@@ -56,9 +56,9 @@ export default function GroupsPage() {
     }
   }
 
-  // useEffect(() => {
-  //   load()
-  // }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   const filtered = useMemo(
     () => groups.filter((group) => group.name.toLowerCase().includes(search.toLowerCase())),
@@ -94,12 +94,14 @@ export default function GroupsPage() {
     setSaving(true)
     try {
       if (editing) {
-        const updated = await groupsApi.update(editing.id, form)
-        setGroups((prev) => prev.map((group) => (group.id === updated.id ? updated : group)))
+        await groupsApi.update(editing.id, form)
+        const refreshed = await groupsApi.list()
+        setGroups(refreshed.data)
         addToast('Qrup yeniləndi', 'success')
       } else {
-        const created = await groupsApi.create(form)
-        setGroups((prev) => [created, ...prev])
+        await groupsApi.create(form)
+        const refreshed = await groupsApi.list()
+        setGroups(refreshed.data)
         addToast('Qrup yaradıldı', 'success')
       }
       setOpen(false)

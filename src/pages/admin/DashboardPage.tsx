@@ -19,27 +19,27 @@ export default function DashboardPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
 
-  // useEffect(() => {
-  //   const load = async () => {
-  //     setLoading(true)
-  //     try {
-  //       const [courseList, groupList, teacherList, studentList] = await Promise.all([
-  //         coursesApi.list(),
-  //         groupsApi.list(),
-  //         teachersApi.list(),
-  //         studentsApi.list(),
-  //       ])
-  //       setCourses(courseList.data)
-  //       setGroups(groupList.data)
-  //       setTeachers(teacherList.data)
-  //       setStudents(studentList.data)
-  //     } finally {
-  //       setLoading(false)
-  //     }
-  //   }
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      try {
+        const [courseList, groupList, teacherList, studentList] = await Promise.all([
+          coursesApi.list(),
+          groupsApi.list(),
+          teachersApi.list(),
+          studentsApi.list(),
+        ])
+        setCourses(courseList.data)
+        setGroups(groupList.data)
+        setTeachers(teacherList.data)
+        setStudents(studentList.data)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  //   load()
-  // }, [])
+    load()
+  }, [])
 
   return (
     <div className="flex flex-col gap-8">

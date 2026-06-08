@@ -38,9 +38,9 @@ export default function CoursesPage() {
     }
   }
 
-  // useEffect(() => {
-  //   fetchItems()
-  // }, [])
+  useEffect(() => {
+    fetchItems()
+  }, [])
 
   const filtered = useMemo(
     () => items.filter((item) => item.name.toLowerCase().includes(search.toLowerCase())),

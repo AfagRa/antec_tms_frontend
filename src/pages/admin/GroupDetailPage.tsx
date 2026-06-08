@@ -60,9 +60,9 @@ export default function GroupDetailPage() {
     }
   }
 
-  // useEffect(() => {
-  //   loadGroup()
-  // }, [groupId])
+  useEffect(() => {
+    loadGroup()
+  }, [groupId])
 
   useEffect(() => {
     if (!group) return

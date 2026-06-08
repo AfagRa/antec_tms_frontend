@@ -47,9 +47,9 @@ export default function TeachersPage() {
     }
   }
 
-  // useEffect(() => {
-  //   load()
-  // }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   const filtered = useMemo(
     () => items.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()) || item.surname.toLowerCase().includes(search.toLowerCase()) || item.email.toLowerCase().includes(search.toLowerCase())),
