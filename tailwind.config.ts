@@ -1,37 +1,41 @@
-import type { Config } from 'tailwindcss';
+import type { Config } from 'tailwindcss'
 
-export default {
+const config: Config = {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        lms: {
-          navy: {
-            DEFAULT: '#08529C',
-            dark: '#063E75',
-            light: '#E6EFF8',
-            text: '#0A335C',
-          },
-          canvas: '#F8FAFC',
-          sidebar: '#FFFFFF',
-          border: '#E2E8F0',
-          muted: '#64748B',
-          heading: '#2D2B2E',
-          badge: {
-            active: { bg: '#E6EFF8', text: '#08529C' },
-            done: { bg: '#FEF3C7', text: '#92400E' },
-            passive: { bg: '#F1F5F9', text: '#475569' },
-            draft: { bg: '#DBEAFE', text: '#1D4ED8' },
-          },
-        },
+        primary: '#08529C',
+        secondary: '#F1F2F5',
+        success: '#00A63D',
+        warning: '#FE9900',
+        danger: '#FF2157',
+        info: '#0EA5E9',
+        surface: '#E7E5E4',
+        'surface-light': '#F0EFEE',
+        'surface-dark': '#CECDCC',
+        'text-base': '#1E2938',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Space Mono"', 'monospace'],
+        display: ['"Space Mono"', 'monospace'],
+        mono: ['"JetBrains Mono"', 'monospace'],
       },
       boxShadow: {
-        card: '0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.05)',
+        neu: '6px 6px 14px #CECDCC, -6px -6px 14px #FFFFFF',
+        'neu-sm': '4px 4px 8px #CECDCC, -4px -4px 8px #FFFFFF',
+        'neu-lg': '10px 10px 20px #CECDCC, -10px -10px 20px #FFFFFF',
+        'neu-inset': 'inset 4px 4px 10px #CECDCC, inset -4px -4px 10px #FFFFFF',
+        'neu-inset-sm': 'inset 2px 2px 6px #CECDCC, inset -2px -2px 6px #FFFFFF',
+      },
+      borderRadius: {
+        neu: '16px',
+        'neu-sm': '10px',
+        'neu-lg': '24px',
       },
     },
   },
   plugins: [],
-} satisfies Config;
+}
+
+export default config

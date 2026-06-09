@@ -1,87 +1,175 @@
-export type Role = 'admin' | 'teacher' | 'student';
-export type GroupStatus = 'Aktiv' | 'Tamamlanmış' | 'Passiv';
-export type LessonStatus = 'draft' | 'completed';
-export type AttendanceStatus = 'present' | 'absent_excused' | 'absent_unexcused' | 'late';
-export type MaterialType = 'file' | 'link' | 'video_link' | 'google_drive' | 'youtube';
+export type UserRole = 'admin' | 'teacher' | 'student'
+export type UserStatus = 'active' | 'inactive'
+
+export interface User {
+  id: number
+  name: string
+  surname: string
+  email: string
+  role: UserRole
+  phone?: string
+  status: UserStatus
+}
+
+export interface AuthResponse {
+  token: string
+  user: User
+}
+
+export interface Paginated<T> {
+  data: T[]
+  total: number
+  page?: number
+  per_page?: number
+}
+
+export interface Course {
+  id: number
+  name: string
+  description?: string
+  status: UserStatus
+  groups_count?: number
+  created_at: string
+}
+
+export interface CoursePayload {
+  name: string
+  description?: string
+  status: UserStatus
+}
+
+export interface GroupCourse {
+  id: number
+  name: string
+}
+
+export interface GroupTeacher {
+  id: number
+  name: string
+  surname: string
+  full_name?: string
+}
+
+export interface GroupStudent {
+  id: number
+  name: string
+  surname: string
+  email?: string
+  status: UserStatus
+  full_name?: string
+}
 
 export interface Group {
-  id: string;
-  name: string;
-  courseName: string;
-  teacherName: string;
-  studentCount: number;
-  startDate: string;
-  endDate: string;
-  status: GroupStatus;
-  lastLessonDate?: string;
+  id: number
+  name: string
+  course: GroupCourse
+  teacher: GroupTeacher
+  students_count: number
+  start_date: string
+  end_date?: string
+  status: UserStatus
+  students?: GroupStudent[]
+}
+
+export interface GroupPayload {
+  name: string
+  course_id: number
+  teacher_id: number
+  start_date: string
+  end_date?: string
+  status: UserStatus
+}
+
+export interface Teacher {
+  id: number
+  user_id?: number
+  name: string
+  surname: string
+  full_name?: string
+  email: string
+  phone?: string
+  specialization?: string
+  bio?: string
+  status: UserStatus
+  groups?: { id: number; name: string }[]
+}
+
+export interface TeacherPayload {
+  name: string
+  surname: string
+  email: string
+  password?: string
+  phone?: string
+  specialization?: string
+  bio?: string
+  status: UserStatus
 }
 
 export interface Student {
-  id: string;
-  name: string;
-  surname: string;
-  email: string;
-  phone: string;
-  joinedAt: string;
-  status: 'Aktiv' | 'Passiv';
+  id: number
+  user_id?: number
+  name: string
+  surname: string
+  full_name?: string
+  email: string
+  phone?: string
+  birth_date?: string
+  note?: string
+  status: UserStatus
+  groups?: { id: number; name: string }[]
+  group?: { id: number; name: string }
+}
+
+export interface StudentPayload {
+  name: string
+  surname: string
+  email: string
+  password?: string
+  phone?: string
+  birth_date?: string
+  note?: string
+  status: UserStatus
 }
 
 export interface Lesson {
-  id: string;
-  groupId: string;
-  groupName: string;
-  teacherName: string;
-  lessonDate: string;
-  topic: string;
-  note?: string;
-  status: LessonStatus;
+  id: number
+  date: string
+  group: { id: number; name: string }
+  topic: string
+  status: 'scheduled' | 'completed' | 'cancelled'
 }
 
 export interface AttendanceRecord {
-  id: string;
-  lessonId: string;
-  studentId: string;
-  studentName: string;
-  studentSurname: string;
-  status: AttendanceStatus;
-  minutesLate?: number;
-  reason?: string;
-  teacherNote?: string;
+  id: number
+  student: { id: number; full_name: string }
+  lesson: { id: number; date: string; topic: string }
+  present: boolean
 }
 
-export interface GradeRecord {
-  id: string;
-  lessonId: string;
-  studentId: string;
-  studentName: string;
-  studentSurname: string;
-  attendanceStatus?: AttendanceStatus;
-  score?: number;
-  maxScore: number;
-  teacherNote?: string;
+export interface Grade {
+  id: number
+  student: { id: number; full_name: string }
+  lesson: { id: number; topic: string }
+  score: number
+  max_score: number
 }
 
 export interface Material {
-  id: string;
-  lessonId: string;
-  groupId: string;
-  title: string;
-  type: MaterialType;
-  url?: string;
-  filePath?: string;
-  description?: string;
-  createdAt: string;
+  id: number
+  title: string
+  url: string
+  type: 'pdf' | 'video' | 'link'
+  created_at: string
+}
+
+export interface ApiError {
+  message: string
+  errors?: Record<string, string[]>
 }
 
 export interface DashboardStats {
-  activeGroupCount: number;
-  weeklyLessonCount: number;
-  draftJournalCount: number;
-  totalStudentCount: number;
-}
-
-export interface Notification {
-  id: string;
-  text: string;
-  time: string;
+  courses: number
+  groups: number
+  teachers: number
+  students: number
 }
