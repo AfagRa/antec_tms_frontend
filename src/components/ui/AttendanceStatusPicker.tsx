@@ -39,12 +39,12 @@ export default function AttendanceStatusPicker({
             />
             <span
               className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
-                selected ? 'ring-2 ring-lms-navy' : 'border border-gray-200'
+                selected ? 'ring-2 ring-primary' : 'border border-surface-dark/20'
               }`}
             >
-              {selected && <span className="h-2 w-2 rounded-full bg-lms-navy" />}
+              {selected && <span className="h-2 w-2 rounded-full bg-primary" />}
             </span>
-            <span className="text-sm text-lms-heading">{option.label}</span>
+            <span className="text-sm text-text-base">{option.label}</span>
           </label>
         );
       })}

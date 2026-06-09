@@ -41,18 +41,18 @@ function InfoSection({
   fields: ProfileField[];
 }) {
   return (
-    <div className="lms-card">
-      <div className="mb-4 flex items-center gap-2 border-b border-lms-border pb-3">
-        <Icon size={18} strokeWidth={1.5} className="text-lms-navy" />
-        <h2 className="text-base font-semibold text-lms-heading">{title}</h2>
+    <div className="rounded-neu bg-surface shadow-neu-sm p-6">
+      <div className="mb-4 flex items-center gap-2 border-b border-surface-dark/20 pb-3">
+        <Icon size={18} strokeWidth={1.5} className="text-primary" />
+        <h2 className="text-base font-semibold text-text-base">{title}</h2>
       </div>
       <dl className="grid gap-4 sm:grid-cols-2">
         {fields.map((field) => (
           <div key={field.label}>
-            <dt className="mb-1 text-xs font-medium uppercase tracking-wide text-lms-muted">
+            <dt className="mb-1 text-xs font-medium uppercase tracking-wide text-text-base/50">
               {field.label}
             </dt>
-            <dd className="text-sm font-medium text-lms-heading">{field.value}</dd>
+            <dd className="text-sm font-medium text-text-base">{field.value}</dd>
           </div>
         ))}
       </dl>
@@ -63,21 +63,21 @@ function InfoSection({
 export default function Profile() {
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-lms-heading">İstifadəçi Profili</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-text-base">İstifadəçi Profili</h1>
 
-      <div className="lms-card mb-6">
+      <div className="rounded-neu bg-surface shadow-neu-sm p-6 mb-6">
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-lms-navy-light">
-            <User size={40} strokeWidth={1.5} className="text-lms-navy" />
+          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-primary/10">
+            <User size={40} strokeWidth={1.5} className="text-primary" />
           </div>
           <div className="flex flex-1 flex-col items-center text-center sm:items-start sm:text-left">
-            <h2 className="text-xl font-semibold text-lms-heading">{PROFILE.fullName}</h2>
-            <p className="mt-1 text-sm text-lms-muted">Müəllim Adı</p>
+            <h2 className="text-xl font-semibold text-text-base">{PROFILE.fullName}</h2>
+            <p className="mt-1 text-sm text-text-base/50">Müəllim Adı</p>
             <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
-              <span className="rounded-full bg-lms-navy px-3 py-1 text-xs font-medium text-white">
+              <span className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-white">
                 {PROFILE.role}
               </span>
-              <span className="rounded-full bg-lms-navy-light px-3 py-1 text-xs font-medium text-lms-navy">
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 {PROFILE.roleBadge}
               </span>
             </div>

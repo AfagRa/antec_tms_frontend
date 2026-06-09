@@ -27,7 +27,7 @@ function highlightMatch(text: string, query: string): ReactNode {
   return (
     <>
       {text.slice(0, index)}
-      <span className="font-semibold text-lms-navy">
+      <span className="font-semibold text-primary">
         {text.slice(index, index + normalizedQuery.length)}
       </span>
       {text.slice(index + normalizedQuery.length)}
@@ -66,7 +66,7 @@ export default function SearchBar() {
     <div ref={containerRef} className="relative w-full max-w-md">
       <Search
         size={16}
-        className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400"
+        className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-text-base/40"
         aria-hidden="true"
       />
       <input
@@ -75,7 +75,7 @@ export default function SearchBar() {
         onChange={(event) => setQuery(event.target.value)}
         onFocus={() => setIsFocused(true)}
         placeholder="Axtarış..."
-        className="w-full rounded-lg border border-lms-border bg-white py-2 pl-9 pr-3 text-sm text-lms-heading placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lms-navy/20"
+        className="w-full rounded-lg border border-surface-dark/20 bg-surface py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-base/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
         aria-label="Axtarış"
         aria-expanded={showDropdown}
         aria-autocomplete="list"
@@ -83,11 +83,11 @@ export default function SearchBar() {
 
       {showDropdown && (
         <div
-          className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-lms-border bg-white shadow-card"
+          className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-surface-dark/20 bg-surface shadow-neu-sm"
           role="listbox"
         >
           {results.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-lms-muted">
+            <p className="px-4 py-6 text-center text-sm text-text-base/50">
               Nəticə tapılmadı
             </p>
           ) : (
@@ -122,13 +122,13 @@ function SearchResultItem({ result, query, onSelect }: SearchResultItemProps) {
       <Link
         to={result.to}
         onClick={onSelect}
-        className="flex items-center justify-between gap-4 px-4 py-2.5 transition-colors hover:bg-slate-50"
+        className="flex items-center justify-between gap-4 px-4 py-2.5 transition-colors hover:bg-surface-dark/10"
       >
-        <span className="flex min-w-0 flex-1 items-center gap-2.5 text-sm text-lms-heading">
-          <Icon size={16} strokeWidth={1.5} className="shrink-0 text-lms-navy" />
+        <span className="flex min-w-0 flex-1 items-center gap-2.5 text-sm text-text-base">
+          <Icon size={16} strokeWidth={1.5} className="shrink-0 text-primary" />
           <span className="truncate">{highlightMatch(result.label, query)}</span>
         </span>
-        <span className="shrink-0 text-xs font-medium text-lms-muted">
+        <span className="shrink-0 text-xs font-medium text-text-base/50">
           {result.category}
         </span>
       </Link>

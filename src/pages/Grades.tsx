@@ -9,7 +9,7 @@ import {
 import type { GradeRecord } from '../types';
 
 const inputClassName =
-  'w-full rounded-md border border-lms-border px-2 py-1 text-sm text-lms-heading focus:outline-none focus:ring-2 focus:ring-lms-navy/30';
+  'w-full rounded-md border border-surface-dark/20 px-2 py-1 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30';
 
 function attendanceLabel(status: GradeRecord['attendanceStatus']) {
   switch (status) {
@@ -85,56 +85,56 @@ export default function Grades() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-lms-heading">Qiymət Daxil Et</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-text-base">Qiymət Daxil Et</h1>
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-lg bg-slate-100 px-4 py-3">
-        <p className="text-sm text-lms-heading">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-neu bg-surface px-4 py-3 shadow-neu-inset-sm">
+        <p className="text-sm text-text-base">
           <span className="font-medium">Dərs Tarixi:</span> {lesson?.lessonDate ?? '—'}
-          <span className="mx-3 text-lms-muted">|</span>
+          <span className="mx-3 text-text-base/50">|</span>
           <span className="font-medium">Qrup:</span> {lesson?.groupName ?? '—'}
-          <span className="mx-3 text-lms-muted">|</span>
+          <span className="mx-3 text-text-base/50">|</span>
           <span className="font-medium">Mövzu:</span> {lesson?.topic ?? '—'}
         </p>
         <button
           type="button"
           onClick={applyMaxToAll}
-          className="shrink-0 rounded-lg bg-lms-navy px-4 py-2 text-sm font-medium text-white hover:bg-lms-navy-dark"
+          className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
         >
           Bütün Max Bal
         </button>
       </div>
 
-      <div className="lms-card overflow-x-auto p-0">
+      <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <table className="w-full min-w-[900px]">
           <thead>
-            <tr className="border-b border-lms-border bg-gray-50">
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+            <tr className="border-b border-surface-dark/20 bg-surface-light">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Ad + Soyad
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Davamiyyət statusu
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Bal (score)
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Maksimum bal
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Faiz (%)
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Müəllim qeydi (optional)
               </th>
             </tr>
           </thead>
           <tbody>
             {records.map((record) => (
-              <tr key={record.id} className="border-b border-lms-border last:border-0">
-                <td className="px-4 py-3 text-sm text-lms-heading">
+              <tr key={record.id} className="border-b border-surface-dark/20 last:border-0">
+                <td className="px-4 py-3 text-sm text-text-base">
                   {record.studentName} {record.studentSurname}
                 </td>
-                <td className="px-4 py-3 text-sm text-lms-muted">
+                <td className="px-4 py-3 text-sm text-text-base/50">
                   {attendanceLabel(record.attendanceStatus)}
                 </td>
                 <td className="px-4 py-3">
@@ -164,7 +164,7 @@ export default function Grades() {
                     className={inputClassName}
                   />
                 </td>
-                <td className="px-4 py-3 text-sm font-medium text-lms-navy">
+                <td className="px-4 py-3 text-sm font-medium text-primary">
                   {calcPercent(record.score, record.maxScore)}
                 </td>
                 <td className="px-4 py-3">
@@ -183,7 +183,7 @@ export default function Grades() {
           </tbody>
         </table>
 
-        <div className="border-t border-lms-border bg-gray-50 px-4 py-3 text-sm font-medium text-lms-muted">
+        <div className="border-t border-surface-dark/20 bg-surface-light px-4 py-3 text-sm font-medium text-text-base/50">
           Qrup ortalama balı (%): {average} | ən yüksək bal: {highest} | ən aşağı bal: {lowest}
         </div>
       </div>
@@ -191,20 +191,20 @@ export default function Grades() {
       <div className="mt-6 flex items-center justify-between">
         <Link
           to={ROUTES.TEACHER_ATTENDANCE(lessonId)}
-          className="text-sm text-lms-muted hover:text-lms-heading"
+          className="text-sm text-text-base/50 hover:text-text-base"
         >
           ← Davamiyyətə Qayıt
         </Link>
         <div className="flex gap-3">
           <button
             type="button"
-            className="rounded-lg border border-lms-navy px-4 py-2 text-sm font-medium text-lms-navy hover:bg-lms-navy-light"
+            className="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
           >
             Saxla
           </button>
           <button
             type="button"
-            className="rounded-lg bg-lms-navy px-4 py-2 text-sm font-medium text-white hover:bg-lms-navy-dark"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
           >
             Dərsi Tamamla ✓
           </button>

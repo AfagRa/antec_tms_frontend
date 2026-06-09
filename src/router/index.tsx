@@ -22,6 +22,24 @@ import Reports from "@/pages/Reports";
 import Profile from "@/pages/Profile";
 import { ROUTES } from "@/constants/routes";
 
+function TeacherRoute({ children }: { children: ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        Yüklənir...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
 
@@ -68,8 +86,13 @@ export const router = createBrowserRouter([
 
   {
     path: "/teacher",
-    element: <AppLayout />,
+    element: (
+      <TeacherRoute>
+        <AppLayout />
+      </TeacherRoute>
+    ),
     children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
       { path: "dashboard", element: <TeacherDashboard /> },
       { path: "groups", element: <Groups /> },
       { path: "groups/:id", element: <GroupDetail /> },

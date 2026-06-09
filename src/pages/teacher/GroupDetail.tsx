@@ -21,24 +21,24 @@ const TABS: { id: TabId; label: string }[] = [
 function groupStatusBadgeClass(status: GroupStatus) {
   switch (status) {
     case 'Aktiv':
-      return 'bg-lms-navy-light text-lms-navy';
+      return 'bg-primary/10 text-primary';
     case 'Tamamlanmış':
-      return 'bg-lms-badge-done-bg text-lms-badge-done-text';
+      return 'bg-green-100 text-green-700';
     default:
-      return 'bg-lms-badge-passive-bg text-lms-badge-passive-text';
+      return 'bg-gray-100 text-gray-600';
   }
 }
 
 function studentStatusBadgeClass(status: 'Aktiv' | 'Passiv') {
   return status === 'Aktiv'
-    ? 'bg-lms-navy-light text-lms-navy'
-    : 'bg-lms-badge-passive-bg text-lms-badge-passive-text';
+    ? 'bg-primary/10 text-primary'
+    : 'bg-gray-100 text-gray-600';
 }
 
 function lessonStatusBadgeClass(status: LessonStatus) {
   return status === 'completed'
-    ? 'bg-lms-navy-light text-lms-navy'
-    : 'bg-lms-badge-draft-bg text-lms-badge-draft-text';
+    ? 'bg-primary/10 text-primary'
+    : 'bg-amber-100 text-amber-700';
 }
 
 export default function GroupDetail() {
@@ -52,7 +52,7 @@ export default function GroupDetail() {
   if (!group) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-lms-heading">Qrup tapılmadı</h1>
+        <h1 className="text-2xl font-semibold text-text-base">Qrup tapılmadı</h1>
       </div>
     );
   }
@@ -60,39 +60,39 @@ export default function GroupDetail() {
   return (
     <div>
       <div className="mb-6 flex items-start justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-lms-heading">
+        <h1 className="text-2xl font-semibold text-text-base">
           Qrup Detalları: {group.name}
         </h1>
-        <span className="shrink-0 text-xs text-lms-muted">
+        <span className="shrink-0 text-xs text-text-base/50">
           Muellim_Telebe_Paneli_Spesifikasiya_v1.0.docx
         </span>
       </div>
 
-      <div className="lms-card mb-6">
-        <h2 className="mb-4 text-sm font-semibold text-lms-heading">Qrup Məlumat Kartı</h2>
+      <div className="rounded-neu bg-surface shadow-neu-sm p-6 mb-6">
+        <h2 className="mb-4 text-sm font-semibold text-text-base">Qrup Məlumat Kartı</h2>
         <div className="grid grid-cols-2 gap-6 text-sm md:grid-cols-3 lg:grid-cols-6">
           <div>
-            <p className="mb-1 text-xs text-lms-muted">Qrup adı</p>
-            <p className="font-medium text-lms-heading">{group.name}</p>
+            <p className="mb-1 text-xs text-text-base/50">Qrup adı</p>
+            <p className="font-medium text-text-base">{group.name}</p>
           </div>
           <div>
-            <p className="mb-1 text-xs text-lms-muted">Kurs adı</p>
-            <p className="font-medium text-lms-heading">{group.courseName}</p>
+            <p className="mb-1 text-xs text-text-base/50">Kurs adı</p>
+            <p className="font-medium text-text-base">{group.courseName}</p>
           </div>
           <div>
-            <p className="mb-1 text-xs text-lms-muted">Başlama tarixi</p>
-            <p className="font-medium text-lms-heading">{group.startDate}</p>
+            <p className="mb-1 text-xs text-text-base/50">Başlama tarixi</p>
+            <p className="font-medium text-text-base">{group.startDate}</p>
           </div>
           <div>
-            <p className="mb-1 text-xs text-lms-muted">Bitmə tarixi</p>
-            <p className="font-medium text-lms-heading">{group.endDate}</p>
+            <p className="mb-1 text-xs text-text-base/50">Bitmə tarixi</p>
+            <p className="font-medium text-text-base">{group.endDate}</p>
           </div>
           <div>
-            <p className="mb-1 text-xs text-lms-muted">Tələbə sayı</p>
-            <p className="font-medium text-lms-heading">{group.studentCount}</p>
+            <p className="mb-1 text-xs text-text-base/50">Tələbə sayı</p>
+            <p className="font-medium text-text-base">{group.studentCount}</p>
           </div>
           <div>
-            <p className="mb-1 text-xs text-lms-muted">Status</p>
+            <p className="mb-1 text-xs text-text-base/50">Status</p>
             <span
               className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${groupStatusBadgeClass(group.status)}`}
             >
@@ -102,8 +102,8 @@ export default function GroupDetail() {
         </div>
       </div>
 
-      <div className="lms-card p-0">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-lms-border px-5 pt-4">
+      <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-surface-dark/20 px-5 pt-4">
           <div className="flex gap-6">
             {TABS.map((tab) => (
               <button
@@ -112,8 +112,8 @@ export default function GroupDetail() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'border-lms-navy text-lms-heading'
-                    : 'border-transparent text-lms-muted hover:text-lms-heading'
+                    ? 'border-primary text-text-base'
+                    : 'border-transparent text-text-base/50 hover:text-text-base'
                 }`}
               >
                 {tab.label}
@@ -122,7 +122,7 @@ export default function GroupDetail() {
           </div>
           <Link
             to={ROUTES.TEACHER_LESSON_CREATE}
-            className="mb-3 flex items-center gap-1.5 rounded-lg bg-lms-navy px-4 py-2 text-sm font-medium text-white hover:bg-lms-navy-dark"
+            className="mb-3 flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
           >
             <Plus size={16} strokeWidth={1.5} />
             Yeni Dərs Yarat
@@ -134,39 +134,39 @@ export default function GroupDetail() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px]">
                 <thead>
-                  <tr className="border-b border-lms-border bg-gray-50">
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                  <tr className="border-b border-surface-dark/20 bg-surface-light">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       #
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Ad
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Soyad
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Email
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Telefon
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Qrupa qoşulma tarixi
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Status
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {MOCK_STUDENTS.map((student, index) => (
-                    <tr key={student.id} className="border-b border-lms-border last:border-0">
-                      <td className="px-3 py-3 text-sm text-lms-heading">{index + 1}</td>
-                      <td className="px-3 py-3 text-sm text-lms-heading">{student.name}</td>
-                      <td className="px-3 py-3 text-sm text-lms-heading">{student.surname}</td>
-                      <td className="px-3 py-3 text-sm text-lms-heading">{student.email}</td>
-                      <td className="px-3 py-3 text-sm text-lms-heading">{student.phone}</td>
-                      <td className="px-3 py-3 text-sm text-lms-heading">{student.joinedAt}</td>
+                    <tr key={student.id} className="border-b border-surface-dark/20 last:border-0">
+                      <td className="px-3 py-3 text-sm text-text-base">{index + 1}</td>
+                      <td className="px-3 py-3 text-sm text-text-base">{student.name}</td>
+                      <td className="px-3 py-3 text-sm text-text-base">{student.surname}</td>
+                      <td className="px-3 py-3 text-sm text-text-base">{student.email}</td>
+                      <td className="px-3 py-3 text-sm text-text-base">{student.phone}</td>
+                      <td className="px-3 py-3 text-sm text-text-base">{student.joinedAt}</td>
                       <td className="px-3 py-3">
                         <span
                           className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${studentStatusBadgeClass(student.status)}`}
@@ -185,20 +185,20 @@ export default function GroupDetail() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-lms-border bg-gray-50">
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                  <tr className="border-b border-surface-dark/20 bg-surface-light">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       #
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Tarix
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Mövzu
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Status
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Əməliyyatlar
                     </th>
                   </tr>
@@ -206,16 +206,16 @@ export default function GroupDetail() {
                 <tbody>
                   {lessons.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-3 py-6 text-center text-sm text-lms-muted">
+                      <td colSpan={5} className="px-3 py-6 text-center text-sm text-text-base/50">
                         Bu qrup üçün dərs tapılmadı.
                       </td>
                     </tr>
                   ) : (
                     lessons.map((lesson, index) => (
-                      <tr key={lesson.id} className="border-b border-lms-border last:border-0">
-                        <td className="px-3 py-3 text-sm text-lms-heading">{index + 1}</td>
-                        <td className="px-3 py-3 text-sm text-lms-heading">{lesson.lessonDate}</td>
-                        <td className="px-3 py-3 text-sm text-lms-heading">{lesson.topic}</td>
+                      <tr key={lesson.id} className="border-b border-surface-dark/20 last:border-0">
+                        <td className="px-3 py-3 text-sm text-text-base">{index + 1}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">{lesson.lessonDate}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">{lesson.topic}</td>
                         <td className="px-3 py-3">
                           <span
                             className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${lessonStatusBadgeClass(lesson.status)}`}
@@ -227,13 +227,13 @@ export default function GroupDetail() {
                           <div className="flex gap-3">
                             <Link
                               to={ROUTES.TEACHER_ATTENDANCE(lesson.id)}
-                              className="text-sm font-medium text-lms-navy hover:underline"
+                              className="text-sm font-medium text-primary hover:underline"
                             >
                               Davamiyyət
                             </Link>
                             <Link
                               to={ROUTES.TEACHER_GRADES(lesson.id)}
-                              className="text-sm font-medium text-lms-navy hover:underline"
+                              className="text-sm font-medium text-primary hover:underline"
                             >
                               Qiymət
                             </Link>
@@ -251,20 +251,20 @@ export default function GroupDetail() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[600px]">
                 <thead>
-                  <tr className="border-b border-lms-border bg-gray-50">
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                  <tr className="border-b border-surface-dark/20 bg-surface-light">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       #
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Başlıq
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Tip
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Tarix
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-lms-heading">
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
                       Əməliyyatlar
                     </th>
                   </tr>
@@ -272,23 +272,23 @@ export default function GroupDetail() {
                 <tbody>
                   {materials.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-3 py-6 text-center text-sm text-lms-muted">
+                      <td colSpan={5} className="px-3 py-6 text-center text-sm text-text-base/50">
                         Material tapılmadı.
                       </td>
                     </tr>
                   ) : (
                     materials.map((material, index) => (
-                      <tr key={material.id} className="border-b border-lms-border last:border-0">
-                        <td className="px-3 py-3 text-sm text-lms-heading">{index + 1}</td>
-                        <td className="px-3 py-3 text-sm text-lms-heading">{material.title}</td>
-                        <td className="px-3 py-3 text-sm capitalize text-lms-muted">
+                      <tr key={material.id} className="border-b border-surface-dark/20 last:border-0">
+                        <td className="px-3 py-3 text-sm text-text-base">{index + 1}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">{material.title}</td>
+                        <td className="px-3 py-3 text-sm capitalize text-text-base/50">
                           {material.type.replace('_', ' ')}
                         </td>
-                        <td className="px-3 py-3 text-sm text-lms-heading">{material.createdAt}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">{material.createdAt}</td>
                         <td className="px-3 py-3">
                           <Link
                             to={ROUTES.TEACHER_MATERIAL}
-                            className="text-sm font-medium text-lms-navy hover:underline"
+                            className="text-sm font-medium text-primary hover:underline"
                           >
                             Bax
                           </Link>
@@ -301,7 +301,7 @@ export default function GroupDetail() {
               <div className="mt-4 flex justify-end">
                 <Link
                   to={ROUTES.TEACHER_MATERIAL}
-                  className="text-sm font-medium text-lms-navy hover:underline"
+                  className="text-sm font-medium text-primary hover:underline"
                 >
                   + Material əlavə et
                 </Link>
