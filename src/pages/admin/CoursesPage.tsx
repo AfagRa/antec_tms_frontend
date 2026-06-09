@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { coursesApi } from '@/api/courses'
 import type { Course, CoursePayload } from '@/types'
 import Table from '@/components/ui/Table'
@@ -15,6 +16,7 @@ import { useToast } from '@/hooks/useToast'
 const emptyForm: CoursePayload = { name: '', description: '', status: 'active' }
 
 export default function CoursesPage() {
+  const navigate = useNavigate()
   const { addToast } = useToast()
   const [items, setItems] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
@@ -137,6 +139,9 @@ export default function CoursesPage() {
             header: 'Əməliyyatlar',
             render: (course: Course) => (
               <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={() => navigate(`/admin/courses/${course.id}`)} aria-label="Detallar">
+                  <Eye size={13} />
+                </Button>
                 <Button variant="secondary" size="sm" onClick={() => openEdit(course)} aria-label="Redaktə et">
                   <Pencil size={13} />
                 </Button>

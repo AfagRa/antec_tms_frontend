@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import LoginPage from '@/pages/LoginPage'
 import AdminLayout from '@/components/layout/AdminLayout'
 import DashboardPage from '@/pages/admin/DashboardPage'
+import CourseDetailPage from '@/pages/admin/CourseDetailPage'
 import CoursesPage from '@/pages/admin/CoursesPage'
 import GroupsPage from '@/pages/admin/GroupsPage'
 import GroupDetailPage from '@/pages/admin/GroupDetailPage'
@@ -33,14 +34,15 @@ export const router = createBrowserRouter([
   {
     path: '/admin',
     element: (
-      // <ProtectedRoute>
+      <ProtectedRoute>
         <AdminLayout />
-      // </ProtectedRoute>
+      </ProtectedRoute>
     ),
     children: [
       { index: true, element: <Navigate to="dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'courses', element: <CoursesPage /> },
+      { path: 'courses/:id', element: <CourseDetailPage /> },
       { path: 'groups', element: <GroupsPage /> },
       { path: 'groups/:id', element: <GroupDetailPage /> },
       { path: 'teachers', element: <TeachersPage /> },
