@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import Sidebar from './Sidebar'
+import AdminSidebar from './AdminSidebar'
 import ToastContainer from '@/components/ui/Toast'
 import Spinner from '@/components/ui/Spinner'
 import { useAuth } from '@/hooks/useAuth'
@@ -23,7 +23,7 @@ export default function AdminLayout() {
 
   return (
     <div className="flex min-h-screen overflow-hidden bg-surface text-text-base">
-      <Sidebar />
+      <AdminSidebar />
       <main className="min-w-0 flex-1 overflow-y-auto p-8">
         <Outlet />
       </main>
