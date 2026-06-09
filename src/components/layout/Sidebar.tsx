@@ -1,62 +1,134 @@
-import { NavLink, useNavigate } from 'react-router-dom'
-import { BookOpen, GraduationCap, LayoutDashboard, LogOut, Users, UserCheck } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
-import Button from '@/components/ui/Button'
+import { NavLink, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Users,
+  ClipboardList,
+  BookOpen,
+  CalendarCheck,
+  PenLine,
+  FilePlus,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { ROUTES } from '../../constants/routes';
+import { DEFAULT_GROUP_ID, DEFAULT_LESSON_ID } from '../../data/teacherMock';
 
-const navItems = [
-  { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/courses', icon: BookOpen, label: 'Kurslar' },
-  { to: '/admin/groups', icon: Users, label: 'Qruplar' },
-  { to: '/admin/teachers', icon: UserCheck, label: 'Müəllimlər' },
-  { to: '/admin/students', icon: GraduationCap, label: 'Tələbələr' },
-]
+interface NavItem {
+  key: string;
+  to: string;
+  icon: LucideIcon;
+  label: string;
+  end?: boolean;
+  isActiveMatch?: (pathname: string) => boolean;
+}
+
+const navItems: NavItem[] = [
+  {
+    key: 'dashboard',
+    to: ROUTES.TEACHER_DASHBOARD,
+    icon: LayoutDashboard,
+    label: 'Müəllim Dashboard',
+    end: true,
+  },
+  {
+    key: 'groups',
+    to: ROUTES.TEACHER_GROUPS,
+    icon: Users,
+    label: 'Mənim Qruplarım',
+    end: true,
+    isActiveMatch: (pathname) => pathname === ROUTES.TEACHER_GROUPS,
+  },
+  {
+    key: 'group-detail',
+    to: ROUTES.TEACHER_GROUP(DEFAULT_GROUP_ID),
+    icon: ClipboardList,
+    label: 'Qrup Detalları',
+    isActiveMatch: (pathname) => /^\/teacher\/groups\/[^/]+$/.test(pathname),
+  },
+  {
+    key: 'lesson-create',
+    to: ROUTES.TEACHER_LESSON_CREATE,
+    icon: BookOpen,
+    label: 'Jurnal Doldur',
+    isActiveMatch: (pathname) => pathname === ROUTES.TEACHER_LESSON_CREATE,
+  },
+  {
+    key: 'attendance',
+    to: ROUTES.TEACHER_ATTENDANCE(DEFAULT_LESSON_ID),
+    icon: CalendarCheck,
+    label: 'Davamiyyət',
+    isActiveMatch: (pathname) => /\/teacher\/lessons\/[^/]+\/attendance$/.test(pathname),
+  },
+  {
+    key: 'grades',
+    to: ROUTES.TEACHER_GRADES(DEFAULT_LESSON_ID),
+    icon: PenLine,
+    label: 'Qiymətləndirmə',
+    isActiveMatch: (pathname) => /\/teacher\/lessons\/[^/]+\/grades$/.test(pathname),
+  },
+  {
+    key: 'material',
+    to: ROUTES.TEACHER_MATERIAL,
+    icon: FilePlus,
+    label: 'Material Əlavə Etmək',
+    end: true,
+  },
+];
+
+function resolveIsActive(item: NavItem, pathname: string, navActive: boolean) {
+  if (item.isActiveMatch) {
+    return item.isActiveMatch(pathname);
+  }
+  return navActive;
+}
 
 export default function Sidebar() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
-
-  const handleLogout = async () => {
-    await logout()
-    navigate('/login')
-  }
+  const { pathname } = useLocation();
 
   return (
-    <aside className="flex h-screen w-60 shrink-0 flex-col bg-surface shadow-neu-lg" aria-label="Əsas naviqasiya">
-      <div className="flex items-center gap-3 border-b border-surface-dark/20 px-6 py-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-neu bg-primary shadow-neu-sm">
-          <span className="text-sm font-bold text-white">N</span>
-        </div>
-        <div>
-          <p className="text-sm font-bold leading-none text-text-base">Neumorphism</p>
-          <p className="mt-0.5 text-xs text-text-base/40">Admin Panel</p>
+    <aside className="fixed left-0 top-0 z-20 flex h-full w-[260px] flex-col border-r border-lms-border bg-lms-sidebar">
+      <div className="flex h-[64px] items-center gap-3 border-b border-lms-border px-4">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="shrink-0 text-lms-navy"
+          aria-hidden="true"
+        >
+          <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+          <path d="M22 10v6" />
+          <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+        </svg>
+        <div className="min-w-0">
+          <p className="text-[13px] font-bold leading-tight text-lms-heading">Tədris Mərkəzi</p>
+          <p className="text-[11px] leading-tight text-lms-muted">İdarəetmə Sistemi</p>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {navItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-neu px-4 py-2.5 text-sm font-bold tracking-wide transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary ${isActive ? 'bg-primary text-white shadow-neu-sm' : 'text-text-base/60 hover:text-text-base hover:shadow-neu-sm'}`
-            }
-          >
-            <Icon size={16} aria-hidden />
-            {label}
-          </NavLink>
-        ))}
+      <nav className="flex flex-col gap-1 px-3 py-4">
+        {navItems.map((item) => {
+          const { key, to, icon: Icon, label, end } = item;
+
+          return (
+            <NavLink
+              key={key}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                resolveIsActive(item, pathname, isActive) ? 'nav-item active' : 'nav-item'
+              }
+            >
+              <Icon size={18} strokeWidth={1.5} />
+              <span>{label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
-
-      <div className="border-t border-surface-dark/20 p-4">
-        <div className="mb-3 rounded-neu px-3 py-2.5 shadow-neu-inset-sm">
-          <p className="truncate text-xs font-bold text-text-base">{user?.name} {user?.surname}</p>
-          <p className="truncate text-xs text-text-base/40">{user?.email}</p>
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout} className="w-full justify-start text-danger hover:text-danger">
-          <LogOut size={14} />
-          Çıxış
-        </Button>
-      </div>
     </aside>
-  )
+  );
 }
