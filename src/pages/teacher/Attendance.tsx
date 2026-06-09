@@ -11,10 +11,10 @@ import {
 import type { AttendanceRecord, AttendanceStatus } from '../../types';
 
 const inputClassName =
-  'w-full border border-lms-border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-lms-navy/30';
+  'w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
 
 const disabledInputClassName =
-  'w-full border border-lms-border rounded-md px-2 py-1 text-sm bg-gray-50 text-gray-300 cursor-not-allowed';
+  'w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm bg-surface-light text-text-base/30 cursor-not-allowed';
 
 const STATUS_OPTIONS: AttendanceStatus[] = [
   'present',
@@ -61,45 +61,45 @@ export default function Attendance() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-lms-heading">Davamiyyət Daxil Et</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-text-base">Davamiyyət Daxil Et</h1>
 
-      <div className="mb-6 flex items-center justify-between gap-4 rounded-lg bg-slate-100 px-4 py-3">
-        <p className="text-sm text-lms-heading">
+      <div className="mb-6 flex items-center justify-between gap-4 rounded-neu bg-surface px-4 py-3 shadow-neu-inset-sm">
+        <p className="text-sm text-text-base">
           <span className="font-medium">Dərs Tarixi:</span> {lesson?.lessonDate ?? '—'}
-          <span className="mx-3 text-lms-muted">|</span>
+          <span className="mx-3 text-text-base/50">|</span>
           <span className="font-medium">Qrup:</span> {lesson?.groupName ?? '—'}
-          <span className="mx-3 text-lms-muted">|</span>
+          <span className="mx-3 text-text-base/50">|</span>
           <span className="font-medium">Mövzu:</span> {lesson?.topic ?? '—'}
         </p>
         <button
           type="button"
           onClick={markAllPresent}
-          className="shrink-0 rounded-lg bg-lms-navy px-4 py-2 text-sm font-medium text-white hover:bg-lms-navy-dark"
+          className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
         >
           Hamısını İştirak Etdi kimi işarələ
         </button>
       </div>
 
-      <div className="lms-card overflow-x-auto p-0">
+      <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <table className="w-full min-w-[960px]">
           <thead>
-            <tr className="border-b border-lms-border bg-gray-50">
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+            <tr className="border-b border-surface-dark/20 bg-surface-light">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 #
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Ad + Soyad
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Status
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Gecikmə dəqiqəsi (varsa)
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Səbəb (varsa)
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-lms-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Müəllim Qeydi (optional)
               </th>
             </tr>
@@ -113,10 +113,10 @@ export default function Attendance() {
               return (
                 <tr
                   key={record.id}
-                  className="border-b border-lms-border last:border-0"
+                  className="border-b border-surface-dark/20 last:border-0"
                 >
-                  <td className="px-4 py-3 text-sm text-lms-heading">{index + 1}</td>
-                  <td className="px-4 py-3 text-sm text-lms-heading">
+                  <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
+                  <td className="px-4 py-3 text-sm text-text-base">
                     {record.studentName} {record.studentSurname}
                   </td>
                   <td className="px-4 py-3">
@@ -194,27 +194,27 @@ export default function Attendance() {
         </table>
       </div>
 
-      <p className="mt-4 text-sm font-medium text-lms-muted">
+      <p className="mt-4 text-sm font-medium text-text-base/50">
         İştirak edən: {present} | Qayıb: {absent} | Gecikən: {late}
       </p>
 
       <div className="mt-6 flex items-center justify-between">
         <Link
           to={ROUTES.TEACHER_GROUP(lesson?.groupId ?? DEFAULT_GROUP_ID)}
-          className="text-sm text-lms-muted hover:text-lms-heading"
+          className="text-sm text-text-base/50 hover:text-text-base"
         >
           ← Dərslərə Qayıt
         </Link>
         <div className="flex gap-3">
           <button
             type="button"
-            className="rounded-lg border border-lms-navy px-4 py-2 text-sm font-medium text-lms-navy hover:bg-lms-navy-light"
+            className="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
           >
             Saxla
           </button>
           <Link
             to={ROUTES.TEACHER_GRADES(lessonId)}
-            className="rounded-lg bg-lms-navy px-4 py-2 text-sm font-medium text-white hover:bg-lms-navy-dark"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
           >
             Növbəti: Qiymətləri Daxil Et →
           </Link>
