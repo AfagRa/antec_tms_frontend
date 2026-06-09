@@ -30,12 +30,12 @@ interface FormFieldProps {
 }
 
 const inputClassName =
-  'w-full rounded-md border border-lms-border px-3 py-2 text-sm text-lms-heading focus:outline-none focus:ring-2 focus:ring-lms-navy/30';
+  'w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30';
 
 function FormField({ label, required, error, children }: FormFieldProps) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-semibold text-lms-heading">
+      <label className="mb-1.5 block text-sm font-semibold text-text-base">
         {label}
         {required && <span className="ml-0.5 text-red-500">*</span>}
       </label>
@@ -139,14 +139,14 @@ export default function MaterialUpload() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-lms-heading">Yeni Material Əlavə Et</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-text-base">Yeni Material Əlavə Et</h1>
 
       <form
         onSubmit={handleSubmit}
-        className="mx-auto max-w-2xl rounded-xl border border-lms-border bg-white p-8 shadow-card"
+        className="mx-auto max-w-2xl rounded-neu bg-surface shadow-neu-sm p-8"
       >
         {successMessage && (
-          <div className="mb-6 rounded-lg border border-lms-navy/30 bg-lms-navy-light px-4 py-3 text-sm font-medium text-lms-navy">
+          <div className="mb-6 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-medium text-primary">
             {successMessage}
           </div>
         )}
@@ -224,13 +224,13 @@ export default function MaterialUpload() {
         <div className="mt-8 flex items-center justify-between">
           <Link
             to={ROUTES.TEACHER_GROUPS}
-            className="text-sm text-lms-muted hover:text-lms-heading"
+            className="text-sm text-text-base/50 hover:text-text-base"
           >
             Ləğv et / Geri
           </Link>
           <button
             type="submit"
-            className="flex items-center gap-2 rounded-lg bg-lms-navy px-4 py-2 text-sm font-medium text-white hover:bg-lms-navy-dark"
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
           >
             Materialı Paylaş
             <Check size={16} strokeWidth={2} />

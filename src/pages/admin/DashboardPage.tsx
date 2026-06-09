@@ -10,7 +10,6 @@ import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import StatCard from '@/components/ui/StatCard'
 import Button from '@/components/ui/Button'
-
 export default function DashboardPage() {
   const navigate = useNavigate()
   const [courses, setCourses] = useState<Course[]>([])
@@ -99,13 +98,17 @@ export default function DashboardPage() {
           </div>
           <div className="divide-y divide-surface-dark/20">
             {courses.slice(0, 5).map((course) => (
-              <div key={course.id} className="flex items-center justify-between px-5 py-3">
-                <div>
+              <button
+                key={course.id}
+                onClick={() => navigate(`/admin/courses/${course.id}`)}
+                className="flex w-full items-center justify-between px-5 py-3 text-left transition-colors hover:bg-surface-dark/10"
+              >
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-text-base">{course.name}</p>
                   <p className="text-xs text-text-base/50 line-clamp-1">{course.description ?? 'Təsvir yoxdur'}</p>
                 </div>
                 <Badge status={course.status} />
-              </div>
+              </button>
             ))}
             {!courses.length && <p className="px-5 py-8 text-center text-sm text-text-base/40">Kurs tapılmadı.</p>}
           </div>

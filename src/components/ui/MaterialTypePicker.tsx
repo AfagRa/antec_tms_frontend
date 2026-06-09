@@ -28,8 +28,8 @@ export default function MaterialTypePicker({ value, onChange }: MaterialTypePick
             onClick={() => onChange(typeValue)}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition-colors ${
               selected
-                ? 'border-2 border-lms-navy bg-lms-navy-light font-medium text-lms-navy'
-                : 'border border-gray-200 bg-white text-gray-600 hover:border-lms-navy/50'
+                ? 'border-2 border-primary bg-primary/10 font-medium text-primary'
+                : 'border border-surface-dark/20 bg-surface text-text-base/60 hover:border-primary/50'
             }`}
           >
             <Icon size={18} strokeWidth={1.5} />

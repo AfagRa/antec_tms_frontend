@@ -7,6 +7,8 @@ import {
   CalendarCheck,
   PenLine,
   FilePlus,
+  BarChart3,
+  User,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
@@ -72,6 +74,20 @@ const navItems: NavItem[] = [
     label: 'Material Əlavə Etmək',
     end: true,
   },
+  {
+    key: 'reports',
+    to: ROUTES.TEACHER_REPORTS,
+    icon: BarChart3,
+    label: 'Hesabatlar',
+    end: true,
+  },
+  {
+    key: 'profile',
+    to: ROUTES.TEACHER_PROFILE,
+    icon: User,
+    label: 'Profil',
+    end: true,
+  },
 ];
 
 function resolveIsActive(item: NavItem, pathname: string, navActive: boolean) {
@@ -85,8 +101,8 @@ export default function Sidebar() {
   const { pathname } = useLocation();
 
   return (
-    <aside className="fixed left-0 top-0 z-20 flex h-full w-[260px] flex-col border-r border-lms-border bg-lms-sidebar">
-      <div className="flex h-[64px] items-center gap-3 border-b border-lms-border px-4">
+    <aside className="fixed left-0 top-0 z-20 flex h-full w-[260px] flex-col border-r border-surface-dark/20 bg-surface shadow-neu-lg">
+      <div className="flex h-[64px] items-center gap-3 border-b border-surface-dark/20 px-4">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -97,7 +113,7 @@ export default function Sidebar() {
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="shrink-0 text-lms-navy"
+          className="shrink-0 text-primary"
           aria-hidden="true"
         >
           <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
@@ -105,8 +121,8 @@ export default function Sidebar() {
           <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
         </svg>
         <div className="min-w-0">
-          <p className="text-[13px] font-bold leading-tight text-lms-heading">Tədris Mərkəzi</p>
-          <p className="text-[11px] leading-tight text-lms-muted">İdarəetmə Sistemi</p>
+          <p className="text-[13px] font-bold leading-tight text-text-base">Tədris Mərkəzi</p>
+          <p className="text-[11px] leading-tight text-text-base/50">İdarəetmə Sistemi</p>
         </div>
       </div>
 
@@ -120,7 +136,11 @@ export default function Sidebar() {
               to={to}
               end={end}
               className={({ isActive }) =>
-                resolveIsActive(item, pathname, isActive) ? 'nav-item active' : 'nav-item'
+                `flex items-center gap-3 rounded-neu px-4 py-2.5 text-sm font-bold tracking-wide transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary ${
+                  resolveIsActive(item, pathname, isActive)
+                    ? 'bg-primary text-white shadow-neu-sm'
+                    : 'text-text-base/60 hover:text-text-base hover:shadow-neu-sm'
+                }`
               }
             >
               <Icon size={18} strokeWidth={1.5} />
