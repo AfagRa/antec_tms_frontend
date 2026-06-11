@@ -197,6 +197,19 @@ export const GRADE_CATEGORY_STYLES: Record<GradeCategory, string> = {
   homework: 'bg-green-100 text-green-700',
 }
 
+export interface JournalLesson {
+  id: string
+  date: string
+  topic: string
+}
+
+export interface JournalCell {
+  attendance: 'D' | 'Q' | 'QÜ' | 'G' | null
+  grade?: number | null
+  maxGrade?: number
+  category?: GradeCategory
+}
+
 export interface GradeRecord {
   id: string
   lessonId: string

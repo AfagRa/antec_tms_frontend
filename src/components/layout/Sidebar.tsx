@@ -7,6 +7,7 @@ import {
   CalendarCheck,
   PenLine,
   FilePlus,
+  Table2,
   BarChart3,
   UserCircle,
 } from 'lucide-react';
@@ -66,6 +67,13 @@ const navItems: NavItem[] = [
     icon: PenLine,
     label: 'Qiymətləndirmə',
     isActiveMatch: (pathname) => /\/teacher\/lessons\/[^/]+\/grades$/.test(pathname),
+  },
+  {
+    key: 'journal',
+    to: ROUTES.TEACHER_JOURNAL,
+    icon: Table2,
+    label: 'Jurnal',
+    end: true,
   },
   {
     key: 'material',
