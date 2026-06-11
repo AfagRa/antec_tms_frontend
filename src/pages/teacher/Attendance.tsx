@@ -28,16 +28,6 @@ const MOCK_LESSONS_BY_GROUP: Record<string, { id: string; date: string; topic: s
 const inputClassName =
   'w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
 
-const disabledInputClassName =
-  'w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm bg-surface-light text-text-base/30 cursor-not-allowed';
-
-const STATUS_OPTIONS: AttendanceStatus[] = [
-  'present',
-  'absent_excused',
-  'absent_unexcused',
-  'late',
-];
-
 export default function Attendance() {
   const [selectedGroupId, setSelectedGroupId] = useState(MOCK_GROUPS[0].id);
   const lessons = MOCK_LESSONS_BY_GROUP[selectedGroupId] ?? [];
@@ -158,14 +148,12 @@ export default function Attendance() {
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">#</th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Ad + Soyad</th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Gecikmə dəqiqəsi (varsa)</th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Səbəb (varsa)</th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Müəllim Qeydi (optional)</th>
             </tr>
           </thead>
           <tbody>
             {records.map((record, index) => {
-              const isLate = record.status === 'late';
               const isExcusedAbsent = record.status === 'absent_excused';
               const useDropdown = record.studentId === '5';
 
@@ -177,35 +165,39 @@ export default function Attendance() {
                   </td>
                   <td className="px-4 py-3">
                     {useDropdown ? (
-                      <select
-                        value={record.status}
-                        onChange={(event) =>
-                          updateRecord(record.studentId, 'status', event.target.value as AttendanceStatus)
-                        }
-                        className={inputClassName}
-                      >
-                        {STATUS_OPTIONS.map((status) => (
-                          <option key={status} value={status}>
-                            {ATTENDANCE_STATUS_LABELS[status]}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={record.status}
+                          onChange={(event) =>
+                            updateRecord(record.studentId, 'status', event.target.value as AttendanceStatus)
+                          }
+                          className={inputClassName + ' w-auto'}
+                        >
+                          <option value="present">DR — Dərsdə</option>
+                          <option value="late">GC — Gecikdi</option>
+                          <option value="absent_excused">QÜ — Qayıb (üzrlü)</option>
+                          <option value="absent_unexcused">QS — Qayıb (üzrsüz)</option>
+                        </select>
+                        {record.status === 'late' && (
+                          <input
+                            type="number"
+                            min={1}
+                            max={90}
+                            value={record.minutesLate || ''}
+                            onChange={(event) => updateRecord(record.studentId, 'minutesLate', Number(event.target.value))}
+                            className="w-14 text-xs border border-amber-300 rounded px-1.5 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50"
+                            placeholder="dəq"
+                          />
+                        )}
+                      </div>
                     ) : (
                       <AttendanceStatusPicker
                         value={record.status}
                         onChange={(status) => updateRecord(record.studentId, 'status', status)}
+                        minutesLate={record.minutesLate}
+                        onMinutesChange={(v) => updateRecord(record.studentId, 'minutesLate', v)}
                       />
                     )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      min={0}
-                      value={record.minutesLate ?? 0}
-                      disabled={!isLate}
-                      onChange={(event) => updateRecord(record.studentId, 'minutesLate', Number(event.target.value))}
-                      className={isLate ? inputClassName : disabledInputClassName}
-                    />
                   </td>
                   <td className="px-4 py-3">
                     <input
@@ -232,6 +224,27 @@ export default function Attendance() {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-3 mb-2 px-1">
+        <p className="text-xs font-medium text-lms-muted mb-1.5 uppercase tracking-wide">
+          Status izahı:
+        </p>
+        <div className="flex flex-wrap gap-x-5 gap-y-1">
+          {[
+            { abbr: 'DR', label: 'Dərsdə',       color: 'text-green-600' },
+            { abbr: 'GC', label: 'Gecikdi',       color: 'text-amber-600' },
+            { abbr: 'QÜ', label: 'Qayıb (üzrlü)',  color: 'text-blue-600'  },
+            { abbr: 'QS', label: 'Qayıb (üzrsüz)', color: 'text-red-600'   },
+          ].map((item) => (
+            <span key={item.abbr} className="flex items-center gap-1.5 text-xs text-lms-muted">
+              <span className={`font-bold text-xs ${item.color}`}>{item.abbr}</span>
+              <span>=</span>
+              <span>{item.label}</span>
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* Summary */}
