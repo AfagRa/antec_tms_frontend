@@ -19,6 +19,7 @@ import Attendance from "@/pages/teacher/Attendance";
 import Grades from "@/pages/Grades";
 import MaterialUpload from "@/pages/teacher/MaterialUpload";
 import Reports from "@/pages/Reports";
+import TeacherJournal from "@/pages/teacher/Journal";
 import TeacherProfile from "@/pages/teacher/Profile";
 import StudentProfile from "@/pages/student/Profile";
 import StudentLayout from "@/components/layout/StudentLayout";
@@ -125,6 +126,7 @@ export const router = createBrowserRouter([
       { path: "lessons/:id/attendance", element: <Attendance /> },
       { path: "lessons/:id/grades", element: <Grades /> },
       { path: "materials/add", element: <MaterialUpload /> },
+      { path: "journal", element: <TeacherJournal /> },
       { path: "reports", element: <Reports /> },
       { path: "profile", element: <TeacherProfile /> },
     ],
