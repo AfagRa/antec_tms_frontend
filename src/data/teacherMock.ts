@@ -74,7 +74,7 @@ export const MOCK_STUDENTS: Student[] = [
     email: 'orxan.rasulov@example.com',
     phone: '+994 50 000 00 03',
     joinedAt: '05.02.2023',
-    status: 'Aktiv',
+    status: 'Passiv' as const,
   },
   {
     id: '4',
@@ -83,7 +83,7 @@ export const MOCK_STUDENTS: Student[] = [
     email: 'leyla.huseynova@example.com',
     phone: '+994 50 000 00 04',
     joinedAt: '10.02.2023',
-    status: 'Aktiv',
+    status: 'Çıxıb' as const,
   },
   {
     id: '5',
@@ -92,7 +92,7 @@ export const MOCK_STUDENTS: Student[] = [
     email: 'rashad.aliyev@example.com',
     phone: '+994 50 000 00 05',
     joinedAt: '12.02.2023',
-    status: 'Passiv',
+    status: 'Məzun' as const,
   },
 ];
 
