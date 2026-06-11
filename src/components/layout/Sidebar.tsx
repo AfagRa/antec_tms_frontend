@@ -1,97 +1,40 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
+  Table2,
   BookOpen,
   CalendarCheck,
   PenLine,
-  Table2,
-  BarChart3,
+  Upload,
+  BarChart2,
   UserCircle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
-import { DEFAULT_LESSON_ID } from '../../data/teacherMock';
 
 interface NavItem {
-  key: string;
-  to: string;
   icon: LucideIcon;
   label: string;
-  end?: boolean;
-  isActiveMatch?: (pathname: string) => boolean;
+  route: string;
 }
 
 const navItems: NavItem[] = [
-  {
-    key: 'dashboard',
-    to: ROUTES.TEACHER_DASHBOARD,
-    icon: LayoutDashboard,
-    label: 'Müəllim Dashboard',
-    end: true,
-  },
-  {
-    key: 'groups',
-    to: ROUTES.TEACHER_GROUPS,
-    icon: Users,
-    label: 'Mənim Qruplarım',
-    end: true,
-    isActiveMatch: (pathname) => pathname === ROUTES.TEACHER_GROUPS,
-  },
-  {
-    key: 'lesson-create',
-    to: ROUTES.TEACHER_LESSON_CREATE,
-    icon: BookOpen,
-    label: 'Jurnal / Dərs Yarat',
-    isActiveMatch: (pathname) => pathname === ROUTES.TEACHER_LESSON_CREATE,
-  },
-  {
-    key: 'attendance',
-    to: ROUTES.TEACHER_ATTENDANCE(DEFAULT_LESSON_ID),
-    icon: CalendarCheck,
-    label: 'Davamiyyət Daxil Et',
-    isActiveMatch: (pathname) => /\/teacher\/lessons\/[^/]+\/attendance$/.test(pathname),
-  },
-  {
-    key: 'grades',
-    to: ROUTES.TEACHER_GRADES(DEFAULT_LESSON_ID),
-    icon: PenLine,
-    label: 'Qiymətləndirmə',
-    isActiveMatch: (pathname) => /\/teacher\/lessons\/[^/]+\/grades$/.test(pathname),
-  },
-  {
-    key: 'journal',
-    to: ROUTES.TEACHER_JOURNAL,
-    icon: Table2,
-    label: 'Jurnal',
-    end: true,
-  },
-  {
-    key: 'reports',
-    to: '#',
-    icon: BarChart3,
-    label: 'Hesabatlar',
-    end: true,
-  },
-  {
-    key: 'profile',
-    to: ROUTES.TEACHER_PROFILE,
-    icon: UserCircle,
-    label: 'Profilim',
-    end: true,
-  },
+  { icon: LayoutDashboard, label: 'Dashboard',         route: ROUTES.TEACHER_DASHBOARD },
+  { icon: Users,           label: 'Mənim Qruplarım',   route: ROUTES.TEACHER_GROUPS },
+  { icon: Table2,          label: 'Jurnal',             route: ROUTES.TEACHER_JOURNAL },
+  { icon: BookOpen,        label: 'Dərs Yarat',         route: ROUTES.TEACHER_LESSON_CREATE },
+  { icon: CalendarCheck,   label: 'Davamiyyət',         route: ROUTES.TEACHER_ATTENDANCE_HOME },
+  { icon: PenLine,         label: 'Qiymətləndirmə',     route: ROUTES.TEACHER_GRADES_HOME },
+  { icon: Upload,          label: 'Material Əlavə Et', route: ROUTES.TEACHER_MATERIAL },
 ];
 
-function resolveIsActive(item: NavItem, pathname: string, navActive: boolean) {
-  if (item.isActiveMatch) {
-    return item.isActiveMatch(pathname);
-  }
-  return navActive;
-}
+const utilityItems: NavItem[] = [
+  { icon: BarChart2,  label: 'Hesabatlar', route: ROUTES.TEACHER_REPORTS },
+  { icon: UserCircle, label: 'Profilim',   route: ROUTES.TEACHER_PROFILE },
+];
 
 export default function Sidebar() {
-  const { pathname } = useLocation();
-
   return (
     <aside className="fixed left-0 top-0 z-20 flex h-full w-[260px] flex-col border-r border-surface-dark/20 bg-surface shadow-neu-lg">
       <div className="flex h-[64px] items-center gap-3 border-b border-surface-dark/20 px-4">
@@ -119,26 +62,43 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex flex-col gap-1 px-3 py-4">
-        {navItems.map((item) => {
-          const { key, to, icon: Icon, label, end } = item;
-
-          return (
-            <NavLink
-              key={key}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-neu px-4 py-2.5 text-sm font-bold tracking-wide transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary ${resolveIsActive(item, pathname, isActive)
+        {navItems.map((item) => (
+          <NavLink
+            key={item.route}
+            to={item.route}
+            end
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-neu px-4 py-2.5 text-sm font-bold tracking-wide transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary ${
+                isActive
                   ? 'bg-primary text-white shadow-neu-sm'
                   : 'text-text-base/60 hover:text-text-base hover:shadow-neu-sm'
-                }`
-              }
-            >
-              <Icon size={18} strokeWidth={1.5} />
-              <span>{label}</span>
-            </NavLink>
-          );
-        })}
+              }`
+            }
+          >
+            <item.icon size={18} strokeWidth={1.5} />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+
+        <div className="mx-3 my-2 h-px bg-lms-border" />
+
+        {utilityItems.map((item) => (
+          <NavLink
+            key={item.route}
+            to={item.route}
+            end
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-neu px-4 py-2.5 text-sm font-bold tracking-wide transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary ${
+                isActive
+                  ? 'bg-primary text-white shadow-neu-sm'
+                  : 'text-text-base/60 hover:text-text-base hover:shadow-neu-sm'
+              }`
+            }
+          >
+            <item.icon size={18} strokeWidth={1.5} />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
       </nav>
     </aside>
   );
