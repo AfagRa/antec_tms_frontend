@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '../../hooks/useAuth'
 
 export default function StudentProfile() {
+  const { user } = useAuth()
   // Şifrəni Dəyiş state
   const [pwForm, setPwForm] = useState({
     current: '',
@@ -50,15 +52,15 @@ export default function StudentProfile() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-lms-student-muted mb-1">Ad</label>
-            <input type="text" value="Tələbə" readOnly className="neu-input opacity-60 cursor-not-allowed" />
+            <input type="text" value={user?.name ?? 'Tələbə'} readOnly className="neu-input opacity-60 cursor-not-allowed" />
           </div>
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-lms-student-muted mb-1">Soyad</label>
-            <input type="text" value="Adı" readOnly className="neu-input opacity-60 cursor-not-allowed" />
+            <input type="text" value={user?.surname ?? 'Adı'} readOnly className="neu-input opacity-60 cursor-not-allowed" />
           </div>
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-lms-student-muted mb-1">Email</label>
-            <input type="email" value="telebe@example.com" readOnly className="neu-input opacity-60 cursor-not-allowed" />
+            <input type="email" value={user?.email ?? 'telebe@example.com'} readOnly className="neu-input opacity-60 cursor-not-allowed" />
           </div>
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-lms-student-muted mb-1">Telefon</label>

@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '../../hooks/useAuth'
 
 export default function TeacherProfile() {
+  const { user } = useAuth()
   // Şifrəni Dəyiş state
   const [pwForm, setPwForm] = useState({
     current: '',
@@ -50,19 +52,19 @@ export default function TeacherProfile() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-lms-muted mb-1">Ad</label>
-            <input type="text" value="Müəllim" readOnly className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
+            <input type="text" value={user?.name ?? 'Müəllim'} readOnly className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
           </div>
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-lms-muted mb-1">Soyad</label>
-            <input type="text" value="Adı" readOnly className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
+            <input type="text" value={user?.surname ?? 'Adı'} readOnly className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
           </div>
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-lms-muted mb-1">Email</label>
-            <input type="email" value="muellim@example.com" readOnly className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
+            <input type="email" value={user?.email ?? 'muellim@example.com'} readOnly className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
           </div>
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-lms-muted mb-1">Telefon</label>
-            <input type="text" value="+994501234567" readOnly className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
+            <input type="text" value={user?.phone ?? '+994501234567'} readOnly className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full bg-gray-50 text-gray-500 cursor-not-allowed outline-none" />
           </div>
           <div className="flex flex-col md:col-span-2">
             <label className="text-xs font-semibold text-lms-muted mb-1">İxtisas</label>
