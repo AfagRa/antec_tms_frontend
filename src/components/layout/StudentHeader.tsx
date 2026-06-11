@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { Search, User } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
+import { useAuth } from '../../hooks/useAuth';
 
-interface StudentHeaderProps {
-  userName?: string;
-}
+const ROLE_LABEL: Record<string, string> = { teacher: 'Müəllim', student: 'Tələbə' };
 
-export default function StudentHeader({ userName = 'Tələbə Adı' }: StudentHeaderProps) {
+export default function StudentHeader() {
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -30,14 +30,16 @@ export default function StudentHeader({ userName = 'Tələbə Adı' }: StudentHe
 
       <div className="flex items-center gap-3">
         <span className="rounded-full bg-lms-student-accentLt px-2.5 py-1 text-xs font-medium text-lms-student-accent">
-          Tələbə
+          {user ? ROLE_LABEL[user.role] ?? user.role : 'Tələbə'}
         </span>
         <button
           onClick={() => navigate(ROUTES.STUDENT_PROFILE)}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer bg-transparent border-0 outline-none text-left"
           aria-label="İstifadəçi profilinə keç"
         >
-          <span className="text-sm font-medium text-lms-student-text">{userName}</span>
+          <span className="text-sm font-medium text-lms-student-text">
+            {user ? `${user.name} ${user.surname}` : 'Tələbə Adı'}
+          </span>
           <div
             className="flex h-9 w-9 items-center justify-center rounded-full bg-lms-student-inset"
             style={{ boxShadow: '3px 3px 6px #C8D0D8, -3px -3px 6px #FFFFFF' }}

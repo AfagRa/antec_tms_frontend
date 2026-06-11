@@ -1,17 +1,13 @@
 import { useId } from 'react';
 import type { AttendanceStatus } from '../../types';
+import { ATTENDANCE_STATUS_LABELS } from '../../types';
 
 interface AttendanceStatusPickerProps {
   value: AttendanceStatus;
   onChange: (value: AttendanceStatus) => void;
 }
 
-const STATUS_OPTIONS: { value: AttendanceStatus; label: string }[] = [
-  { value: 'present', label: 'present' },
-  { value: 'absent_excused', label: 'absent_excused' },
-  { value: 'absent_unexcused', label: 'absent_unexcused' },
-  { value: 'late', label: 'late' },
-];
+const STATUS_OPTIONS: AttendanceStatus[] = ['present', 'absent_excused', 'absent_unexcused', 'late'];
 
 export default function AttendanceStatusPicker({
   value,
@@ -22,19 +18,19 @@ export default function AttendanceStatusPicker({
   return (
     <div className="flex flex-wrap gap-3">
       {STATUS_OPTIONS.map((option) => {
-        const selected = value === option.value;
+        const selected = value === option;
 
         return (
           <label
-            key={option.value}
+            key={option}
             className="flex cursor-pointer items-center gap-2"
           >
             <input
               type="radio"
               name={groupName}
-              value={option.value}
+              value={option}
               checked={selected}
-              onChange={() => onChange(option.value)}
+              onChange={() => onChange(option)}
               className="sr-only"
             />
             <span
@@ -44,7 +40,7 @@ export default function AttendanceStatusPicker({
             >
               {selected && <span className="h-2 w-2 rounded-full bg-primary" />}
             </span>
-            <span className="text-sm text-text-base">{option.label}</span>
+            <span className="text-sm text-text-base">{ATTENDANCE_STATUS_LABELS[option]}</span>
           </label>
         );
       })}

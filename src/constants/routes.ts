@@ -6,6 +6,7 @@ export const ROUTES = {
   TEACHER_ATTENDANCE: (id: string) => `/teacher/lessons/${id}/attendance`,
   TEACHER_GRADES: (id: string) => `/teacher/lessons/${id}/grades`,
   TEACHER_MATERIAL: '/teacher/materials/add',
+  TEACHER_JOURNAL: '/teacher/journal',
   TEACHER_REPORTS: '/teacher/reports',
   TEACHER_PROFILE: '/teacher/profile',
   STUDENT_DASHBOARD: '/student/dashboard',

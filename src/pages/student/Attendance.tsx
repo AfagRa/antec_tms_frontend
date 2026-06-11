@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import NoteCell from '../../components/ui/NoteCell'
 
-type AttendanceStatus = 'İştirak etdi' | 'Üzrsüz' | 'Gecikdi' | 'Üzrlü'
+type AttendanceStatus = 'Dərsdə' | 'Qayıb (üzrsüz)' | 'Gecikdi' | 'Qayıb (üzrlü)'
 
 interface AttendanceRecord {
   id: string;
@@ -21,7 +21,7 @@ const records: AttendanceRecord[] = [
     date: '02.06.2026',
     groupName: 'Python-A1',
     topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'İştirak etdi',
+    statusLabel: 'Dərsdə',
     minutesLate: 0,
     reason: '',
     teacherNote: 'Tapşırığı tam yerinə yetirib',
@@ -31,7 +31,7 @@ const records: AttendanceRecord[] = [
     date: '02.06.2026',
     groupName: 'Python-A1',
     topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'Üzrsüz',
+    statusLabel: 'Qayıb (üzrsüz)',
     minutesLate: 0,
     reason: '',
     teacherNote: 'Tapşırığı tam yerinə yetirib',
@@ -61,7 +61,7 @@ const records: AttendanceRecord[] = [
     date: '02.06.2026',
     groupName: 'Python-A1',
     topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'İştirak etdi',
+    statusLabel: 'Dərsdə',
     minutesLate: 0,
     reason: '',
     teacherNote: 'Tapşırığı tam yerinə yetirib',
@@ -71,7 +71,7 @@ const records: AttendanceRecord[] = [
     date: '02.06.2026',
     groupName: 'Python-A1',
     topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'İştirak etdi',
+    statusLabel: 'Dərsdə',
     minutesLate: 0,
     reason: '',
     teacherNote: 'Tapşırığı tam yerinə yetirib',
@@ -81,7 +81,7 @@ const records: AttendanceRecord[] = [
     date: '01.06.2026',
     groupName: 'Python-A1',
     topic: 'Giriş dərsi',
-    statusLabel: 'Üzrlü',
+    statusLabel: 'Qayıb (üzrlü)',
     minutesLate: 0,
     reason: 'Xəstəlik',
     teacherNote: 'Növbəti dərsə hazırlaşsın',
@@ -91,7 +91,7 @@ const records: AttendanceRecord[] = [
     date: '01.06.2026',
     groupName: 'Python-A2',
     topic: 'Massivlərlə iş',
-    statusLabel: 'İştirak etdi',
+    statusLabel: 'Dərsdə',
     minutesLate: 0,
     reason: '',
     teacherNote: 'Aktiv iştirak etdi',
@@ -115,9 +115,9 @@ export default function StudentAttendance() {
       .filter(r => selectedGroup === 'Bütün Qruplar' || r.groupName === selectedGroup)
       .filter(r => {
         if (selectedStatus === 'Tilter') return true
-        if (selectedStatus === 'İştirak etdi') return r.statusLabel === 'İştirak etdi'
-        if (selectedStatus === 'Üzrlü qayıb') return r.statusLabel === 'Üzrlü'
-        if (selectedStatus === 'Üzrsüz qayıb') return r.statusLabel === 'Üzrsüz'
+        if (selectedStatus === 'Dərsdə') return r.statusLabel === 'Dərsdə'
+        if (selectedStatus === 'Qayıb (üzrlü)') return r.statusLabel === 'Qayıb (üzrlü)'
+        if (selectedStatus === 'Qayıb (üzrsüz)') return r.statusLabel === 'Qayıb (üzrsüz)'
         if (selectedStatus === 'Gecikdi') return r.statusLabel === 'Gecikdi'
         return true
       })
@@ -151,14 +151,14 @@ export default function StudentAttendance() {
 
   const getStatusBadge = (status: AttendanceStatus) => {
     switch (status) {
-      case 'İştirak etdi':
-        return <span className="neu-badge bg-green-100 text-green-700">İştirak etdi</span>
-      case 'Üzrsüz':
-        return <span className="neu-badge bg-red-100 text-red-600">Üzrsüz</span>
+      case 'Dərsdə':
+        return <span className="neu-badge bg-green-100 text-green-700">Dərsdə</span>
+      case 'Qayıb (üzrsüz)':
+        return <span className="neu-badge bg-red-100 text-red-600">Qayıb (üzrsüz)</span>
       case 'Gecikdi':
         return <span className="neu-badge bg-amber-100 text-amber-700">Gecikdi</span>
-      case 'Üzrlü':
-        return <span className="neu-badge bg-blue-100 text-blue-600">Üzrlü</span>
+      case 'Qayıb (üzrlü)':
+        return <span className="neu-badge bg-blue-100 text-blue-600">Qayıb (üzrlü)</span>
       default:
         return null
     }
@@ -208,9 +208,9 @@ export default function StudentAttendance() {
               className="neu-input h-[38px] cursor-pointer"
             >
               <option value="Tilter">Tilter</option>
-              <option value="İştirak etdi">İştirak etdi</option>
-              <option value="Üzrlü qayıb">Üzrlü qayıb</option>
-              <option value="Üzrsüz qayıb">Üzrsüz qayıb</option>
+              <option value="Dərsdə">Dərsdə</option>
+              <option value="Qayıb (üzrlü)">Qayıb (üzrlü)</option>
+              <option value="Qayıb (üzrsüz)">Qayıb (üzrsüz)</option>
               <option value="Gecikdi">Gecikdi</option>
             </select>
           </div>
@@ -235,7 +235,7 @@ export default function StudentAttendance() {
         {/* Card 1 */}
         <div className="neu-card py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-green-600 leading-snug">
-            İştirak etdi
+            Dərsdə
           </span>
           <span className="text-2xl font-bold text-lms-student-text mt-1">
             18 dərs
@@ -245,7 +245,7 @@ export default function StudentAttendance() {
         {/* Card 2 */}
         <div className="neu-card py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-blue-500 leading-snug">
-            Üzrlü qayıb
+            Qayıb (üzrlü)
           </span>
           <span className="text-2xl font-bold text-lms-student-text mt-1">
             1 dərs
@@ -255,7 +255,7 @@ export default function StudentAttendance() {
         {/* Card 3 */}
         <div className="neu-card py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-red-500 leading-snug">
-            Üzrsüz qayıb
+            Qayıb (üzrsüz)
           </span>
           <span className="text-2xl font-bold text-lms-student-text mt-1">
             2 dərs
