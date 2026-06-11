@@ -2,6 +2,29 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Save } from 'lucide-react';
 import type { JournalLesson, JournalCell, GradeCategory } from '../../types';
 
+const ATTENDANCE_OPTIONS: Array<{ value: JournalCell['attendance']; label: string }> = [
+  { value: null,  label: '—' },
+  { value: 'D',   label: 'Dərsdə' },
+  { value: 'Q',   label: 'Qayıb' },
+  { value: 'QÜ',  label: 'Q/Üzrlü' },
+  { value: 'G',   label: 'Gecikdi' },
+];
+
+const ATTENDANCE_COLOR: Record<string, string> = {
+  D:  '#16a34a',
+  Q:  '#ef4444',
+  QÜ: '#3b82f6',
+  G:  '#d97706',
+};
+
+const CATEGORY_OPTIONS: { value: GradeCategory; label: string }[] = [
+  { value: 'daily',    label: 'Dərs' },
+  { value: 'homework', label: 'Ev tapşırığı' },
+  { value: 'module',   label: 'Modul' },
+  { value: 'project',  label: 'Layihə' },
+  { value: 'final',    label: 'Final' },
+];
+
 const GROUPS = [
   { id: '1', name: 'Python-A1' },
   { id: '2', name: 'Code-A2' },
@@ -45,14 +68,6 @@ const STUDENTS_BY_GROUP: Record<string, { id: string; fullName: string }[]> = {
   ],
 };
 
-const STATUSES: Array<{ value: JournalCell['attendance']; label: string; color: string }> = [
-  { value: null,  label: '·',  color: 'text-gray-300' },
-  { value: 'D',   label: 'D',  color: 'text-green-600 font-bold' },
-  { value: 'Q',   label: 'Q',  color: 'text-red-500 font-bold' },
-  { value: 'QÜ',  label: 'QÜ', color: 'text-blue-500 font-bold' },
-  { value: 'G',   label: 'G',  color: 'text-amber-500 font-bold' },
-];
-
 type JournalData = Record<string, Record<string, JournalCell>>;
 
 export default function TeacherJournal() {
@@ -76,7 +91,7 @@ export default function TeacherJournal() {
 
   const getCell = useCallback(
     (studentId: string, lessonId: string): JournalCell =>
-      journalData[studentId]?.[lessonId] ?? { attendance: null, grade: null },
+      journalData[studentId]?.[lessonId] ?? { attendance: null, grade: null, minutesLate: 0 },
     [journalData],
   );
 
@@ -92,13 +107,6 @@ export default function TeacherJournal() {
     },
     [getCell],
   );
-
-  const handleAttendanceCycle = (studentId: string, lessonId: string) => {
-    const cell = getCell(studentId, lessonId);
-    const currentIdx = STATUSES.findIndex((s) => s.value === cell.attendance);
-    const nextIdx = (currentIdx + 1) % STATUSES.length;
-    setCell(studentId, lessonId, { attendance: STATUSES[nextIdx].value });
-  };
 
   const handleSaveJournal = () => {
     setToast('saving');
@@ -145,110 +153,172 @@ export default function TeacherJournal() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto lms-card p-0 overflow-hidden">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            {/* Row 1 — lesson dates */}
-            <tr>
-              <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border px-4 py-3 text-left font-medium text-lms-muted text-xs uppercase tracking-wide min-w-[180px]">
-                Tələbənin adı
-              </th>
-              {lessons.map((lesson) => (
-                <th
-                  key={lesson.id}
-                  colSpan={2}
-                  className="border-b border-r border-lms-border px-2 py-2 text-center font-medium text-lms-heading text-xs min-w-[100px]"
-                  title={lesson.topic}
-                >
-                  <div className="font-semibold">{lesson.date}</div>
-                  <div className="text-lms-muted font-normal truncate max-w-[96px] mx-auto" title={lesson.topic}>
-                    {lesson.topic.length > 12 ? `${lesson.topic.slice(0, 12)}…` : lesson.topic}
-                  </div>
+      <div className="lms-card p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table
+            className="border-collapse text-sm"
+            style={{ minWidth: `${180 + lessons.length * 240 + 80}px` }}
+          >
+            <thead>
+              {/* Row 1 — lesson dates */}
+              <tr>
+                <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border px-4 py-3 text-left font-medium text-lms-muted text-xs uppercase tracking-wide min-w-[180px]">
+                  Tələbənin adı
                 </th>
-              ))}
-              <th className="sticky right-0 z-20 bg-white border-b border-l border-lms-border px-3 py-3 text-center font-medium text-lms-muted text-xs uppercase tracking-wide min-w-[80px]">
-                Ümumi %
-              </th>
-            </tr>
-
-            {/* Row 2 — sub-headers */}
-            <tr>
-              <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border px-4 py-1" />
-              {lessons.map((lesson) => (
-                <React.Fragment key={lesson.id}>
-                  <th className="border-b border-r border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-gray-50 w-[48px]">
-                    D/Q
+                {lessons.map((lesson) => (
+                  <th
+                    key={lesson.id}
+                    colSpan={2}
+                    className="border-b border-r border-lms-border px-2 py-2 text-center font-medium text-lms-heading text-xs min-w-[120px]"
+                    title={lesson.topic}
+                  >
+                    <div className="font-semibold">{lesson.date}</div>
+                    <div className="text-lms-muted font-normal truncate max-w-[96px] mx-auto" title={lesson.topic}>
+                      {lesson.topic.length > 12 ? `${lesson.topic.slice(0, 12)}…` : lesson.topic}
+                    </div>
                   </th>
-                  <th className="border-b border-r border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-gray-50 w-[52px]">
-                    Bal
-                  </th>
-                </React.Fragment>
-              ))}
-              <th className="sticky right-0 z-20 bg-white border-b border-l border-lms-border px-3 py-1" />
-            </tr>
-          </thead>
+                ))}
+                <th className="sticky right-0 z-20 bg-gray-50 border-b border-l border-lms-border px-3 py-3 text-center font-medium text-lms-muted text-xs uppercase tracking-wide min-w-[80px]">
+                  Ümumi %
+                </th>
+              </tr>
 
-          <tbody>
-            {students.map((student) => {
-              const studentGrades = lessons
-                .map((l) => getCell(student.id, l.id).grade)
-                .filter((g): g is number => g !== null && g !== undefined);
-              const avg =
-                studentGrades.length > 0
-                  ? Math.round(studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length)
-                  : null;
-              const avgColor =
-                avg === null ? 'text-gray-300' : avg >= 80 ? 'text-green-600 font-semibold' : avg >= 60 ? 'text-amber-600 font-semibold' : 'text-red-500 font-semibold';
+              {/* Row 2 — sub-headers */}
+              <tr>
+                <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border px-4 py-1" />
+                {lessons.map((lesson) => (
+                  <React.Fragment key={lesson.id}>
+                    <th className="border-b border-r border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-gray-50 w-[140px]">
+                      Davamiyyət
+                    </th>
+                    <th className="border-b border-r border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-gray-50 w-[100px]">
+                      Qiymət
+                    </th>
+                  </React.Fragment>
+                ))}
+                <th className="sticky right-0 z-20 bg-gray-50 border-b border-l border-lms-border px-3 py-1" />
+              </tr>
+            </thead>
 
-              return (
-                <tr key={student.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="sticky left-0 z-10 bg-white border-b border-r border-lms-border px-4 py-2 font-medium text-lms-heading whitespace-nowrap">
-                    {student.fullName}
-                  </td>
-                  {lessons.map((lesson) => {
-                    const cell = getCell(student.id, lesson.id);
-                    const attIdx = STATUSES.findIndex((s) => s.value === cell.attendance);
+            <tbody>
+              {students.map((student) => {
+                const studentGrades = lessons
+                  .map((l) => getCell(student.id, l.id).grade)
+                  .filter((g): g is number => g !== null && g !== undefined);
+                const avg =
+                  studentGrades.length > 0
+                    ? Math.round(studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length)
+                    : null;
+                const avgColor =
+                  avg === null ? 'text-gray-300' : avg >= 80 ? 'text-green-600 font-semibold' : avg >= 60 ? 'text-amber-600 font-semibold' : 'text-red-500 font-semibold';
 
-                    return (
-                      <React.Fragment key={lesson.id}>
-                        {/* Attendance cell */}
-                        <td className="border-b border-r border-lms-border px-1 py-2 text-center w-[48px]">
-                          <button
-                            onClick={() => handleAttendanceCycle(student.id, lesson.id)}
-                            className={`w-8 h-8 rounded-md text-xs transition-all hover:bg-gray-100 ${STATUSES[attIdx].color}`}
-                            title={`Növbəti: ${STATUSES[(attIdx + 1) % STATUSES.length].label}`}
-                          >
-                            {cell.attendance ?? '·'}
-                          </button>
-                        </td>
-                        {/* Grade cell */}
-                        <td className="border-b border-r border-lms-border px-1 py-2 w-[52px]">
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={cell.grade ?? ''}
-                            onChange={(e) =>
-                              setCell(student.id, lesson.id, {
-                                grade: e.target.value === '' ? null : Number(e.target.value),
-                              })
-                            }
-                            placeholder="—"
-                            className="w-full text-center text-xs border border-transparent rounded hover:border-lms-border focus:border-lms-green focus:ring-1 focus:ring-lms-green/30 outline-none py-1 bg-transparent focus:bg-white transition-all"
-                          />
-                        </td>
-                      </React.Fragment>
-                    );
-                  })}
-                  {/* Average cell */}
-                  <td className={`sticky right-0 z-10 bg-white border-b border-l border-lms-border px-3 py-2 text-center font-medium text-sm ${avgColor}`}>
-                    {avg !== null ? `${avg}%` : '—'}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                return (
+                  <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="sticky left-0 z-10 bg-white border-b border-r border-lms-border px-4 py-2 font-medium text-lms-heading whitespace-nowrap">
+                      {student.fullName}
+                    </td>
+                    {lessons.map((lesson) => {
+                      const cell = getCell(student.id, lesson.id);
+                      const isWriteable = cell.attendance === 'D' || cell.attendance === 'G';
+
+                      return (
+                        <React.Fragment key={lesson.id}>
+                          {/* Attendance cell */}
+                          <td className="border-b border-r border-lms-border px-1 py-1.5 w-[140px]">
+                            <div className="flex items-center gap-1">
+                              <select
+                                value={cell.attendance ?? ''}
+                                onChange={(e) => {
+                                  const val = (e.target.value || null) as JournalCell['attendance'];
+                                  setCell(student.id, lesson.id, {
+                                    attendance: val,
+                                    minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
+                                  });
+                                }}
+                                className="text-xs border border-lms-border rounded px-1 py-1 focus:ring-1 focus:ring-lms-green/40 focus:border-lms-green bg-white outline-none w-[80px]"
+                                style={{ color: cell.attendance ? (ATTENDANCE_COLOR[cell.attendance] ?? '#94a3b8') : '#94a3b8' }}
+                              >
+                                {ATTENDANCE_OPTIONS.map((opt) => (
+                                  <option key={opt.value ?? ''} value={opt.value ?? ''} style={{ color: opt.value ? ATTENDANCE_COLOR[opt.value] : '#94a3b8' }}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+
+                              {cell.attendance === 'G' && (
+                                <div className="flex items-center gap-0.5">
+                                  <span className="text-xs text-lms-muted">(</span>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={90}
+                                    value={cell.minutesLate ?? ''}
+                                    onChange={(e) =>
+                                      setCell(student.id, lesson.id, {
+                                        minutesLate: e.target.value === '' ? 0 : Number(e.target.value),
+                                      })
+                                    }
+                                    placeholder="dəq"
+                                    className="w-[36px] text-xs border border-amber-300 rounded px-1 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50"
+                                    title="Gecikdiyi dəqiqə"
+                                  />
+                                  <span className="text-xs text-lms-muted">)</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Grade cell */}
+                          <td className="border-b border-r border-lms-border px-1 py-1.5 w-[100px]">
+                            {isWriteable ? (
+                              <div className="flex flex-col gap-1">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  value={cell.grade ?? ''}
+                                  onChange={(e) =>
+                                    setCell(student.id, lesson.id, {
+                                      grade: e.target.value === '' ? null : Number(e.target.value),
+                                    })
+                                  }
+                                  placeholder="Bal"
+                                  className="w-full text-center text-xs border border-lms-border rounded px-1 py-1 focus:border-lms-green focus:ring-1 focus:ring-lms-green/30 outline-none bg-white"
+                                />
+                                <select
+                                  value={cell.category ?? 'daily'}
+                                  onChange={(e) =>
+                                    setCell(student.id, lesson.id, {
+                                      category: e.target.value as GradeCategory,
+                                    })
+                                  }
+                                  className="w-full text-center text-xs border border-lms-border rounded px-1 py-0.5 focus:border-lms-green outline-none bg-white text-lms-muted"
+                                  title="Qiymət kateqoriyası"
+                                >
+                                  {CATEGORY_OPTIONS.map((cat) => (
+                                    <option key={cat.value} value={cat.value}>
+                                      {cat.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            ) : (
+                              <div className="text-center text-gray-300 text-sm select-none">—</div>
+                            )}
+                          </td>
+                        </React.Fragment>
+                      );
+                    })}
+                    {/* Average cell */}
+                    <td className={`sticky right-0 z-10 bg-gray-50 border-b border-l border-lms-border px-3 py-2 text-center font-medium text-sm ${avgColor}`}>
+                      {avg !== null ? `${avg}%` : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Legend */}
@@ -258,7 +328,8 @@ export default function TeacherJournal() {
         <span className="text-red-500 font-bold">Q</span><span>= Qayıb</span>
         <span className="text-blue-500 font-bold">QÜ</span><span>= Qayıb (üzrlü)</span>
         <span className="text-amber-500 font-bold">G</span><span>= Gecikdi</span>
-        <span className="ml-2 italic">Hücrəyə klikləyin → statusu dəyişdirin. Bal sahəsinə rəqəm daxil edin.</span>
+        <span className="text-amber-500 font-bold">G(15)</span><span>= 15 dəqiqə gecikdi</span>
+        <span className="ml-2 italic">Status və bal sahələrini redaktə edin.</span>
       </div>
     </div>
   );
