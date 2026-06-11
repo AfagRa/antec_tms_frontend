@@ -202,17 +202,28 @@ export const GRADE_CATEGORY_STYLES: Record<GradeCategory, string> = {
   homework: 'bg-green-100 text-green-700',
 }
 
+export type StudentGroupStatus = 'Aktiv' | 'Passiv' | 'Çıxıb' | 'Məzun'
+
+export const STUDENT_STATUS_CONFIG: Record<StudentGroupStatus, {
+  label: string; bg: string; text: string
+}> = {
+  Aktiv:  { label: 'Aktiv',  bg: 'bg-green-100',  text: 'text-green-700'  },
+  Passiv: { label: 'Passiv', bg: 'bg-gray-100',   text: 'text-gray-600'   },
+  Çıxıb:  { label: 'Çıxıb',  bg: 'bg-red-100',    text: 'text-red-600'    },
+  Məzun:  { label: 'Məzun',  bg: 'bg-purple-100', text: 'text-purple-700' },
+}
+
 export type AttendanceStatus = 'present' | 'absent_excused' | 'absent_unexcused' | 'late'
 
 export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
-  present:          'Dərsdə',
+  present:          'İştirak edib',
   absent_excused:   'Qayıb (üzrlü)',
   absent_unexcused: 'Qayıb (üzrsüz)',
   late:             'Gecikdi',
 }
 
 export const ATTENDANCE_STATUS_SHORT: Record<AttendanceStatus, string> = {
-  present:          'Dərsdə',
+  present:          'İ/E',
   absent_excused:   'Q/Üzrlü',
   absent_unexcused: 'Q/Üzrsüz',
   late:             'Gecikdi',
@@ -225,8 +236,9 @@ export interface JournalLesson {
 }
 
 export interface JournalCell {
-  attendance: 'D' | 'Q' | 'QÜ' | 'G' | null
+  attendance: 'I/E' | 'Q' | 'QÜ' | 'G' | null
   grade?: number | null
+  minutesLate?: number
   maxGrade?: number
   category?: GradeCategory
 }

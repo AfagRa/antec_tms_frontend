@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
 import {
   MOCK_STUDENTS,
@@ -8,6 +8,7 @@ import {
   getLessonsByGroupId,
   getMaterialsByGroupId,
 } from '../../data/teacherMock';
+import { STUDENT_STATUS_CONFIG, type StudentGroupStatus } from '../../types';
 import type { GroupStatus, LessonStatus } from '../../types';
 
 type TabId = 'students' | 'lessons' | 'materials';
@@ -29,12 +30,6 @@ function groupStatusBadgeClass(status: GroupStatus) {
   }
 }
 
-function studentStatusBadgeClass(status: 'Aktiv' | 'Passiv') {
-  return status === 'Aktiv'
-    ? 'bg-primary/10 text-primary'
-    : 'bg-gray-100 text-gray-600';
-}
-
 function lessonStatusBadgeClass(status: LessonStatus) {
   return status === 'completed'
     ? 'bg-primary/10 text-primary'
@@ -45,6 +40,11 @@ export default function GroupDetail() {
   const { id = '1' } = useParams();
   const group = getGroupById(id);
   const [activeTab, setActiveTab] = useState<TabId>('students');
+  const [statusFilter, setStatusFilter] = useState<StudentGroupStatus | 'all'>('all');
+
+  const filteredStudents = statusFilter === 'all'
+    ? MOCK_STUDENTS
+    : MOCK_STUDENTS.filter((s) => (s.status as StudentGroupStatus) === statusFilter);
 
   const lessons = getLessonsByGroupId(id);
   const materials = getMaterialsByGroupId(id);
@@ -57,15 +57,22 @@ export default function GroupDetail() {
     );
   }
 
+  const navigate = useNavigate();
+
   return (
     <div>
+      <button
+        onClick={() => navigate(ROUTES.TEACHER_GROUPS)}
+        className="flex items-center gap-1.5 text-sm text-lms-muted hover:text-lms-heading transition-colors mb-4 group"
+      >
+        <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+        Mənim Qruplarıma Qayıt
+      </button>
+
       <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-semibold text-text-base">
           Qrup Detalları: {group.name}
         </h1>
-        <span className="shrink-0 text-xs text-text-base/50">
-          Muellim_Telebe_Paneli_Spesifikasiya_v1.0.docx
-        </span>
       </div>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-6 mb-6">
@@ -132,6 +139,22 @@ export default function GroupDetail() {
         <div className="p-5">
           {activeTab === 'students' && (
             <div className="overflow-x-auto">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs text-lms-muted">Status:</span>
+                {(['all', 'Aktiv', 'Passiv', 'Çıxıb', 'Məzun'] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(s)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+                      statusFilter === s
+                        ? 'bg-lms-green text-white border-lms-green'
+                        : 'bg-white text-lms-muted border-lms-border hover:border-lms-green/50'
+                    }`}
+                  >
+                    {s === 'all' ? 'Hamısı' : s}
+                  </button>
+                ))}
+              </div>
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr className="border-b border-surface-dark/20 bg-surface-light">
@@ -159,23 +182,26 @@ export default function GroupDetail() {
                   </tr>
                 </thead>
                 <tbody>
-                  {MOCK_STUDENTS.map((student, index) => (
-                    <tr key={student.id} className="border-b border-surface-dark/20 last:border-0">
-                      <td className="px-3 py-3 text-sm text-text-base">{index + 1}</td>
-                      <td className="px-3 py-3 text-sm text-text-base">{student.name}</td>
-                      <td className="px-3 py-3 text-sm text-text-base">{student.surname}</td>
-                      <td className="px-3 py-3 text-sm text-text-base">{student.email}</td>
-                      <td className="px-3 py-3 text-sm text-text-base">{student.phone}</td>
-                      <td className="px-3 py-3 text-sm text-text-base">{student.joinedAt}</td>
-                      <td className="px-3 py-3">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${studentStatusBadgeClass(student.status)}`}
-                        >
-                          {student.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredStudents.map((student, index) => {
+                    const cfg = STUDENT_STATUS_CONFIG[student.status as StudentGroupStatus]
+                      ?? STUDENT_STATUS_CONFIG['Aktiv']
+                    return (
+                      <tr key={student.id} className="border-b border-surface-dark/20 last:border-0">
+                        <td className="px-3 py-3 text-sm text-text-base">{index + 1}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">{student.name}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">{student.surname}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">{student.email}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">{student.phone}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">{student.joinedAt}</td>
+                        <td className="px-3 py-3">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cfg.bg} ${cfg.text}`}
+                          >
+                            {cfg.label}
+                          </span>
+                        </td>
+                      </tr>
+                    )})}
                 </tbody>
               </table>
             </div>

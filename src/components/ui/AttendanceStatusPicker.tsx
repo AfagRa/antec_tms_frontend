@@ -1,49 +1,59 @@
-import { useId } from 'react';
 import type { AttendanceStatus } from '../../types';
-import { ATTENDANCE_STATUS_LABELS } from '../../types';
 
 interface AttendanceStatusPickerProps {
   value: AttendanceStatus;
   onChange: (value: AttendanceStatus) => void;
+  minutesLate?: number;
+  onMinutesChange?: (v: number) => void;
 }
 
-const STATUS_OPTIONS: AttendanceStatus[] = ['present', 'absent_excused', 'absent_unexcused', 'late'];
+const OPTIONS: { value: AttendanceStatus; abbr: string; activeColor: string }[] = [
+  { value: 'present',          abbr: 'DR', activeColor: 'bg-green-100 border-green-400 text-green-700' },
+  { value: 'late',             abbr: 'GC', activeColor: 'bg-amber-100 border-amber-400 text-amber-700' },
+  { value: 'absent_excused',   abbr: 'QÜ', activeColor: 'bg-blue-100  border-blue-400  text-blue-700'  },
+  { value: 'absent_unexcused', abbr: 'QS', activeColor: 'bg-red-100   border-red-400   text-red-700'   },
+];
 
 export default function AttendanceStatusPicker({
   value,
   onChange,
+  minutesLate = 0,
+  onMinutesChange,
 }: AttendanceStatusPickerProps) {
-  const groupName = useId();
-
   return (
-    <div className="flex flex-wrap gap-3">
-      {STATUS_OPTIONS.map((option) => {
-        const selected = value === option;
-
-        return (
-          <label
-            key={option}
-            className="flex cursor-pointer items-center gap-2"
+    <div>
+      <div className="flex items-center gap-1">
+        {OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={`w-9 h-8 rounded-md text-xs font-bold border-2 transition-all ${
+              value === opt.value
+                ? opt.activeColor
+                : 'bg-gray-50 border-gray-200 text-gray-400 hover:border-gray-300'
+            }`}
+            title={opt.abbr}
           >
-            <input
-              type="radio"
-              name={groupName}
-              value={option}
-              checked={selected}
-              onChange={() => onChange(option)}
-              className="sr-only"
-            />
-            <span
-              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
-                selected ? 'ring-2 ring-primary' : 'border border-surface-dark/20'
-              }`}
-            >
-              {selected && <span className="h-2 w-2 rounded-full bg-primary" />}
-            </span>
-            <span className="text-sm text-text-base">{ATTENDANCE_STATUS_LABELS[option]}</span>
-          </label>
-        );
-      })}
+            {opt.abbr}
+          </button>
+        ))}
+      </div>
+      {value === 'late' && onMinutesChange && (
+        <div className="flex items-center gap-1 mt-1">
+          <span className="text-xs text-lms-muted">Gecikdi:</span>
+          <input
+            type="number"
+            min={1}
+            max={90}
+            value={minutesLate || ''}
+            onChange={(e) => onMinutesChange(Number(e.target.value))}
+            className="w-14 text-xs border border-amber-300 rounded px-1.5 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50"
+            placeholder="dəq"
+          />
+          <span className="text-xs text-lms-muted">dəq</span>
+        </div>
+      )}
     </div>
   );
 }

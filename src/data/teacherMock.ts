@@ -74,7 +74,7 @@ export const MOCK_STUDENTS: Student[] = [
     email: 'orxan.rasulov@example.com',
     phone: '+994 50 000 00 03',
     joinedAt: '05.02.2023',
-    status: 'Aktiv',
+    status: 'Passiv' as const,
   },
   {
     id: '4',
@@ -83,7 +83,7 @@ export const MOCK_STUDENTS: Student[] = [
     email: 'leyla.huseynova@example.com',
     phone: '+994 50 000 00 04',
     joinedAt: '10.02.2023',
-    status: 'Aktiv',
+    status: 'Çıxıb' as const,
   },
   {
     id: '5',
@@ -92,7 +92,7 @@ export const MOCK_STUDENTS: Student[] = [
     email: 'rashad.aliyev@example.com',
     phone: '+994 50 000 00 05',
     joinedAt: '12.02.2023',
-    status: 'Passiv',
+    status: 'Məzun' as const,
   },
 ];
 
@@ -204,8 +204,12 @@ export function formatLessonDateTime(lesson: Lesson): string {
 export function createAttendanceRecords(
   lessonId: string,
   initialStatus: AttendanceStatus = 'present',
+  studentIds?: string[],
 ): AttendanceRecord[] {
-  return MOCK_STUDENTS.map((student) => ({
+  const students = studentIds
+    ? MOCK_STUDENTS.filter((s) => studentIds.includes(s.id))
+    : MOCK_STUDENTS;
+  return students.map((student) => ({
     id: `${lessonId}-${student.id}`,
     lessonId,
     studentId: student.id,
