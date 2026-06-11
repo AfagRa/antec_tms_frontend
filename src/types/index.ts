@@ -140,10 +140,15 @@ export interface Lesson {
 }
 
 export interface AttendanceRecord {
-  id: number
-  student: { id: number; full_name: string }
-  lesson: { id: number; date: string; topic: string }
-  present: boolean
+  id: string
+  lessonId: string
+  studentId: string
+  studentName: string
+  studentSurname: string
+  status: AttendanceStatus
+  minutesLate: number
+  reason: string
+  teacherNote: string
 }
 
 export interface Grade {
@@ -197,6 +202,22 @@ export const GRADE_CATEGORY_STYLES: Record<GradeCategory, string> = {
   homework: 'bg-green-100 text-green-700',
 }
 
+export type AttendanceStatus = 'present' | 'absent_excused' | 'absent_unexcused' | 'late'
+
+export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
+  present:          'Dərsdə',
+  absent_excused:   'Qayıb (üzrlü)',
+  absent_unexcused: 'Qayıb (üzrsüz)',
+  late:             'Gecikdi',
+}
+
+export const ATTENDANCE_STATUS_SHORT: Record<AttendanceStatus, string> = {
+  present:          'Dərsdə',
+  absent_excused:   'Q/Üzrlü',
+  absent_unexcused: 'Q/Üzrsüz',
+  late:             'Gecikdi',
+}
+
 export interface JournalLesson {
   id: string
   date: string
@@ -216,7 +237,7 @@ export interface GradeRecord {
   studentId: string
   studentName: string
   studentSurname: string
-  attendanceStatus: 'present' | 'absent_excused' | 'absent_unexcused' | 'late'
+  attendanceStatus: AttendanceStatus
   score: number | undefined
   maxScore: number
   teacherNote: string
