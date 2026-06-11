@@ -2,18 +2,16 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
-  ClipboardList,
   BookOpen,
   CalendarCheck,
   PenLine,
-  FilePlus,
   Table2,
   BarChart3,
   UserCircle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
-import { DEFAULT_GROUP_ID, DEFAULT_LESSON_ID } from '../../data/teacherMock';
+import { DEFAULT_LESSON_ID } from '../../data/teacherMock';
 
 interface NavItem {
   key: string;
@@ -41,24 +39,17 @@ const navItems: NavItem[] = [
     isActiveMatch: (pathname) => pathname === ROUTES.TEACHER_GROUPS,
   },
   {
-    key: 'group-detail',
-    to: ROUTES.TEACHER_GROUP(DEFAULT_GROUP_ID),
-    icon: ClipboardList,
-    label: 'Qrup Detalları',
-    isActiveMatch: (pathname) => /^\/teacher\/groups\/[^/]+$/.test(pathname),
-  },
-  {
     key: 'lesson-create',
     to: ROUTES.TEACHER_LESSON_CREATE,
     icon: BookOpen,
-    label: 'Jurnal Doldur',
+    label: 'Jurnal / Dərs Yarat',
     isActiveMatch: (pathname) => pathname === ROUTES.TEACHER_LESSON_CREATE,
   },
   {
     key: 'attendance',
     to: ROUTES.TEACHER_ATTENDANCE(DEFAULT_LESSON_ID),
     icon: CalendarCheck,
-    label: 'Davamiyyət',
+    label: 'Davamiyyət Daxil Et',
     isActiveMatch: (pathname) => /\/teacher\/lessons\/[^/]+\/attendance$/.test(pathname),
   },
   {
@@ -76,15 +67,8 @@ const navItems: NavItem[] = [
     end: true,
   },
   {
-    key: 'material',
-    to: ROUTES.TEACHER_MATERIAL,
-    icon: FilePlus,
-    label: 'Material Əlavə Etmək',
-    end: true,
-  },
-  {
     key: 'reports',
-    to: ROUTES.TEACHER_REPORTS,
+    to: '#',
     icon: BarChart3,
     label: 'Hesabatlar',
     end: true,
