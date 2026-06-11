@@ -22,7 +22,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-screen overflow-hidden bg-surface text-text-base">
+    <div className="flex h-screen overflow-hidden bg-surface text-text-base">
       <AdminSidebar />
       <main className="min-w-0 flex-1 overflow-y-auto p-8">
         <Outlet />

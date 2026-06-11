@@ -236,7 +236,7 @@ export interface JournalLesson {
 }
 
 export interface JournalCell {
-  attendance: 'D' | 'Q' | 'QÜ' | 'G' | null
+  attendance: 'I/E' | 'Q' | 'QÜ' | 'G' | null
   grade?: number | null
   minutesLate?: number
   maxGrade?: number

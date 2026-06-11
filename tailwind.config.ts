@@ -16,6 +16,8 @@ const config: Config = {
         'surface-dark': '#CECDCC',
         'text-base': '#1E2938',
         lms: {
+          navy: '#08529C',
+          'navy-dark': '#063D75',
           green: '#00A63D',
           'green-dark': '#008B32',
           border: '#CECDCC',
