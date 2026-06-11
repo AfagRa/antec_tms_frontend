@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
 import {
   MOCK_STUDENTS,
@@ -57,15 +57,22 @@ export default function GroupDetail() {
     );
   }
 
+  const navigate = useNavigate();
+
   return (
     <div>
+      <button
+        onClick={() => navigate(ROUTES.TEACHER_GROUPS)}
+        className="flex items-center gap-1.5 text-sm text-lms-muted hover:text-lms-heading transition-colors mb-4 group"
+      >
+        <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+        Mənim Qruplarıma Qayıt
+      </button>
+
       <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-semibold text-text-base">
           Qrup Detalları: {group.name}
         </h1>
-        <span className="shrink-0 text-xs text-text-base/50">
-          Muellim_Telebe_Paneli_Spesifikasiya_v1.0.docx
-        </span>
       </div>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-6 mb-6">
