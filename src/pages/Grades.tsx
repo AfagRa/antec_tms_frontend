@@ -6,7 +6,8 @@ import {
   createAttendanceRecords,
   getLessonById,
 } from '../data/teacherMock';
-import type { GradeRecord } from '../types';
+import type { GradeCategory, GradeRecord } from '../types';
+import { GRADE_CATEGORY_LABELS } from '../types';
 
 const inputClassName =
   'w-full rounded-md border border-surface-dark/20 px-2 py-1 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30';
@@ -39,6 +40,7 @@ function createGradeRecords(lessonId: string): GradeRecord[] {
     score: index === 0 ? 85 : index === 1 ? 72 : undefined,
     maxScore: 100,
     teacherNote: '',
+    category: 'daily',
   }));
 }
 
@@ -126,6 +128,9 @@ export default function Grades() {
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
                 Müəllim qeydi (optional)
               </th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
+                Kateqoriya
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -177,6 +182,17 @@ export default function Grades() {
                     }
                     className={`${inputClassName} resize-none`}
                   />
+                </td>
+                <td className="px-4 py-3">
+                  <select
+                    value={record.category ?? 'daily'}
+                    onChange={(e) => updateRecord(record.studentId, 'category', e.target.value as GradeCategory)}
+                    className="border border-lms-border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-lms-green/30 w-[130px]"
+                  >
+                    {Object.entries(GRADE_CATEGORY_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
                 </td>
               </tr>
             ))}

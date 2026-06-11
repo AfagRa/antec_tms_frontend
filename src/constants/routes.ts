@@ -8,4 +8,10 @@ export const ROUTES = {
   TEACHER_MATERIAL: '/teacher/materials/add',
   TEACHER_REPORTS: '/teacher/reports',
   TEACHER_PROFILE: '/teacher/profile',
+  STUDENT_DASHBOARD: '/student/dashboard',
+  STUDENT_GROUPS: '/student/groups',
+  STUDENT_ATTENDANCE: '/student/attendance',
+  STUDENT_GRADES: '/student/grades',
+  STUDENT_MATERIALS: '/student/materials',
+  STUDENT_PROFILE: '/student/profile',
 } as const;

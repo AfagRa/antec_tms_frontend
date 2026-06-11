@@ -8,7 +8,7 @@ import {
   PenLine,
   FilePlus,
   BarChart3,
-  User,
+  UserCircle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
@@ -84,8 +84,8 @@ const navItems: NavItem[] = [
   {
     key: 'profile',
     to: ROUTES.TEACHER_PROFILE,
-    icon: User,
-    label: 'Profil',
+    icon: UserCircle,
+    label: 'Profilim',
     end: true,
   },
 ];
@@ -136,10 +136,9 @@ export default function Sidebar() {
               to={to}
               end={end}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-neu px-4 py-2.5 text-sm font-bold tracking-wide transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary ${
-                  resolveIsActive(item, pathname, isActive)
-                    ? 'bg-primary text-white shadow-neu-sm'
-                    : 'text-text-base/60 hover:text-text-base hover:shadow-neu-sm'
+                `flex items-center gap-3 rounded-neu px-4 py-2.5 text-sm font-bold tracking-wide transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary ${resolveIsActive(item, pathname, isActive)
+                  ? 'bg-primary text-white shadow-neu-sm'
+                  : 'text-text-base/60 hover:text-text-base hover:shadow-neu-sm'
                 }`
               }
             >

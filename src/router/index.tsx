@@ -19,7 +19,14 @@ import Attendance from "@/pages/teacher/Attendance";
 import Grades from "@/pages/Grades";
 import MaterialUpload from "@/pages/teacher/MaterialUpload";
 import Reports from "@/pages/Reports";
-import Profile from "@/pages/Profile";
+import TeacherProfile from "@/pages/teacher/Profile";
+import StudentProfile from "@/pages/student/Profile";
+import StudentLayout from "@/components/layout/StudentLayout";
+import StudentDashboard from "@/pages/student/Dashboard";
+import StudentGroups from "@/pages/student/Groups";
+import StudentAttendance from "@/pages/student/Attendance";
+import StudentGrades from "@/pages/student/Grades";
+import StudentMaterials from "@/pages/student/Materials";
 import { ROUTES } from "@/constants/routes";
 
 function TeacherRoute({ children }: { children: ReactNode }) {
@@ -28,6 +35,24 @@ function TeacherRoute({ children }: { children: ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface">
+        Yüklənir...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+function StudentRoute({ children }: { children: ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-lms-student-bg">
         Yüklənir...
       </div>
     );
@@ -101,7 +126,25 @@ export const router = createBrowserRouter([
       { path: "lessons/:id/grades", element: <Grades /> },
       { path: "materials/add", element: <MaterialUpload /> },
       { path: "reports", element: <Reports /> },
-      { path: "profile", element: <Profile /> },
+      { path: "profile", element: <TeacherProfile /> },
+    ],
+  },
+
+  {
+    path: "/student",
+    element: (
+      <StudentRoute>
+        <StudentLayout />
+      </StudentRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: "dashboard", element: <StudentDashboard /> },
+      { path: "groups", element: <StudentGroups /> },
+      { path: "attendance", element: <StudentAttendance /> },
+      { path: "grades", element: <StudentGrades /> },
+      { path: "materials", element: <StudentMaterials /> },
+      { path: "profile", element: <StudentProfile /> },
     ],
   },
 
