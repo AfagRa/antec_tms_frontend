@@ -173,3 +173,39 @@ export interface DashboardStats {
   teachers: number
   students: number
 }
+
+export type GradeCategory =
+  | 'daily'
+  | 'module'
+  | 'final'
+  | 'project'
+  | 'homework'
+
+export const GRADE_CATEGORY_LABELS: Record<GradeCategory, string> = {
+  daily:    'Günlük',
+  module:   'Modul',
+  final:    'Final',
+  project:  'Layihə',
+  homework: 'Ev Tapşırığı',
+}
+
+export const GRADE_CATEGORY_STYLES: Record<GradeCategory, string> = {
+  daily:    'bg-blue-100 text-blue-700',
+  module:   'bg-purple-100 text-purple-700',
+  final:    'bg-red-100 text-red-700',
+  project:  'bg-amber-100 text-amber-700',
+  homework: 'bg-green-100 text-green-700',
+}
+
+export interface GradeRecord {
+  id: string
+  lessonId: string
+  studentId: string
+  studentName: string
+  studentSurname: string
+  attendanceStatus: 'present' | 'absent_excused' | 'absent_unexcused' | 'late'
+  score: number | undefined
+  maxScore: number
+  teacherNote: string
+  category?: GradeCategory
+}
