@@ -1,5 +1,5 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { Check } from 'lucide-react';
+import { useState, useRef, type FormEvent, type ReactNode } from 'react';
+import { Check, Upload, FileCheck, X, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import MaterialTypePicker from '../../components/ui/MaterialTypePicker';
 import { ROUTES } from '../../constants/routes';
@@ -78,6 +78,9 @@ export default function MaterialUpload() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const lessonsForGroup = getLessonsByGroupId(formState.groupId);
 
@@ -91,6 +94,10 @@ export default function MaterialUpload() {
       if (field === 'groupId') {
         const groupLessons = getLessonsByGroupId(String(value));
         next.lessonId = groupLessons[0]?.id ?? '';
+      }
+      if (field === 'type' && value !== 'file') {
+        setSelectedFile(null);
+        setFilePreview('');
       }
 
       return next;
@@ -114,8 +121,14 @@ export default function MaterialUpload() {
     if (!formState.type) {
       nextErrors.type = 'Materialın tipi seçilməlidir';
     }
-    if (!formState.resourceUrl.trim()) {
-      nextErrors.resourceUrl = 'Resurs linki və ya sənəd ünvanı daxil edilməlidir';
+    if (formState.type === 'file') {
+      if (!selectedFile) {
+        nextErrors.resourceUrl = 'Fayl seçilməyib';
+      }
+    } else {
+      if (!formState.resourceUrl.trim()) {
+        nextErrors.resourceUrl = 'Resurs linki daxil edilməyib';
+      }
     }
 
     return nextErrors;
@@ -133,7 +146,13 @@ export default function MaterialUpload() {
     }
 
     const material = toMaterialPayload(formState);
-    console.log(material);
+    console.log('Material upload payload:', {
+      ...material,
+      ...(formState.type === 'file'
+        ? { fileName: selectedFile?.name, fileSize: selectedFile?.size }
+        : {}),
+    });
+    // TODO: POST FormData to POST /materials when API is ready
     setSuccessMessage('Material uğurla paylaşıldı!');
   }
 
@@ -197,19 +216,75 @@ export default function MaterialUpload() {
             />
           </FormField>
 
-          <FormField
-            label="Resurs Linki və ya Sənəd Ünvanı"
-            required
-            error={errors.resourceUrl}
-          >
-            <input
-              type="text"
-              value={formState.resourceUrl}
-              onChange={(event) => updateField('resourceUrl', event.target.value)}
-              placeholder="Resurs Linki və ya Sənəd Ünvanı *"
-              className={fieldClassName(Boolean(errors.resourceUrl))}
-            />
-          </FormField>
+          {formState.type === 'file' ? (
+            <FormField label="Fayl seçin" required error={errors.resourceUrl}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.png,.jpg,.jpeg,.mp4,.mp3"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setSelectedFile(file);
+                  setFilePreview(file ? file.name : '');
+                  if (errors.resourceUrl) setErrors((prev) => ({ ...prev, resourceUrl: undefined }));
+                }}
+              />
+
+              {!selectedFile ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-lms-border rounded-xl p-8 text-center hover:border-lms-green hover:bg-lms-green-light/10 transition-all cursor-pointer group"
+                >
+                  <Upload size={28} className="mx-auto text-lms-muted group-hover:text-lms-green transition-colors mb-2" />
+                  <p className="text-sm font-medium text-lms-heading">
+                    Faylı buraya çəkin və ya <span className="text-lms-green">seçin</span>
+                  </p>
+                  <p className="text-xs text-lms-muted mt-1">
+                    PDF, Word, Excel, PPT, şəkil, video — maks. 50MB
+                  </p>
+                </button>
+              ) : (
+                <div className="lms-card flex items-center gap-3 p-3">
+                  <div className="w-10 h-10 rounded-lg bg-lms-green-light flex items-center justify-center flex-shrink-0">
+                    <FileCheck size={20} className="text-lms-green" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-lms-heading truncate">{selectedFile.name}</p>
+                    <p className="text-xs text-lms-muted mt-0.5">
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB · {selectedFile.type || 'fayl'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedFile(null); setFilePreview(''); }}
+                    className="flex-shrink-0 text-lms-muted hover:text-red-500 transition-colors p-1"
+                    title="Faylı sil"
+                  >
+                    <X size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-shrink-0 text-lms-muted hover:text-lms-green transition-colors text-xs border border-lms-border rounded-md px-2 py-1"
+                  >
+                    Dəyiş
+                  </button>
+                </div>
+              )}
+            </FormField>
+          ) : (
+            <FormField label="Resurs Linki" required error={errors.resourceUrl}>
+              <input
+                type="text"
+                value={formState.resourceUrl}
+                onChange={(event) => updateField('resourceUrl', event.target.value)}
+                placeholder="Resurs Linki *"
+                className={fieldClassName(Boolean(errors.resourceUrl))}
+              />
+            </FormField>
+          )}
 
           <FormField label="Açıqlama / Qeyd (optional)">
             <textarea
