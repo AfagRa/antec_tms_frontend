@@ -1,16 +1,21 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import AttendanceStatusPicker from '../../components/ui/AttendanceStatusPicker';
 import { ATTENDANCE_STATUS_LABELS } from '../../types';
 import { ROUTES } from '../../constants/routes';
 import { createAttendanceRecords } from '../../data/teacherMock';
-import type { AttendanceRecord, AttendanceStatus } from '../../types';
+import type { AttendanceRecord } from '../../types';
 
 const MOCK_GROUPS = [
   { id: '1', name: 'Python-A1' },
   { id: '2', name: 'Code-A2' },
   { id: '3', name: 'JS-B1' },
 ];
+
+const GROUP_STUDENT_IDS: Record<string, string[]> = {
+  '1': ['1', '2', '3'],
+  '2': ['2', '4'],
+  '3': ['1', '3', '5'],
+};
 
 const MOCK_LESSONS_BY_GROUP: Record<string, { id: string; date: string; topic: string }[]> = {
   '1': [
@@ -25,13 +30,13 @@ const MOCK_LESSONS_BY_GROUP: Record<string, { id: string; date: string; topic: s
   ],
 };
 
-const inputClassName =
-  'w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
+type SaveState = 'idle' | 'saving' | 'done';
 
 export default function Attendance() {
   const [selectedGroupId, setSelectedGroupId] = useState(MOCK_GROUPS[0].id);
   const lessons = MOCK_LESSONS_BY_GROUP[selectedGroupId] ?? [];
   const [selectedLessonId, setSelectedLessonId] = useState(lessons[0]?.id ?? '');
+  const [saveState, setSaveState] = useState<SaveState>('idle');
 
   const selectedLesson = useMemo(
     () => lessons.find((l) => l.id === selectedLessonId),
@@ -44,7 +49,7 @@ export default function Attendance() {
   );
 
   const [records, setRecords] = useState<AttendanceRecord[]>(() =>
-    createAttendanceRecords(selectedLessonId || 'l1'),
+    createAttendanceRecords(selectedLessonId || 'l1', 'present', GROUP_STUDENT_IDS[MOCK_GROUPS[0].id]),
   );
 
   const present = records.filter((record) => record.status === 'present').length;
@@ -54,16 +59,18 @@ export default function Attendance() {
   const late = records.filter((record) => record.status === 'late').length;
 
   function handleGroupChange(groupId: string) {
-    setSelectedGroupId(groupId);
     const firstLesson = (MOCK_LESSONS_BY_GROUP[groupId] ?? [])[0];
     const lessonId = firstLesson?.id ?? '';
+    setSelectedGroupId(groupId);
     setSelectedLessonId(lessonId);
-    setRecords(createAttendanceRecords(lessonId || 'l1'));
+    setRecords(createAttendanceRecords(lessonId || 'l1', 'present', GROUP_STUDENT_IDS[groupId]));
+    setSaveState('idle');
   }
 
   function handleLessonChange(lessonId: string) {
     setSelectedLessonId(lessonId);
-    setRecords(createAttendanceRecords(lessonId || 'l1'));
+    setRecords(createAttendanceRecords(lessonId || 'l1', 'present', GROUP_STUDENT_IDS[selectedGroupId]));
+    setSaveState('idle');
   }
 
   function updateRecord<K extends keyof AttendanceRecord>(
@@ -88,6 +95,34 @@ export default function Attendance() {
     );
   }
 
+  function handleSave() {
+    setSaveState('saving');
+    const payload = {
+      date: selectedLesson?.date,
+      groupId: selectedGroupId,
+      groupName: selectedGroup?.name,
+      lessonId: selectedLessonId,
+      lessonTopic: selectedLesson?.topic,
+      attendance: records.map((r) => ({
+        studentId: r.studentId,
+        studentName: `${r.studentName} ${r.studentSurname}`,
+        status: r.status,
+        minutesLate: r.minutesLate,
+        reason: r.reason,
+        teacherNote: r.teacherNote,
+      })),
+    };
+    console.log('Saving attendance:', payload);
+    setTimeout(() => setSaveState('done'), 600);
+  }
+
+  useEffect(() => {
+    if (saveState === 'done') {
+      const t = setTimeout(() => setSaveState('idle'), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [saveState]);
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-semibold text-text-base">Davamiyyət Daxil Et</h1>
@@ -100,7 +135,7 @@ export default function Attendance() {
             <select
               value={selectedGroupId}
               onChange={(e) => handleGroupChange(e.target.value)}
-              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-lms-green/30 focus:border-lms-green"
+              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy"
             >
               {MOCK_GROUPS.map((g) => (
                 <option key={g.id} value={g.id}>{g.name}</option>
@@ -112,7 +147,7 @@ export default function Attendance() {
             <select
               value={selectedLessonId}
               onChange={(e) => handleLessonChange(e.target.value)}
-              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-lms-green/30 focus:border-lms-green"
+              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy"
             >
               {lessons.map((l) => (
                 <option key={l.id} value={l.id}>{l.date} — {l.topic}</option>
@@ -140,6 +175,13 @@ export default function Attendance() {
         </button>
       </div>
 
+      {/* Toast */}
+      {saveState === 'done' && (
+        <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-medium">
+          Davamiyyət uğurla yadda saxlanıldı!
+        </div>
+      )}
+
       {/* Table */}
       <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <table className="w-full min-w-[960px]">
@@ -153,61 +195,57 @@ export default function Attendance() {
             </tr>
           </thead>
           <tbody>
-            {records.map((record, index) => {
-              const isExcusedAbsent = record.status === 'absent_excused';
-              const useDropdown = record.studentId === '5';
-
-              return (
+            {records.map((record, index) => (
                 <tr key={record.id} className="border-b border-surface-dark/20 last:border-0">
                   <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
                   <td className="px-4 py-3 text-sm text-text-base">
                     {record.studentName} {record.studentSurname}
                   </td>
                   <td className="px-4 py-3">
-                    {useDropdown ? (
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={record.status}
-                          onChange={(event) =>
-                            updateRecord(record.studentId, 'status', event.target.value as AttendanceStatus)
-                          }
-                          className={inputClassName + ' w-auto'}
+                    <div className="flex items-center gap-1">
+                      {([
+                        { value: 'present',          abbr: 'İ/E', activeColor: 'bg-green-100 border-green-400 text-green-700' },
+                        { value: 'late',             abbr: 'G',   activeColor: 'bg-amber-100 border-amber-400 text-amber-700' },
+                        { value: 'absent_excused',   abbr: 'Q/Ü', activeColor: 'bg-blue-100  border-blue-400  text-blue-700'  },
+                        { value: 'absent_unexcused', abbr: 'Q',   activeColor: 'bg-red-100   border-red-400   text-red-700'   },
+                      ] as const).map((opt) => (
+                        <label
+                          key={opt.value}
+                          className={`w-9 h-8 rounded-md text-xs font-bold border-2 flex items-center justify-center cursor-pointer transition-all ${
+                            record.status === opt.value
+                              ? opt.activeColor
+                              : 'bg-gray-50 border-gray-200 text-gray-400 hover:border-gray-300'
+                          }`}
                         >
-                          <option value="present">DR — Dərsdə</option>
-                          <option value="late">GC — Gecikdi</option>
-                          <option value="absent_excused">QÜ — Qayıb (üzrlü)</option>
-                          <option value="absent_unexcused">QS — Qayıb (üzrsüz)</option>
-                        </select>
-                        {record.status === 'late' && (
                           <input
-                            type="number"
-                            min={1}
-                            max={90}
-                            value={record.minutesLate || ''}
-                            onChange={(event) => updateRecord(record.studentId, 'minutesLate', Number(event.target.value))}
-                            className="w-14 text-xs border border-amber-300 rounded px-1.5 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50"
-                            placeholder="dəq"
+                            type="checkbox"
+                            checked={record.status === opt.value}
+                            onChange={() => updateRecord(record.studentId, 'status', opt.value)}
+                            className="sr-only"
                           />
-                        )}
-                      </div>
-                    ) : (
-                      <AttendanceStatusPicker
-                        value={record.status}
-                        onChange={(status) => updateRecord(record.studentId, 'status', status)}
-                        minutesLate={record.minutesLate}
-                        onMinutesChange={(v) => updateRecord(record.studentId, 'minutesLate', v)}
-                      />
-                    )}
+                          {opt.abbr}
+                        </label>
+                      ))}
+                      {record.status === 'late' && (
+                        <input
+                          type="number"
+                          min={1}
+                          max={90}
+                          value={record.minutesLate || ''}
+                          onChange={(e) => updateRecord(record.studentId, 'minutesLate', Number(e.target.value))}
+                          className="w-14 text-xs border border-amber-300 rounded px-1.5 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50"
+                          placeholder="dəq"
+                        />
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <input
                       type="text"
                       value={record.reason ?? ''}
-                      placeholder={isExcusedAbsent ? 'Səbəb *' : 'Səbəb'}
-                      required={isExcusedAbsent}
-                      aria-required={isExcusedAbsent}
+                      placeholder="Səbəb"
                       onChange={(event) => updateRecord(record.studentId, 'reason', event.target.value)}
-                      className={inputClassName}
+                      className="w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-lms-navy/30"
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -216,12 +254,11 @@ export default function Attendance() {
                       value={record.teacherNote ?? ''}
                       placeholder="optional"
                       onChange={(event) => updateRecord(record.studentId, 'teacherNote', event.target.value)}
-                      className={`${inputClassName} resize-none`}
+                      className="w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-lms-navy/30 resize-none"
                     />
                   </td>
                 </tr>
-              );
-            })}
+              ))}
           </tbody>
         </table>
       </div>
@@ -233,10 +270,10 @@ export default function Attendance() {
         </p>
         <div className="flex flex-wrap gap-x-5 gap-y-1">
           {[
-            { abbr: 'DR', label: 'Dərsdə',       color: 'text-green-600' },
-            { abbr: 'GC', label: 'Gecikdi',       color: 'text-amber-600' },
-            { abbr: 'QÜ', label: 'Qayıb (üzrlü)',  color: 'text-blue-600'  },
-            { abbr: 'QS', label: 'Qayıb (üzrsüz)', color: 'text-red-600'   },
+            { abbr: 'İ/E', label: 'İştirak edib',  color: 'text-lms-navy'  },
+            { abbr: 'G',   label: 'Gecikdi',        color: 'text-amber-600' },
+            { abbr: 'Q/Ü', label: 'Qayıb (üzrlü)',   color: 'text-blue-600'  },
+            { abbr: 'Q',   label: 'Qayıb (üzrsüz)',  color: 'text-red-600'   },
           ].map((item) => (
             <span key={item.abbr} className="flex items-center gap-1.5 text-xs text-lms-muted">
               <span className={`font-bold text-xs ${item.color}`}>{item.abbr}</span>
@@ -262,9 +299,11 @@ export default function Attendance() {
         <div className="flex gap-3">
           <button
             type="button"
-            className="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+            onClick={handleSave}
+            disabled={saveState === 'saving'}
+            className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-medium transition-all disabled:opacity-60"
           >
-            Saxla
+            {saveState === 'saving' ? 'Saxlanılır...' : 'Yadda saxla'}
           </button>
           <Link
             to={ROUTES.TEACHER_GRADES(selectedLessonId)}

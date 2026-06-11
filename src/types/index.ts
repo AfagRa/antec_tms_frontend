@@ -216,14 +216,14 @@ export const STUDENT_STATUS_CONFIG: Record<StudentGroupStatus, {
 export type AttendanceStatus = 'present' | 'absent_excused' | 'absent_unexcused' | 'late'
 
 export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
-  present:          'Dərsdə',
+  present:          'İştirak edib',
   absent_excused:   'Qayıb (üzrlü)',
   absent_unexcused: 'Qayıb (üzrsüz)',
   late:             'Gecikdi',
 }
 
 export const ATTENDANCE_STATUS_SHORT: Record<AttendanceStatus, string> = {
-  present:          'Dərsdə',
+  present:          'İ/E',
   absent_excused:   'Q/Üzrlü',
   absent_unexcused: 'Q/Üzrsüz',
   late:             'Gecikdi',

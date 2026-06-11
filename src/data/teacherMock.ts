@@ -204,8 +204,12 @@ export function formatLessonDateTime(lesson: Lesson): string {
 export function createAttendanceRecords(
   lessonId: string,
   initialStatus: AttendanceStatus = 'present',
+  studentIds?: string[],
 ): AttendanceRecord[] {
-  return MOCK_STUDENTS.map((student) => ({
+  const students = studentIds
+    ? MOCK_STUDENTS.filter((s) => studentIds.includes(s.id))
+    : MOCK_STUDENTS;
+  return students.map((student) => ({
     id: `${lessonId}-${student.id}`,
     lessonId,
     studentId: student.id,
