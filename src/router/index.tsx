@@ -20,6 +20,7 @@ import Grades from "@/pages/Grades";
 import MaterialUpload from "@/pages/teacher/MaterialUpload";
 import TeacherJournal from "@/pages/teacher/Journal";
 import TeacherProfile from "@/pages/teacher/Profile";
+import Reports from "@/pages/Reports";
 import StudentProfile from "@/pages/student/Profile";
 import StudentLayout from "@/components/layout/StudentLayout";
 import StudentDashboard from "@/pages/student/Dashboard";
@@ -128,7 +129,7 @@ export const router = createBrowserRouter([
       { path: "journal", element: <TeacherJournal /> },
       { path: "attendance-home", element: <Attendance /> },
       { path: "grades-home", element: <Grades /> },
-      { path: "reports", element: <div className="p-6 text-lms-muted">Hesabatlar səhifəsi hazırlanır…</div> },
+      { path: "reports", element: <Reports /> },
       { path: "profile", element: <TeacherProfile /> },
     ],
   },
