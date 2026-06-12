@@ -77,6 +77,7 @@ export default function TeacherJournal() {
   const [columnCategories, setColumnCategories] = useState<Record<string, GradeCategory>>({});
   const [extraLessons, setExtraLessons] = useState<JournalLesson[]>([]);
   const [lessonTopics, setLessonTopics] = useState<Record<string, string>>({});
+  const [editingTopics, setEditingTopics] = useState<Record<string, boolean>>({});
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -90,6 +91,7 @@ export default function TeacherJournal() {
     setExtraLessons([]);
     setColumnCategories({});
     setLessonTopics({});
+    setEditingTopics({});
   }, [selectedGroupId]);
 
   const lessons = LESSONS_BY_GROUP[selectedGroupId] ?? [];
@@ -140,6 +142,7 @@ export default function TeacherJournal() {
       topic: '',
     };
     setExtraLessons((prev) => [...prev, newLesson]);
+    setEditingTopics((prev) => ({ ...prev, [newLesson.id]: true }));
     // reset input so the same date can be picked again if needed
     if (dateInputRef.current) dateInputRef.current.value = '';
   };
@@ -251,19 +254,55 @@ export default function TeacherJournal() {
                     Tələbənin adı
                   </th>
 
-                  {allLessons.map((lesson) => (
+                  {allLessons.map((lesson) => {
+                    const isEditing = editingTopics[lesson.id] ?? false;
+                    const isExtra = extraLessons.some((el) => el.id === lesson.id);
+                    const topic = lessonTopics[lesson.id] ?? lesson.topic;
+                    return (
                     <th
                       key={lesson.id}
                       colSpan={2}
                       className="border-b border-r border-lms-border px-2 py-2 text-center font-medium text-lms-heading text-xs min-w-[140px]"
                     >
-                      <div className="font-semibold">{lesson.date}</div>
-                      <div className="text-lms-muted font-normal truncate max-w-[130px] mx-auto"
-                           title={lesson.topic}>
-                        {lesson.topic.length > 14 ? lesson.topic.slice(0, 14) + '…' : lesson.topic}
-                      </div>
+                      <div className="font-semibold text-lms-heading">{lesson.date}</div>
+                      {isEditing ? (
+                        <div className="flex items-center gap-1 mt-1">
+                          <input
+                            type="text"
+                            value={topic}
+                            onChange={(e) => setLessonTopic(lesson.id, e.target.value)}
+                            placeholder="Mövzu..."
+                            className="w-full text-[10px] px-1 py-0.5 border border-lms-border rounded bg-white text-lms-heading focus:border-lms-navy outline-none"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: false }))}
+                            className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-lms-navy text-white hover:bg-lms-navy-dark transition-colors"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div
+                            className="text-lms-muted font-normal text-[11px] truncate max-w-[130px] mx-auto mt-0.5 leading-tight"
+                            title={topic}
+                          >
+                            {topic.length > 16 ? topic.slice(0, 16) + '…' : topic}
+                          </div>
+                          {isExtra && (
+                            <button
+                              onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: true }))}
+                              className="mt-0.5 text-[9px] text-lms-navy hover:text-lms-navy-dark transition-colors"
+                            >
+                              Redaktə et
+                            </button>
+                          )}
+                        </>
+                      )}
                     </th>
-                  ))}
+                    );
+                  })}
 
                   {/*
                    * ── CHANGE 2: Persistent "+ Yeni Tarix" placeholder column ──
