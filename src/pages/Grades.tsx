@@ -55,8 +55,8 @@ export default function Grades() {
   );
   const [lessonCategory, setLessonCategory] = useState<GradeCategory>('daily');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [hasSaved, setHasSaved] = useState(false);
   const [lessonCompleted, setLessonCompleted] = useState(false);
-  const [bulkMax, setBulkMax] = useState(100);
 
   const currentLesson = (MOCK_LESSONS_BY_GROUP[selectedGroupId] ?? [])
     .find((l) => l.id === selectedLessonId);
@@ -78,6 +78,7 @@ export default function Grades() {
       category: lessonCategory,
     })));
     setSaveStatus('idle');
+    setHasSaved(false);
     setLessonCompleted(false);
   }, [selectedGroupId, selectedLessonId]);
 
@@ -100,21 +101,25 @@ export default function Grades() {
     setSaveStatus('saving');
     setTimeout(() => {
       console.log('Grades saved:', { lessonId: selectedLessonId, lessonCategory, records });
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+    setSaveStatus('saved');
+    setHasSaved(true);
+    setTimeout(() => setSaveStatus('idle'), 3000);
     }, 800);
   };
 
-  const writeableScores = records
-    .filter((r) => (r.attendanceStatus === 'present' || r.attendanceStatus === 'late')
-      && r.score !== undefined && r.score !== null)
+  const allScores = records
+    .filter((r) => r.score !== undefined && r.score !== null)
     .map((r) => r.score as number);
 
-  const avg = writeableScores.length
-    ? Math.round(writeableScores.reduce((a, b) => a + b, 0) / writeableScores.length)
+  const writeableCount = records.filter((r) =>
+    r.attendanceStatus === 'present' || r.attendanceStatus === 'late',
+  ).length;
+
+  const avg = allScores.length
+    ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
     : null;
-  const highest = writeableScores.length ? Math.max(...writeableScores) : null;
-  const lowest = writeableScores.length ? Math.min(...writeableScores) : null;
+  const highest = allScores.length ? Math.max(...allScores) : null;
+  const lowest = allScores.length ? Math.min(...allScores) : null;
 
   function attendanceLabel(status: AttendanceStatus) {
     switch (status) {
@@ -195,10 +200,19 @@ export default function Grades() {
       {/* Table */}
       <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <table className="w-full min-w-[900px]">
+          <colgroup>
+            <col style={{ width: '48px'  }} />
+            <col style={{ width: '140px' }} />
+            <col style={{ width: '120px' }} />
+            <col style={{ width: '90px'  }} />
+            <col style={{ width: '100px' }} />
+            <col style={{ width: '70px'  }} />
+            <col style={{ width: '180px' }} />
+          </colgroup>
           <thead>
             <tr className="border-b border-surface-dark/20 bg-surface-light">
               <th className="border-b border-lms-border px-3 py-3 text-center text-xs
-                             font-medium text-lms-muted w-[48px] uppercase tracking-wide">
+                             font-medium text-lms-muted uppercase tracking-wide">
                 №
               </th>
               <th className="border-b border-lms-border px-3 py-3 text-left text-xs
@@ -232,8 +246,8 @@ export default function Grades() {
                 </select>
               </th>
               <th className="border-b border-lms-border px-3 py-3 text-center text-xs
-                             font-medium text-lms-muted uppercase tracking-wide w-[80px] min-w-[80px]">
-                Maks.
+                             font-medium text-lms-muted uppercase tracking-wide">
+                Maks. bal
               </th>
               <th className="border-b border-lms-border px-3 py-3 text-left text-xs
                              font-medium text-lms-muted uppercase tracking-wide">
@@ -246,34 +260,53 @@ export default function Grades() {
             </tr>
           </thead>
           <tbody>
-            {records.map((record, index) => (
+            {records.map((record, index) => {
+              const writeable = record.attendanceStatus === 'present' || record.attendanceStatus === 'late';
+              return (
               <tr key={record.id} className="border-b border-surface-dark/20 last:border-0">
-                <td className="border-b border-lms-border px-3 py-3 text-center text-xs
-                               text-lms-muted font-medium w-[48px] select-none">
+                <td className="border-b border-lms-border px-3 py-1.5 text-center text-xs
+                               text-lms-muted font-medium select-none">
                   {index + 1}
                 </td>
-                <td className="px-4 py-3 text-sm text-lms-heading">
+                <td className="px-4 py-1.5 text-sm text-lms-heading">
                   {record.studentName} {record.studentSurname}
                 </td>
-                <td className="px-4 py-3 text-sm text-lms-muted">
-                  {attendanceLabel(record.attendanceStatus)}
+                <td className="px-4 py-1.5 text-sm text-lms-muted">
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                    record.attendanceStatus === 'present' ? 'bg-green-100 text-green-700' :
+                    record.attendanceStatus === 'late' ? 'bg-amber-100 text-amber-700' :
+                    record.attendanceStatus === 'absent_excused' ? 'bg-blue-100 text-blue-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {attendanceLabel(record.attendanceStatus)}
+                  </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <input
                     type="number"
                     min={0}
                     max={record.maxScore}
                     value={record.score ?? ''}
-                    onChange={(e) =>
-                      updateRecord(record.studentId, 'score',
-                        e.target.value === '' ? undefined : Number(e.target.value))
-                    }
-                    className="w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-lms-navy/30
-                               focus:border-lms-navy"
+                    onChange={(e) => {
+                      const raw = e.target.value === '' ? undefined : Number(e.target.value);
+                      if (raw !== undefined && raw > record.maxScore) {
+                        updateRecord(record.studentId, 'score', record.maxScore);
+                      } else {
+                        updateRecord(record.studentId, 'score', raw ?? undefined);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const val = Number(e.target.value);
+                      if (!isNaN(val) && val > record.maxScore) {
+                        updateRecord(record.studentId, 'score', record.maxScore);
+                      }
+                    }}
+                    className="w-full text-center text-sm border border-lms-border rounded px-1.5 py-0.5
+                               bg-white focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy outline-none"
+                    placeholder="0"
                   />
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-1.5 text-center">
                   <input
                     type="number"
                     min={1}
@@ -281,15 +314,14 @@ export default function Grades() {
                     onChange={(e) =>
                       updateRecord(record.studentId, 'maxScore', Number(e.target.value))
                     }
-                    className="w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm
-                               text-center focus:outline-none focus:ring-2 focus:ring-lms-navy/30
-                               focus:border-lms-navy"
+                    className="w-full text-center text-sm border border-lms-border rounded px-1.5 py-0.5
+                               focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy outline-none"
                   />
                 </td>
-                <td className="px-4 py-3 text-sm font-medium text-lms-navy">
+                <td className="px-4 py-1.5 text-sm font-medium text-lms-navy text-center">
                   {calcPercent(record.score, record.maxScore)}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <textarea
                     rows={1}
                     value={record.teacherNote ?? ''}
@@ -297,13 +329,13 @@ export default function Grades() {
                     onChange={(e) =>
                       updateRecord(record.studentId, 'teacherNote', e.target.value)
                     }
-                    className="w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-lms-navy/30
-                               focus:border-lms-navy resize-none"
+                    className="w-full border border-lms-border rounded px-1.5 py-0.5 text-sm
+                               focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy resize-none outline-none"
                   />
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
 
@@ -314,31 +346,14 @@ export default function Grades() {
             <span>Ən yüksək: <strong className="text-green-600">{highest ?? '—'}</strong></span>
             <span>Ən aşağı: <strong className="text-red-500">{lowest ?? '—'}</strong></span>
             <span className="text-xs">
-              ({writeableScores.length} / {records.length} tələbə qiymətləndirildi)
+              ({allScores.length} / {records.length} tələbə qiymətləndirildi)
             </span>
           </div>
         </div>
       </div>
 
       {/* Action bar */}
-      <div className="mt-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <input
-            type="number" min={1} max={200}
-            value={bulkMax}
-            onChange={(e) => setBulkMax(Number(e.target.value))}
-            className="border border-lms-border rounded-lg px-2 py-1.5 text-sm
-                       w-[72px] text-center focus:ring-2 focus:ring-lms-navy/30"
-          />
-          <button
-            onClick={() => setRecords((prev) => prev.map((r) => ({ ...r, maxScore: bulkMax })))}
-            className="border border-lms-navy text-lms-navy px-3 py-1.5 rounded-lg
-                       text-sm font-medium hover:bg-lms-navy/5 transition-colors"
-          >
-            Hamısına tətbiq et
-          </button>
-        </div>
-
+      <div className="mt-6 flex items-center justify-end">
         <div className="flex gap-3">
           <button
             onClick={handleSave}
@@ -358,26 +373,27 @@ export default function Grades() {
               <><Save size={15} /> Saxla</>
             )}
           </button>
-          <button
-            onClick={() => {
-              if (saveStatus !== 'saved') {
-                alert('Əvvəlcə qiymətləri saxlayın.');
-                return;
-              }
-              setLessonCompleted(true);
-              console.log('Lesson marked completed:', selectedLessonId);
-            }}
-            disabled={saveStatus !== 'saved'}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                       border-2 transition-all
-                       ${lessonCompleted
-                         ? 'border-emerald-600 bg-emerald-50 text-emerald-700 cursor-default'
-                         : 'border-emerald-600 text-emerald-600 hover:bg-emerald-50 cursor-pointer'}
-                       ${saveStatus !== 'saved' ? 'border-gray-200 text-gray-300 cursor-not-allowed' : ''}`}
-          >
-            <CheckCircle size={15} />
-            {lessonCompleted ? 'Tamamlandı' : 'Dərsi Tamamla'}
-          </button>
+            <button
+              onClick={() => {
+                if (!hasSaved) {
+                  alert('Əvvəlcə qiymətləri saxlayın.');
+                  return;
+                }
+                setLessonCompleted(true);
+                console.log('Lesson marked completed:', selectedLessonId);
+              }}
+              disabled={!hasSaved}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                         transition-all cursor-pointer
+                         ${lessonCompleted
+                           ? 'bg-lms-navy text-white'
+                           : hasSaved
+                             ? 'bg-lms-navy hover:bg-lms-navy-dark text-white'
+                             : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
+            >
+              <CheckCircle size={15} />
+              {lessonCompleted ? 'Tamamlandı' : 'Dərsi Tamamla'}
+            </button>
         </div>
       </div>
 
