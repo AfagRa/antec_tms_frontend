@@ -1,230 +1,409 @@
-import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ROUTES } from '../constants/routes';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  DEFAULT_LESSON_ID,
-  createAttendanceRecords,
-  getLessonById,
-} from '../data/teacherMock';
-import type { GradeCategory, GradeRecord } from '../types';
-import { GRADE_CATEGORY_LABELS } from '../types';
+  CalendarDays, Save, CheckCircle, Loader2, ArrowLeft,
+} from 'lucide-react';
+import { ROUTES } from '../constants/routes';
+import type { GradeCategory, AttendanceStatus, GradeRecord } from '../types';
 
-const inputClassName =
-  'w-full rounded-md border border-surface-dark/20 px-2 py-1 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30';
+const MOCK_GROUPS = [
+  { id: '1', name: 'Python-A1' },
+  { id: '2', name: 'Code-A2' },
+  { id: '3', name: 'JS-B1' },
+];
 
-function attendanceLabel(status: GradeRecord['attendanceStatus']) {
-  switch (status) {
-    case 'present':
-      return 'İştirak etdi';
-    case 'absent_excused':
-      return 'Üzrlü qayıb';
-    case 'absent_unexcused':
-      return 'Üzrsüz qayıb';
-    case 'late':
-      return 'Gecikdi';
-    default:
-      return '—';
-  }
-}
+const MOCK_LESSONS_BY_GROUP: Record<string, { id: string; date: string; topic: string }[]> = {
+  '1': [
+    { id: 'l1', date: '04.06.2026', topic: 'Döngələr ve Massivlər' },
+    { id: 'l2', date: '06.06.2026', topic: 'Funksiyalar' },
+  ],
+  '2': [
+    { id: 'l3', date: '05.06.2026', topic: 'HTML Əsasları' },
+  ],
+  '3': [
+    { id: 'l4', date: '07.06.2026', topic: 'Dəyişənlər' },
+  ],
+};
 
-function createGradeRecords(lessonId: string): GradeRecord[] {
-  const attendance = createAttendanceRecords(lessonId);
-
-  return attendance.map((record, index) => ({
-    id: `grade-${record.studentId}`,
-    lessonId,
-    studentId: record.studentId,
-    studentName: record.studentName,
-    studentSurname: record.studentSurname,
-    attendanceStatus: record.status,
-    score: index === 0 ? 85 : index === 1 ? 72 : undefined,
-    maxScore: 100,
-    teacherNote: '',
-    category: 'daily',
-  }));
-}
-
-function calcPercent(score: number | undefined, maxScore: number) {
-  if (score === undefined || maxScore === 0) {
-    return 'N%';
-  }
-  return `${Math.round((score / maxScore) * 100)}%`;
-}
+const MOCK_STUDENTS_BY_GROUP: Record<string, {
+  studentId: string; studentName: string; studentSurname: string;
+  attendanceStatus: AttendanceStatus
+}[]> = {
+  '1': [
+    { studentId: 's1', studentName: 'Əli',    studentSurname: 'Məmmədov', attendanceStatus: 'present' },
+    { studentId: 's2', studentName: 'Sona',   studentSurname: 'Quliyeva', attendanceStatus: 'absent_unexcused' },
+    { studentId: 's3', studentName: 'Orxan',  studentSurname: 'Rəsulov',  attendanceStatus: 'absent_unexcused' },
+    { studentId: 's4', studentName: 'Vüsal',  studentSurname: 'Qəfarov',  attendanceStatus: 'late' },
+    { studentId: 's5', studentName: 'Leyla',  studentSurname: 'Əliyeva',  attendanceStatus: 'present' },
+    { studentId: 's6', studentName: 'Murad',  studentSurname: 'Həsənov',  attendanceStatus: 'present' },
+  ],
+  '2': [
+    { studentId: 's7', studentName: 'Nigar',  studentSurname: 'Babayeva', attendanceStatus: 'present' },
+    { studentId: 's8', studentName: 'Rauf',   studentSurname: 'İsmayılov',attendanceStatus: 'late' },
+  ],
+  '3': [
+    { studentId: 's9', studentName: 'Könül',  studentSurname: 'Nəsirov',  attendanceStatus: 'present' },
+    { studentId: 's10',studentName: 'Tural',  studentSurname: 'Qədirov',  attendanceStatus: 'present' },
+  ],
+};
 
 export default function Grades() {
-  const { id: lessonId = DEFAULT_LESSON_ID } = useParams();
-  const lesson = getLessonById(lessonId);
+  const navigate = useNavigate();
+  const [selectedGroupId, setSelectedGroupId] = useState(MOCK_GROUPS[0].id);
+  const [selectedLessonId, setSelectedLessonId] = useState(
+    MOCK_LESSONS_BY_GROUP[MOCK_GROUPS[0].id][0].id,
+  );
+  const [lessonCategory, setLessonCategory] = useState<GradeCategory>('daily');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [hasSaved, setHasSaved] = useState(false);
+  const [lessonCompleted, setLessonCompleted] = useState(false);
 
-  const [records, setRecords] = useState<GradeRecord[]>(() => createGradeRecords(lessonId));
+  const currentLesson = (MOCK_LESSONS_BY_GROUP[selectedGroupId] ?? [])
+    .find((l) => l.id === selectedLessonId);
 
-  const scored = records.filter((record) => record.score !== undefined);
-  const average =
-    scored.length > 0
-      ? (
-          scored.reduce((sum, record) => sum + (record.score! / record.maxScore) * 100, 0) /
-          scored.length
-        ).toFixed(1)
-      : '0';
-  const highest = scored.length > 0 ? Math.max(...scored.map((r) => r.score!)) : 0;
-  const lowest =
-    scored.length > 0 ? Math.min(...scored.map((r) => r.score!)) : 0;
+  const [records, setRecords] = useState<GradeRecord[]>([]);
 
-  function updateRecord<K extends keyof GradeRecord>(
-    studentId: string,
-    field: K,
-    value: GradeRecord[K],
-  ) {
-    setRecords((prev) =>
-      prev.map((record) =>
-        record.studentId === studentId ? { ...record, [field]: value } : record,
-      ),
-    );
+  useEffect(() => {
+    const students = MOCK_STUDENTS_BY_GROUP[selectedGroupId] ?? [];
+    setRecords(students.map((s) => ({
+      id: s.studentId,
+      lessonId: selectedLessonId,
+      studentId: s.studentId,
+      studentName: s.studentName,
+      studentSurname: s.studentSurname,
+      attendanceStatus: s.attendanceStatus,
+      score: undefined,
+      maxScore: 100,
+      teacherNote: '',
+      category: lessonCategory,
+    })));
+    setSaveStatus('idle');
+    setHasSaved(false);
+    setLessonCompleted(false);
+  }, [selectedGroupId, selectedLessonId]);
+
+  const updateRecord = (studentId: string, field: keyof GradeRecord, value: unknown) => {
+    setRecords((prev) => prev.map((r) =>
+      r.studentId === studentId ? { ...r, [field]: value } : r,
+    ));
+    setSaveStatus('idle');
+  };
+
+  const handleSave = () => {
+    const errors = records.filter((r) => {
+      const writeable = r.attendanceStatus === 'present' || r.attendanceStatus === 'late';
+      return writeable && (r.score === undefined || r.score === null);
+    });
+    if (errors.length > 0) {
+      alert(`${errors.length} tələbənin balı boşdur. Zəhmət olmasa doldurun.`);
+      return;
+    }
+    setSaveStatus('saving');
+    setTimeout(() => {
+      console.log('Grades saved:', { lessonId: selectedLessonId, lessonCategory, records });
+    setSaveStatus('saved');
+    setHasSaved(true);
+    setTimeout(() => setSaveStatus('idle'), 3000);
+    }, 800);
+  };
+
+  const allScores = records
+    .filter((r) => r.score !== undefined && r.score !== null)
+    .map((r) => r.score as number);
+
+  const writeableCount = records.filter((r) =>
+    r.attendanceStatus === 'present' || r.attendanceStatus === 'late',
+  ).length;
+
+  const avg = allScores.length
+    ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
+    : null;
+  const highest = allScores.length ? Math.max(...allScores) : null;
+  const lowest = allScores.length ? Math.min(...allScores) : null;
+
+  function attendanceLabel(status: AttendanceStatus) {
+    switch (status) {
+      case 'present':          return 'İştirak edib';
+      case 'absent_excused':   return 'Üzrlü qayıb';
+      case 'absent_unexcused': return 'Üzrsüz qayıb';
+      case 'late':             return 'Gecikdi';
+      default:                 return '—';
+    }
   }
 
-  function applyMaxToAll() {
-    setRecords((prev) => prev.map((record) => ({ ...record, maxScore: 100 })));
+  function calcPercent(score: number | undefined, maxScore: number) {
+    if (score === undefined || maxScore === 0) return 'N%';
+    return `${Math.round((score / maxScore) * 100)}%`;
   }
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-text-base">Qiymət Daxil Et</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-lms-heading">Qiymət Daxil Et</h1>
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-neu bg-surface px-4 py-3 shadow-neu-inset-sm">
-        <p className="text-sm text-text-base">
-          <span className="font-medium">Dərs Tarixi:</span> {lesson?.lessonDate ?? '—'}
-          <span className="mx-3 text-text-base/50">|</span>
-          <span className="font-medium">Qrup:</span> {lesson?.groupName ?? '—'}
-          <span className="mx-3 text-text-base/50">|</span>
-          <span className="font-medium">Mövzu:</span> {lesson?.topic ?? '—'}
-        </p>
-        <button
-          type="button"
-          onClick={applyMaxToAll}
-          className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-        >
-          Bütün Max Bal
-        </button>
+      {/* Top selector bar */}
+      <div className="lms-card mb-4">
+        <div className="grid grid-cols-3 gap-4 items-end">
+          <div>
+            <label className="text-xs text-lms-muted mb-1 block">Qrup</label>
+            <select
+              value={selectedGroupId}
+              onChange={(e) => {
+                setSelectedGroupId(e.target.value);
+                const firstLesson = MOCK_LESSONS_BY_GROUP[e.target.value]?.[0];
+                if (firstLesson) setSelectedLessonId(firstLesson.id);
+              }}
+              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full
+                         focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy bg-white"
+            >
+              {MOCK_GROUPS.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-lms-muted mb-1 block">Dərs</label>
+            <select
+              value={selectedLessonId}
+              onChange={(e) => setSelectedLessonId(e.target.value)}
+              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full
+                         focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy bg-white"
+            >
+              {(MOCK_LESSONS_BY_GROUP[selectedGroupId] ?? []).map((l) => (
+                <option key={l.id} value={l.id}>{l.date} — {l.topic}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-lms-muted mb-1 block">Tarix</label>
+            <div className="border border-lms-border rounded-lg px-3 py-2 text-sm
+                            bg-gray-50 text-lms-muted flex items-center gap-2">
+              <CalendarDays size={15} className="text-lms-muted" />
+              {currentLesson?.date ?? '—'}
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Info bar */}
+      <div className="flex items-center gap-3 mb-4 px-1">
+        <span className="text-sm font-medium text-lms-heading">
+          {MOCK_GROUPS.find((g) => g.id === selectedGroupId)?.name}
+        </span>
+        <span className="text-lms-muted">·</span>
+        <span className="text-sm text-lms-muted">{currentLesson?.topic}</span>
+        <span className="text-lms-muted">·</span>
+        <span className="text-sm text-lms-muted">{currentLesson?.date}</span>
+      </div>
+
+      {/* Table */}
       <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <table className="w-full min-w-[900px]">
+          <colgroup>
+            <col style={{ width: '48px'  }} />
+            <col style={{ width: '140px' }} />
+            <col style={{ width: '120px' }} />
+            <col style={{ width: '90px'  }} />
+            <col style={{ width: '100px' }} />
+            <col style={{ width: '70px'  }} />
+            <col style={{ width: '180px' }} />
+          </colgroup>
           <thead>
             <tr className="border-b border-surface-dark/20 bg-surface-light">
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
+              <th className="border-b border-lms-border px-3 py-3 text-center text-xs
+                             font-medium text-lms-muted uppercase tracking-wide">
+                №
+              </th>
+              <th className="border-b border-lms-border px-3 py-3 text-left text-xs
+                             font-medium text-lms-muted uppercase tracking-wide">
                 Ad + Soyad
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
+              <th className="border-b border-lms-border px-3 py-3 text-left text-xs
+                             font-medium text-lms-muted uppercase tracking-wide">
                 Davamiyyət statusu
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
-                Bal (score)
+              <th className="border-b border-lms-border px-3 py-2 text-left text-xs
+                             font-medium text-lms-muted uppercase tracking-wide">
+                <div className="mb-1">Bal</div>
+                <select
+                  value={lessonCategory}
+                  onChange={(e) => {
+                    const cat = e.target.value as GradeCategory;
+                    setLessonCategory(cat);
+                    setRecords((prev) => prev.map((r) => ({ ...r, category: cat })));
+                  }}
+                  className="border border-lms-border rounded px-1.5 py-0.5 text-[11px]
+                             font-normal normal-case tracking-normal text-lms-heading
+                             focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy
+                             bg-white w-[110px]"
+                >
+                  <option value="daily">Dərs qiyməti</option>
+                  <option value="homework">Ev tapşırığı</option>
+                  <option value="module">Modul imtahanı</option>
+                  <option value="project">Layihə</option>
+                  <option value="final">Final imtahanı</option>
+                </select>
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
-                Maksimum bal
+              <th className="border-b border-lms-border px-3 py-3 text-center text-xs
+                             font-medium text-lms-muted uppercase tracking-wide">
+                Maks. bal
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
+              <th className="border-b border-lms-border px-3 py-3 text-left text-xs
+                             font-medium text-lms-muted uppercase tracking-wide">
                 Faiz (%)
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
+              <th className="border-b border-lms-border px-3 py-3 text-left text-xs
+                             font-medium text-lms-muted uppercase tracking-wide">
                 Müəllim qeydi (optional)
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">
-                Kateqoriya
               </th>
             </tr>
           </thead>
           <tbody>
-            {records.map((record) => (
+            {records.map((record, index) => {
+              const writeable = record.attendanceStatus === 'present' || record.attendanceStatus === 'late';
+              return (
               <tr key={record.id} className="border-b border-surface-dark/20 last:border-0">
-                <td className="px-4 py-3 text-sm text-text-base">
+                <td className="border-b border-lms-border px-3 py-1.5 text-center text-xs
+                               text-lms-muted font-medium select-none">
+                  {index + 1}
+                </td>
+                <td className="px-4 py-1.5 text-sm text-lms-heading">
                   {record.studentName} {record.studentSurname}
                 </td>
-                <td className="px-4 py-3 text-sm text-text-base/50">
-                  {attendanceLabel(record.attendanceStatus)}
+                <td className="px-4 py-1.5 text-sm text-lms-muted">
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                    record.attendanceStatus === 'present' ? 'bg-green-100 text-green-700' :
+                    record.attendanceStatus === 'late' ? 'bg-amber-100 text-amber-700' :
+                    record.attendanceStatus === 'absent_excused' ? 'bg-blue-100 text-blue-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {attendanceLabel(record.attendanceStatus)}
+                  </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <input
                     type="number"
                     min={0}
                     max={record.maxScore}
                     value={record.score ?? ''}
-                    onChange={(event) =>
-                      updateRecord(
-                        record.studentId,
-                        'score',
-                        event.target.value === '' ? undefined : Number(event.target.value),
-                      )
-                    }
-                    className={inputClassName}
+                    onChange={(e) => {
+                      const raw = e.target.value === '' ? undefined : Number(e.target.value);
+                      if (raw !== undefined && raw > record.maxScore) {
+                        updateRecord(record.studentId, 'score', record.maxScore);
+                      } else {
+                        updateRecord(record.studentId, 'score', raw ?? undefined);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const val = Number(e.target.value);
+                      if (!isNaN(val) && val > record.maxScore) {
+                        updateRecord(record.studentId, 'score', record.maxScore);
+                      }
+                    }}
+                    className="w-full text-center text-sm border border-lms-border rounded px-1.5 py-0.5
+                               bg-white focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy outline-none"
+                    placeholder="0"
                   />
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5 text-center">
                   <input
                     type="number"
                     min={1}
                     value={record.maxScore}
-                    onChange={(event) =>
-                      updateRecord(record.studentId, 'maxScore', Number(event.target.value))
+                    onChange={(e) =>
+                      updateRecord(record.studentId, 'maxScore', Number(e.target.value))
                     }
-                    className={inputClassName}
+                    className="w-full text-center text-sm border border-lms-border rounded px-1.5 py-0.5
+                               focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy outline-none"
                   />
                 </td>
-                <td className="px-4 py-3 text-sm font-medium text-primary">
+                <td className="px-4 py-1.5 text-sm font-medium text-lms-navy text-center">
                   {calcPercent(record.score, record.maxScore)}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-1.5">
                   <textarea
                     rows={1}
                     value={record.teacherNote ?? ''}
                     placeholder="optional"
-                    onChange={(event) =>
-                      updateRecord(record.studentId, 'teacherNote', event.target.value)
+                    onChange={(e) =>
+                      updateRecord(record.studentId, 'teacherNote', e.target.value)
                     }
-                    className={`${inputClassName} resize-none`}
+                    className="w-full border border-lms-border rounded px-1.5 py-0.5 text-sm
+                               focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy resize-none outline-none"
                   />
                 </td>
-                <td className="px-4 py-3">
-                  <select
-                    value={record.category ?? 'daily'}
-                    onChange={(e) => updateRecord(record.studentId, 'category', e.target.value as GradeCategory)}
-                    className="border border-lms-border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-lms-green/30 w-[130px]"
-                  >
-                    {Object.entries(GRADE_CATEGORY_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
-                    ))}
-                  </select>
-                </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
 
-        <div className="border-t border-surface-dark/20 bg-surface-light px-4 py-3 text-sm font-medium text-text-base/50">
-          Qrup ortalama balı (%): {average} | ən yüksək bal: {highest} | ən aşağı bal: {lowest}
+        {/* Summary footer */}
+        <div className="border-t border-surface-dark/20 bg-surface-light px-4 py-3 text-sm text-lms-muted">
+          <div className="flex items-center gap-4">
+            <span>Ortalama: <strong className="text-lms-heading">{avg ?? '—'}%</strong></span>
+            <span>Ən yüksək: <strong className="text-green-600">{highest ?? '—'}</strong></span>
+            <span>Ən aşağı: <strong className="text-red-500">{lowest ?? '—'}</strong></span>
+            <span className="text-xs">
+              ({allScores.length} / {records.length} tələbə qiymətləndirildi)
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
-        <Link
-          to={ROUTES.TEACHER_ATTENDANCE(lessonId)}
-          className="text-sm text-text-base/50 hover:text-text-base"
-        >
-          ← Davamiyyətə Qayıt
-        </Link>
+      {/* Action bar */}
+      <div className="mt-6 flex items-center justify-end">
         <div className="flex gap-3">
           <button
-            type="button"
-            className="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+            onClick={handleSave}
+            disabled={saveStatus === 'saving'}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                       transition-all
+                       ${saveStatus === 'saved'
+                         ? 'bg-emerald-600 text-white'
+                         : 'bg-emerald-600 hover:bg-emerald-700 text-white'}
+                       ${saveStatus === 'saving' ? 'opacity-70 cursor-wait' : ''}`}
           >
-            Saxla
+            {saveStatus === 'saving' ? (
+              <><Loader2 size={15} className="animate-spin" /> Saxlanılır...</>
+            ) : saveStatus === 'saved' ? (
+              <><CheckCircle size={15} /> Saxlanıldı</>
+            ) : (
+              <><Save size={15} /> Saxla</>
+            )}
           </button>
-          <button
-            type="button"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-          >
-            Dərsi Tamamla ✓
-          </button>
+            <button
+              onClick={() => {
+                if (!hasSaved) {
+                  alert('Əvvəlcə qiymətləri saxlayın.');
+                  return;
+                }
+                setLessonCompleted(true);
+                console.log('Lesson marked completed:', selectedLessonId);
+              }}
+              disabled={!hasSaved}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                         transition-all cursor-pointer
+                         ${lessonCompleted
+                           ? 'bg-lms-navy text-white'
+                           : hasSaved
+                             ? 'bg-lms-navy hover:bg-lms-navy-dark text-white'
+                             : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
+            >
+              <CheckCircle size={15} />
+              {lessonCompleted ? 'Tamamlandı' : 'Dərsi Tamamla'}
+            </button>
         </div>
+      </div>
+
+      <div className="mt-4">
+        <button
+          onClick={() => navigate(ROUTES.TEACHER_ATTENDANCE_HOME)}
+          className="text-sm text-lms-muted hover:text-lms-heading flex items-center gap-1.5 transition-colors"
+        >
+          <ArrowLeft size={15} /> Davamiyyətə Qayıt
+        </button>
       </div>
     </div>
   );

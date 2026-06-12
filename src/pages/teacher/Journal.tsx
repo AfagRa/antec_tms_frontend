@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Save } from 'lucide-react';
+import { Plus, Save, CheckCheck } from 'lucide-react';
 import type { JournalLesson, JournalCell, GradeCategory } from '../../types';
 
 const ATTENDANCE_OPTIONS: Array<{ value: JournalCell['attendance']; label: string }> = [
@@ -77,6 +77,7 @@ export default function TeacherJournal() {
   const [columnCategories, setColumnCategories] = useState<Record<string, GradeCategory>>({});
   const [extraLessons, setExtraLessons] = useState<JournalLesson[]>([]);
   const [lessonTopics, setLessonTopics] = useState<Record<string, string>>({});
+  const [editingTopics, setEditingTopics] = useState<Record<string, boolean>>({});
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -90,6 +91,7 @@ export default function TeacherJournal() {
     setExtraLessons([]);
     setColumnCategories({});
     setLessonTopics({});
+    setEditingTopics({});
   }, [selectedGroupId]);
 
   const lessons = LESSONS_BY_GROUP[selectedGroupId] ?? [];
@@ -140,6 +142,7 @@ export default function TeacherJournal() {
       topic: '',
     };
     setExtraLessons((prev) => [...prev, newLesson]);
+    setEditingTopics((prev) => ({ ...prev, [newLesson.id]: true }));
     // reset input so the same date can be picked again if needed
     if (dateInputRef.current) dateInputRef.current.value = '';
   };
@@ -149,6 +152,24 @@ export default function TeacherJournal() {
     console.log('Saving journal:', journalData);
     setTimeout(() => setToast('done'), 400);
   };
+
+  const handleBulkPresent = useCallback((lessonId: string) => {
+    setJournalData((prev) => {
+      const updated = { ...prev };
+      students.forEach((student) => {
+        const existing = updated[student.id]?.[lessonId];
+        updated[student.id] = {
+          ...updated[student.id],
+          [lessonId]: {
+            attendance: 'I/E',
+            grade: existing?.grade ?? null,
+            minutesLate: 0,
+          },
+        };
+      });
+      return updated;
+    });
+  }, [students]);
 
   return (
     /*
@@ -212,34 +233,76 @@ export default function TeacherJournal() {
           <div className="overflow-auto h-full w-full">
             <table
               className="border-collapse text-sm"
-              style={{ minWidth: `${180 + allLessons.length * 260 + 80 + 130}px` }}
+              style={{ minWidth: `${48 + 180 + allLessons.length * 240 + 80}px` }}
             >
               <thead>
                 {/* ── Row 1: lesson dates + persistent "+ Yeni Tarix" placeholder ── */}
                 <tr>
+                  {/* Row-number column */}
+                  <th
+                    className="sticky left-0 z-20 bg-white border-b border-r border-lms-border
+                               px-2 py-3 text-center text-xs font-medium text-lms-muted
+                               uppercase tracking-wide w-[48px] min-w-[48px]"
+                  >
+                    №
+                  </th>
+
                   {/* Frozen student-name column header */}
                   <th
-                    className="sticky left-0 z-30 bg-white border-b border-r-2 border-lms-border px-4 py-3 text-left font-medium text-lms-muted text-xs uppercase tracking-wide min-w-[180px]"
+                    className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-3 text-left font-medium text-lms-muted text-xs uppercase tracking-wide min-w-[180px]"
                   >
                     Tələbənin adı
                   </th>
 
-                  {allLessons.map((lesson) => (
+                  {allLessons.map((lesson) => {
+                    const isEditing = editingTopics[lesson.id] ?? false;
+                    const isExtra = extraLessons.some((el) => el.id === lesson.id);
+                    const topic = lessonTopics[lesson.id] ?? lesson.topic;
+                    return (
                     <th
                       key={lesson.id}
                       colSpan={2}
-                      className="border-b border-r border-lms-border px-2 py-2 text-center font-medium text-lms-heading text-xs min-w-[130px]"
+                      className="border-b border-r border-lms-border px-2 py-2 text-center font-medium text-lms-heading text-xs min-w-[140px]"
                     >
-                      <div className="font-semibold mb-0.5">{lesson.date}</div>
-                      <input
-                        type="text"
-                        value={getLessonTopic(lesson)}
-                        onChange={(e) => setLessonTopic(lesson.id, e.target.value)}
-                        placeholder="Mövzu adı..."
-                        className="text-[11px] px-1 py-0.5 border border-lms-border rounded bg-slate-50 focus:bg-white text-lms-heading focus:border-lms-navy outline-none w-full text-center"
-                      />
+                      <div className="font-semibold text-lms-heading">{lesson.date}</div>
+                      {isEditing ? (
+                        <div className="flex items-center gap-1 mt-1">
+                          <input
+                            type="text"
+                            value={topic}
+                            onChange={(e) => setLessonTopic(lesson.id, e.target.value)}
+                            placeholder="Mövzu..."
+                            className="w-full text-[10px] px-1 py-0.5 border border-lms-border rounded bg-white text-lms-heading focus:border-lms-navy outline-none"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: false }))}
+                            className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-lms-navy text-white hover:bg-lms-navy-dark transition-colors"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div
+                            className="text-lms-muted font-normal text-[11px] truncate max-w-[130px] mx-auto mt-0.5 leading-tight"
+                            title={topic}
+                          >
+                            {topic.length > 16 ? topic.slice(0, 16) + '…' : topic}
+                          </div>
+                          {isExtra && (
+                            <button
+                              onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: true }))}
+                              className="mt-0.5 text-[9px] text-lms-navy hover:text-lms-navy-dark transition-colors"
+                            >
+                              Redaktə et
+                            </button>
+                          )}
+                        </>
+                      )}
                     </th>
-                  ))}
+                    );
+                  })}
 
                   {/*
                    * ── CHANGE 2: Persistent "+ Yeni Tarix" placeholder column ──
@@ -279,7 +342,9 @@ export default function TeacherJournal() {
 
                 {/* ── Row 2: sub-headers ── */}
                 <tr>
-                  <th className="sticky left-0 z-30 bg-white border-b border-r-2 border-lms-border px-4 py-1" />
+                  <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border
+                                 w-[48px] min-w-[48px]" />
+                  <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-1" />
                   {allLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
                       <th className="border-b border-r border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-gray-50 w-[140px]">
@@ -292,7 +357,7 @@ export default function TeacherJournal() {
                   ))}
                   {/* Placeholder sub-headers */}
                   <th className="border-b border-l border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-slate-50/60 w-[140px]">
-                    Davamiyyət
+                    <div>Davamiyyət</div>
                   </th>
                   <th className="border-b border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-slate-50/60 w-[120px]">
                     Qiymət
@@ -302,10 +367,24 @@ export default function TeacherJournal() {
 
                 {/* ── Row 3: category selects ── */}
                 <tr>
-                  <th className="sticky left-0 z-30 bg-white border-b border-r-2 border-lms-border px-4 py-1" />
+                  <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border
+                                 w-[48px] min-w-[48px]" />
+                  <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-1" />
                   {allLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
-                      <th className="border-b border-r border-lms-border px-1 py-1" />
+                      <th className="border-b border-r border-lms-border px-1 py-1 text-center">
+                        <button
+                          onClick={() => handleBulkPresent(lesson.id)}
+                          className="w-full text-[9px] font-medium px-0.5 py-0.5 rounded
+                                     bg-green-50 text-green-700 border border-green-200
+                                     hover:bg-green-100 hover:border-green-400 transition-all
+                                     flex items-center justify-center gap-0.5 whitespace-nowrap"
+                          title="Bütün tələbələri 'Dərsdə' kimi işarələ"
+                        >
+                          <CheckCheck size={8} />
+                          Hamısı dərsdə
+                        </button>
+                      </th>
                       <th className="border-b border-r border-lms-border px-1 py-1 text-center">
                         <select
                           value={columnCategories[lesson.id] ?? 'daily'}
@@ -343,7 +422,7 @@ export default function TeacherJournal() {
               </thead>
 
               <tbody>
-                {students.map((student) => {
+                {students.map((student, index) => {
                   const studentGrades = allLessons
                     .map((l) => getCell(student.id, l.id).grade)
                     .filter((g): g is number => g !== null && g !== undefined);
@@ -364,12 +443,18 @@ export default function TeacherJournal() {
 
                   return (
                     <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                      {/* Row number */}
+                      <td className="sticky left-0 z-10 bg-white border-b border-r border-lms-border
+                                     px-2 py-2 text-center text-xs font-medium text-lms-muted
+                                     w-[48px] min-w-[48px] select-none">
+                        {index + 1}
+                      </td>
+
                       {/*
-                       * ── CHANGE 1: Frozen left column ────────────────────────
-                       * `sticky left-0 z-30 bg-white` keeps the name pinned
-                       * while the date columns scroll underneath it.
+                       * Frozen left column: student name pinned at left-[48px],
+                       * after the № column.
                        */}
-                      <td className="sticky left-0 z-30 bg-white border-b border-r-2 border-lms-border px-4 py-2 font-medium text-lms-heading whitespace-nowrap">
+                      <td className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-2 font-medium text-lms-heading whitespace-nowrap">
                         {student.fullName}
                       </td>
 
@@ -389,8 +474,8 @@ export default function TeacherJournal() {
                                       minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
                                     });
                                   }}
-                                  className={`text-xs border border-lms-border rounded px-1 py-1 focus:ring-1 focus:ring-lms-navy/40 focus:border-lms-navy bg-white outline-none ${
-                                    cell.attendance === 'G' ? 'w-[60px]' : 'w-full'
+                                  className={`text-xs border border-lms-border rounded px-1 py-1 focus:ring-1 focus:ring-lms-navy/40 focus:border-lms-navy bg-white outline-none min-w-0 ${
+                                    cell.attendance === 'G' ? 'w-[60px] flex-none' : 'flex-1'
                                   }`}
                                   style={{
                                     color: cell.attendance
