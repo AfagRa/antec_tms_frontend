@@ -38,27 +38,48 @@ const REPORT_DATA = {
   ],
 };
 
+const GROUP_ATTENDANCE: Record<string, typeof REPORT_DATA.attendanceOverall> = {
+  '1': { present: 42, late: 5, excused: 3, unexcused: 6 },
+  '2': { present: 14, late: 2, excused: 1, unexcused: 1 },
+  '3': { present: 12, late: 1, excused: 1, unexcused: 2 },
+};
+
 export default function Reports() {
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string>('all');
-
-  const totalStudents = REPORT_DATA.groups.reduce((s, g) => s + g.studentCount, 0);
-  const totalLessons = REPORT_DATA.groups.reduce((s, g) => s + g.lessonCount, 0);
-  const att = REPORT_DATA.attendanceOverall;
-  const attTotal = att.present + att.late + att.excused + att.unexcused;
-  const overallAttendance = Math.round((att.present / attTotal) * 100);
-  const overallAvgGrade = Math.round(
-    REPORT_DATA.groups.reduce((s, g) => s + g.avgGrade, 0) / REPORT_DATA.groups.length,
-  );
 
   const filteredGroups = selectedGroupFilter === 'all'
     ? REPORT_DATA.groups
     : REPORT_DATA.groups.filter((g) => g.id === selectedGroupFilter);
 
+  const totalStudents = filteredGroups.reduce((s, g) => s + g.studentCount, 0);
+  const totalLessons = filteredGroups.reduce((s, g) => s + g.lessonCount, 0);
+
+  const overallAttendance = filteredGroups.length
+    ? Math.round(
+        filteredGroups.reduce((s, g) => s + g.avgAttendance, 0) / filteredGroups.length,
+      )
+    : 0;
+
+  const overallAvgGrade = filteredGroups.length
+    ? Math.round(
+        filteredGroups.reduce((s, g) => s + g.avgGrade, 0) / filteredGroups.length,
+      )
+    : 0;
+
+  const attendanceData = selectedGroupFilter === 'all'
+    ? REPORT_DATA.attendanceOverall
+    : (GROUP_ATTENDANCE[selectedGroupFilter] ?? REPORT_DATA.attendanceOverall);
+
+  const attTotal = attendanceData.present
+    + attendanceData.late
+    + attendanceData.excused
+    + attendanceData.unexcused;
+
   const attendanceRows = [
-    { label: 'Dərsdə',        value: att.present,  color: 'bg-green-500' },
-    { label: 'Gecikdi',       value: att.late,      color: 'bg-amber-400' },
-    { label: 'Qayıb (üzrlü)',  value: att.excused,   color: 'bg-blue-400'  },
-    { label: 'Qayıb (üzrsüz)', value: att.unexcused, color: 'bg-red-400'   },
+    { label: 'Dərsdə',        value: attendanceData.present,  color: 'bg-green-500' },
+    { label: 'Gecikdi',       value: attendanceData.late,      color: 'bg-amber-400' },
+    { label: 'Qayıb (üzrlü)',  value: attendanceData.excused,   color: 'bg-blue-400'  },
+    { label: 'Qayıb (üzrsüz)', value: attendanceData.unexcused, color: 'bg-red-400'   },
   ];
 
   return (
