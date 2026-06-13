@@ -2,41 +2,25 @@ import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ATTENDANCE_STATUS_LABELS } from '../../types';
 import { ROUTES } from '../../constants/routes';
-import { createAttendanceRecords } from '../../data/teacherMock';
 import type { AttendanceRecord } from '../../types';
-
-const MOCK_GROUPS = [
-  { id: '1', name: 'Python-A1' },
-  { id: '2', name: 'Code-A2' },
-  { id: '3', name: 'JS-B1' },
-];
-
-const GROUP_STUDENT_IDS: Record<string, string[]> = {
-  '1': ['1', '2', '3'],
-  '2': ['2', '4'],
-  '3': ['1', '3', '5'],
-};
-
-const MOCK_LESSONS_BY_GROUP: Record<string, { id: string; date: string; topic: string }[]> = {
-  '1': [
-    { id: 'l1', date: '04.06.2026', topic: 'Döngələr ve Massivlər' },
-    { id: 'l2', date: '06.06.2026', topic: 'Funksiyalar' },
-  ],
-  '2': [
-    { id: 'l3', date: '05.06.2026', topic: 'HTML Əsasları' },
-  ],
-  '3': [
-    { id: 'l4', date: '07.06.2026', topic: 'Dəyişənlər' },
-  ],
-};
+import {
+  useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
+  getAttendanceForLesson,
+  type AttendanceEntry,
+} from '../../store/academicStore.tsx';
 
 type SaveState = 'idle' | 'saving' | 'done';
 
 export default function Attendance() {
-  const [selectedGroupId, setSelectedGroupId] = useState(MOCK_GROUPS[0].id);
-  const lessons = MOCK_LESSONS_BY_GROUP[selectedGroupId] ?? [];
+  const { state, dispatch } = useAcademic();
+  const [selectedGroupId, setSelectedGroupId] = useState(SHARED_GROUPS[0].id);
+  const lessons = useMemo(
+    () => SHARED_LESSONS.filter((l) => l.groupId === selectedGroupId),
+    [selectedGroupId],
+  );
   const [selectedLessonId, setSelectedLessonId] = useState(lessons[0]?.id ?? '');
   const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [formRecords, setFormRecords] = useState<AttendanceRecord[]>([]);
 
   const selectedLesson = useMemo(
     () => lessons.find((l) => l.id === selectedLessonId),
@@ -44,33 +28,46 @@ export default function Attendance() {
   );
 
   const selectedGroup = useMemo(
-    () => MOCK_GROUPS.find((g) => g.id === selectedGroupId),
+    () => SHARED_GROUPS.find((g) => g.id === selectedGroupId),
     [selectedGroupId],
   );
 
-  const [records, setRecords] = useState<AttendanceRecord[]>(() =>
-    createAttendanceRecords(selectedLessonId || 'l1', 'present', GROUP_STUDENT_IDS[MOCK_GROUPS[0].id]),
-  );
+  const storedEntries = getAttendanceForLesson(state, selectedLessonId);
 
-  const present = records.filter((record) => record.status === 'present').length;
-  const absent = records.filter(
-    (record) => record.status !== 'present' && record.status !== 'late',
+  useEffect(() => {
+    const students = SHARED_STUDENTS.filter((s) => s.groupId === selectedGroupId);
+    const initialized: AttendanceRecord[] = students.map((s) => {
+      const existing = storedEntries.find((e) => e.studentId === s.studentId);
+      return {
+        id: `${selectedLessonId}-${s.studentId}`,
+        lessonId: selectedLessonId,
+        studentId: s.studentId,
+        studentName: s.studentName,
+        studentSurname: s.studentSurname,
+        status: existing?.status ?? 'present',
+        minutesLate: existing?.minutesLate ?? 0,
+        reason: existing?.reason ?? '',
+        teacherNote: existing?.teacherNote ?? '',
+      };
+    });
+    setFormRecords(initialized);
+    setSaveState('idle');
+  }, [selectedGroupId, selectedLessonId, state.attendance]);
+
+  const present = formRecords.filter((r) => r.status === 'present').length;
+  const absent = formRecords.filter(
+    (r) => r.status !== 'present' && r.status !== 'late',
   ).length;
-  const late = records.filter((record) => record.status === 'late').length;
+  const late = formRecords.filter((r) => r.status === 'late').length;
 
   function handleGroupChange(groupId: string) {
-    const firstLesson = (MOCK_LESSONS_BY_GROUP[groupId] ?? [])[0];
-    const lessonId = firstLesson?.id ?? '';
+    const firstLesson = SHARED_LESSONS.filter((l) => l.groupId === groupId)[0];
     setSelectedGroupId(groupId);
-    setSelectedLessonId(lessonId);
-    setRecords(createAttendanceRecords(lessonId || 'l1', 'present', GROUP_STUDENT_IDS[groupId]));
-    setSaveState('idle');
+    setSelectedLessonId(firstLesson?.id ?? '');
   }
 
   function handleLessonChange(lessonId: string) {
     setSelectedLessonId(lessonId);
-    setRecords(createAttendanceRecords(lessonId || 'l1', 'present', GROUP_STUDENT_IDS[selectedGroupId]));
-    setSaveState('idle');
   }
 
   function updateRecord<K extends keyof AttendanceRecord>(
@@ -78,42 +75,29 @@ export default function Attendance() {
     field: K,
     value: AttendanceRecord[K],
   ) {
-    setRecords((prev) =>
-      prev.map((record) =>
-        record.studentId === studentId ? { ...record, [field]: value } : record,
-      ),
+    setFormRecords((prev) =>
+      prev.map((r) => (r.studentId === studentId ? { ...r, [field]: value } : r)),
     );
   }
 
   function markAllPresent() {
-    setRecords((prev) =>
-      prev.map((record) => ({
-        ...record,
-        status: 'present',
-        minutesLate: 0,
-      })),
+    setFormRecords((prev) =>
+      prev.map((r) => ({ ...r, status: 'present', minutesLate: 0 })),
     );
   }
 
   function handleSave() {
     setSaveState('saving');
-    const payload = {
-      date: selectedLesson?.date,
-      groupId: selectedGroupId,
-      groupName: selectedGroup?.name,
+    const entries: AttendanceEntry[] = formRecords.map((r) => ({
       lessonId: selectedLessonId,
-      lessonTopic: selectedLesson?.topic,
-      attendance: records.map((r) => ({
-        studentId: r.studentId,
-        studentName: `${r.studentName} ${r.studentSurname}`,
-        status: r.status,
-        minutesLate: r.minutesLate,
-        reason: r.reason,
-        teacherNote: r.teacherNote,
-      })),
-    };
-    console.log('Saving attendance:', payload);
-    setTimeout(() => setSaveState('done'), 600);
+      studentId: r.studentId,
+      status: r.status,
+      minutesLate: r.minutesLate,
+      reason: r.reason,
+      teacherNote: r.teacherNote,
+    }));
+    dispatch({ type: 'BULK_ATTENDANCE', lessonId: selectedLessonId, entries });
+    setTimeout(() => setSaveState('done'), 400);
   }
 
   useEffect(() => {
@@ -127,7 +111,6 @@ export default function Attendance() {
     <div>
       <h1 className="mb-4 text-2xl font-semibold text-text-base">Davamiyyət Daxil Et</h1>
 
-      {/* Group + Lesson selection */}
       <div className="lms-card mb-4 p-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -137,7 +120,7 @@ export default function Attendance() {
               onChange={(e) => handleGroupChange(e.target.value)}
               className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy"
             >
-              {MOCK_GROUPS.map((g) => (
+              {SHARED_GROUPS.map((g) => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
             </select>
@@ -157,7 +140,6 @@ export default function Attendance() {
         </div>
       </div>
 
-      {/* Info bar */}
       <div className="mb-6 flex items-center justify-between gap-4 rounded-neu bg-surface px-4 py-3 shadow-neu-inset-sm">
         <p className="text-sm text-text-base">
           <span className="font-medium">Dərs Tarixi:</span> {selectedLesson?.date ?? '—'}
@@ -175,14 +157,12 @@ export default function Attendance() {
         </button>
       </div>
 
-      {/* Toast */}
       {saveState === 'done' && (
         <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-medium">
           Davamiyyət uğurla yadda saxlanıldı!
         </div>
       )}
 
-      {/* Table */}
       <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <table className="w-full min-w-[960px]">
           <thead>
@@ -195,7 +175,7 @@ export default function Attendance() {
             </tr>
           </thead>
           <tbody>
-            {records.map((record, index) => (
+            {formRecords.map((record, index) => (
                 <tr key={record.id} className="border-b border-surface-dark/20 last:border-0">
                   <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
                   <td className="px-4 py-3 text-sm text-text-base">
@@ -263,7 +243,6 @@ export default function Attendance() {
         </table>
       </div>
 
-      {/* Legend */}
       <div className="mt-3 mb-2 px-1">
         <p className="text-xs font-medium text-lms-muted mb-1.5 uppercase tracking-wide">
           Status izahı:
@@ -284,7 +263,6 @@ export default function Attendance() {
         </div>
       </div>
 
-      {/* Summary */}
       <p className="mt-4 text-sm font-medium text-text-base/50">
         {ATTENDANCE_STATUS_LABELS.present}: {present} | Qayıb: {absent} | {ATTENDANCE_STATUS_LABELS.late}: {late}
       </p>

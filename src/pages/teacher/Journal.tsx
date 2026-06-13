@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Save, CheckCheck } from 'lucide-react';
+import { Plus, Save } from 'lucide-react';
 import type { JournalLesson, JournalCell, GradeCategory } from '../../types';
+import {
+  useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
+  getAttendanceForLesson, getGradesForLesson,
+} from '../../store/academicStore.tsx';
 
 const ATTENDANCE_OPTIONS: Array<{ value: JournalCell['attendance']; label: string }> = [
   { value: null,  label: '—' },
@@ -25,53 +29,11 @@ const CATEGORY_OPTIONS: { value: GradeCategory; label: string }[] = [
   { value: 'final',    label: 'Final' },
 ];
 
-const GROUPS = [
-  { id: '1', name: 'Python-A1' },
-  { id: '2', name: 'Code-A2' },
-  { id: '3', name: 'JS-B1' },
-];
-
-const LESSONS_BY_GROUP: Record<string, JournalLesson[]> = {
-  '1': [
-    { id: 'l1', date: '01.06.2026', topic: 'Giriş' },
-    { id: 'l2', date: '03.06.2026', topic: 'Dəyişənlər' },
-    { id: 'l3', date: '06.06.2026', topic: 'Massivlər' },
-    { id: 'l4', date: '08.06.2026', topic: 'Funksiyalar' },
-    { id: 'l5', date: '10.06.2026', topic: 'Döngülər' },
-  ],
-  '2': [
-    { id: 'l6', date: '02.06.2026', topic: 'HTML Əsasları' },
-    { id: 'l7', date: '05.06.2026', topic: 'CSS Flex' },
-    { id: 'l8', date: '09.06.2026', topic: 'JS Giriş' },
-  ],
-  '3': [
-    { id: 'l9',  date: '04.06.2026', topic: 'Dəyişənlər' },
-    { id: 'l10', date: '07.06.2026', topic: 'Funksiyalar' },
-  ],
-};
-
-const STUDENTS_BY_GROUP: Record<string, { id: string; fullName: string }[]> = {
-  '1': [
-    { id: 's1', fullName: 'Əli Məmmədov' },
-    { id: 's2', fullName: 'Sona Quliyeva' },
-    { id: 's3', fullName: 'Orxan Rəsulov' },
-    { id: 's4', fullName: 'Leyla Əliyeva' },
-    { id: 's5', fullName: 'Murad Həsənov' },
-  ],
-  '2': [
-    { id: 's6', fullName: 'Nigar Babayeva' },
-    { id: 's7', fullName: 'Rauf İsmayılov' },
-  ],
-  '3': [
-    { id: 's8', fullName: 'Könül Nəsirov' },
-    { id: 's9', fullName: 'Tural Qədirov' },
-  ],
-};
-
 type JournalData = Record<string, Record<string, JournalCell>>;
 
 export default function TeacherJournal() {
-  const [selectedGroupId, setSelectedGroupId] = useState('1');
+  const { state, dispatch } = useAcademic();
+  const [selectedGroupId, setSelectedGroupId] = useState(SHARED_GROUPS[0].id);
   const [journalData, setJournalData] = useState<JournalData>({});
   const [toast, setToast] = useState<'idle' | 'saving' | 'done'>('idle');
   const [columnCategories, setColumnCategories] = useState<Record<string, GradeCategory>>({});
@@ -94,17 +56,44 @@ export default function TeacherJournal() {
     setEditingTopics({});
   }, [selectedGroupId]);
 
-  const lessons = LESSONS_BY_GROUP[selectedGroupId] ?? [];
+  const lessons = SHARED_LESSONS.filter((l) => l.groupId === selectedGroupId);
   const allLessons = [...lessons, ...extraLessons];
-  const students = STUDENTS_BY_GROUP[selectedGroupId] ?? [];
+  const students = SHARED_STUDENTS.filter((s) => s.groupId === selectedGroupId);
 
-  const getLessonTopic = useCallback((lesson: JournalLesson): string =>
-    lesson.id in lessonTopics ? lessonTopics[lesson.id] : (lesson.topic ?? ''),
-  [lessonTopics]);
+  // Initialize journal data from store
+  useEffect(() => {
+    setJournalData((prev) => {
+      const next = { ...prev };
+      allLessons.forEach((lesson) => {
+        const storedAtt = getAttendanceForLesson(state, lesson.id);
+        const storedGrades = getGradesForLesson(state, lesson.id);
+        students.forEach((student) => {
+          if (!next[student.studentId]) next[student.studentId] = {};
+          const existing = next[student.studentId][lesson.id];
+          const attEntry = storedAtt.find((e) => e.studentId === student.studentId);
+          const gradeEntry = storedGrades.find((e) => e.studentId === student.studentId);
+          if (!existing || attEntry || gradeEntry) {
+            next[student.studentId][lesson.id] = {
+              attendance: attEntry ? attStatusToJournalCode(attEntry.status) : (existing?.attendance ?? null),
+              grade: gradeEntry?.score ?? (existing?.grade ?? null),
+              minutesLate: attEntry?.minutesLate ?? (existing?.minutesLate ?? 0),
+            };
+          }
+        });
+      });
+      return next;
+    });
+  }, [selectedGroupId, state.attendance, state.grades, students.length]);
 
-  const setLessonTopic = useCallback((lessonId: string, topic: string) => {
-    setLessonTopics((prev) => ({ ...prev, [lessonId]: topic }));
-  }, []);
+  function attStatusToJournalCode(status: string): JournalCell['attendance'] {
+    switch (status) {
+      case 'present':          return 'I/E';
+      case 'late':             return 'G';
+      case 'absent_excused':   return 'QÜ';
+      case 'absent_unexcused': return 'Q';
+      default:                 return null;
+    }
+  }
 
   const getCell = useCallback(
     (studentId: string, lessonId: string): JournalCell =>
@@ -125,11 +114,63 @@ export default function TeacherJournal() {
     [getCell],
   );
 
-  // ── CHANGE 2: open native date picker, on pick → append new lesson column ──
+  const dispatchCell = useCallback(
+    (studentId: string, lessonId: string, patch: Partial<JournalCell>) => {
+      if ('attendance' in patch || 'minutesLate' in patch) {
+        const status = patch.attendance !== undefined
+          ? journalCodeToAttStatus(patch.attendance)
+          : journalCodeToAttStatus(journalData[studentId]?.[lessonId]?.attendance ?? null);
+        dispatch({
+          type: 'UPSERT_ATTENDANCE',
+          payload: {
+            studentId,
+            lessonId,
+            status,
+            minutesLate: patch.minutesLate ?? (journalData[studentId]?.[lessonId]?.minutesLate ?? 0),
+            reason: '',
+            teacherNote: '',
+          },
+        });
+      }
+      if ('grade' in patch) {
+        dispatch({
+          type: 'UPSERT_GRADE',
+          payload: {
+            studentId,
+            lessonId,
+            score: patch.grade ?? 0,
+            maxScore: 100,
+            teacherNote: '',
+            category: columnCategories[lessonId] ?? 'daily',
+          },
+        });
+      }
+    },
+    [dispatch, journalData, columnCategories],
+  );
+
+  function journalCodeToAttStatus(code: JournalCell['attendance']): string {
+    switch (code) {
+      case 'I/E': return 'present';
+      case 'G':   return 'late';
+      case 'QÜ':  return 'absent_excused';
+      case 'Q':   return 'absent_unexcused';
+      default:    return 'present';
+    }
+  }
+
+  const getLessonTopic = useCallback((lesson: JournalLesson): string =>
+    lesson.id in lessonTopics ? lessonTopics[lesson.id] : (lesson.topic ?? ''),
+  [lessonTopics]);
+
+  const setLessonTopic = useCallback((lessonId: string, topic: string) => {
+    setLessonTopics((prev) => ({ ...prev, [lessonId]: topic }));
+  }, []);
+
   const handleNewDateClick = () => {
     const input = dateInputRef.current;
     if (!input) return;
-    try { input.showPicker(); } catch { /* fallback below */ }
+    try { input.showPicker(); } catch { /* fallback */ }
   };
 
   const handleDatePicked = (dateStr: string) => {
@@ -143,13 +184,11 @@ export default function TeacherJournal() {
     };
     setExtraLessons((prev) => [...prev, newLesson]);
     setEditingTopics((prev) => ({ ...prev, [newLesson.id]: true }));
-    // reset input so the same date can be picked again if needed
     if (dateInputRef.current) dateInputRef.current.value = '';
   };
 
   const handleSaveJournal = () => {
     setToast('saving');
-    console.log('Saving journal:', journalData);
     setTimeout(() => setToast('done'), 400);
   };
 
@@ -157,9 +196,9 @@ export default function TeacherJournal() {
     setJournalData((prev) => {
       const updated = { ...prev };
       students.forEach((student) => {
-        const existing = updated[student.id]?.[lessonId];
-        updated[student.id] = {
-          ...updated[student.id],
+        const existing = updated[student.studentId]?.[lessonId];
+        updated[student.studentId] = {
+          ...updated[student.studentId],
           [lessonId]: {
             attendance: 'I/E',
             grade: existing?.grade ?? null,
@@ -169,19 +208,24 @@ export default function TeacherJournal() {
       });
       return updated;
     });
-  }, [students]);
+    // Dispatch bulk update
+    dispatch({
+      type: 'BULK_ATTENDANCE',
+      lessonId,
+      entries: students.map((s) => ({
+        studentId: s.studentId,
+        lessonId,
+        status: 'present',
+        minutesLate: 0,
+        reason: '',
+        teacherNote: '',
+      })),
+    });
+  }, [students, dispatch]);
 
   return (
-    /*
-     * ── CHANGE 1: Isolated Canvas Layout ──────────────────────────────────────
-     * The outermost wrapper (`h-full overflow-hidden flex flex-col`) anchors
-     * to the parent layout shell (sidebar + main). Nothing here scrolls.
-     * The inner `flex-1 min-h-0` canvas is the ONLY element that scrolls,
-     * and only in both axes, so the sidebar and the top bar never move.
-     */
     <div className="flex flex-col h-full overflow-hidden">
 
-      {/* ── Fixed top bar: title + controls — never scrolls ── */}
       <div className="shrink-0">
         <h1 className="text-2xl font-semibold text-lms-heading mb-4">Jurnal</h1>
 
@@ -193,7 +237,7 @@ export default function TeacherJournal() {
               onChange={(e) => setSelectedGroupId(e.target.value)}
               className="border border-lms-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy bg-white"
             >
-              {GROUPS.map((g) => (
+              {SHARED_GROUPS.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.name}
                 </option>
@@ -221,13 +265,6 @@ export default function TeacherJournal() {
         </div>
       </div>
 
-      {/*
-       * ── CHANGE 1: Isolated scroll canvas ────────────────────────────────────
-       * `flex-1 min-h-0` lets this div fill all remaining vertical space.
-       * `overflow-auto` on the inner div is the SOLE scroll surface.
-       * The table's `sticky` columns work because the scroll container is
-       * this div, not the window.
-       */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div className="lms-card p-0 h-full overflow-hidden">
           <div className="overflow-auto h-full w-full">
@@ -236,9 +273,7 @@ export default function TeacherJournal() {
               style={{ minWidth: `${48 + 180 + allLessons.length * 240 + 80}px` }}
             >
               <thead>
-                {/* ── Row 1: lesson dates + persistent "+ Yeni Tarix" placeholder ── */}
                 <tr>
-                  {/* Row-number column */}
                   <th
                     className="sticky left-0 z-20 bg-white border-b border-r border-lms-border
                                px-2 py-3 text-center text-xs font-medium text-lms-muted
@@ -247,7 +282,6 @@ export default function TeacherJournal() {
                     №
                   </th>
 
-                  {/* Frozen student-name column header */}
                   <th
                     className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-3 text-left font-medium text-lms-muted text-xs uppercase tracking-wide min-w-[180px]"
                   >
@@ -304,13 +338,6 @@ export default function TeacherJournal() {
                     );
                   })}
 
-                  {/*
-                   * ── CHANGE 2: Persistent "+ Yeni Tarix" placeholder column ──
-                   * This header cell is always the rightmost date header.
-                   * Clicking it opens the native date picker. Once a date is
-                   * selected, a real lesson column is appended and this
-                   * placeholder remains—just like inserting columns in Excel.
-                   */}
                   <th
                     colSpan={2}
                     className="relative border-b border-l border-lms-border px-2 py-2 text-center min-w-[130px] bg-slate-50/60"
@@ -332,7 +359,6 @@ export default function TeacherJournal() {
                     />
                   </th>
 
-                  {/* Sticky average column header */}
                   <th
                     className="sticky right-0 z-20 bg-slate-100 border-b border-l border-lms-border px-3 py-3 text-center font-semibold text-slate-700 text-xs uppercase tracking-wide min-w-[80px]"
                   >
@@ -340,7 +366,6 @@ export default function TeacherJournal() {
                   </th>
                 </tr>
 
-                {/* ── Row 2: sub-headers ── */}
                 <tr>
                   <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border
                                  w-[48px] min-w-[48px]" />
@@ -355,7 +380,6 @@ export default function TeacherJournal() {
                       </th>
                     </React.Fragment>
                   ))}
-                  {/* Placeholder sub-headers */}
                   <th className="border-b border-l border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-slate-50/60 w-[140px]">
                     <div>Davamiyyət</div>
                   </th>
@@ -365,7 +389,6 @@ export default function TeacherJournal() {
                   <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-lms-border px-3 py-1" />
                 </tr>
 
-                {/* ── Row 3: category selects ── */}
                 <tr>
                   <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border
                                  w-[48px] min-w-[48px]" />
@@ -381,7 +404,7 @@ export default function TeacherJournal() {
                                      flex items-center justify-center gap-0.5 whitespace-nowrap"
                           title="Bütün tələbələri 'Dərsdə' kimi işarələ"
                         >
-                          <CheckCheck size={8} />
+                          <span className="text-[8px]">✔</span>
                           Hamısı dərsdə
                         </button>
                       </th>
@@ -406,7 +429,6 @@ export default function TeacherJournal() {
                       </th>
                     </React.Fragment>
                   ))}
-                  {/* Placeholder category cells (disabled — no date yet) */}
                   <th className="border-b border-l border-lms-border px-1 py-1 bg-slate-50/60" />
                   <th className="border-b border-lms-border px-1 py-1 text-center bg-slate-50/60">
                     <select
@@ -424,7 +446,7 @@ export default function TeacherJournal() {
               <tbody>
                 {students.map((student, index) => {
                   const studentGrades = allLessons
-                    .map((l) => getCell(student.id, l.id).grade)
+                    .map((l) => getCell(student.studentId, l.id).grade)
                     .filter((g): g is number => g !== null && g !== undefined);
                   const avg =
                     studentGrades.length > 0
@@ -442,34 +464,32 @@ export default function TeacherJournal() {
                           : 'text-red-500 font-semibold';
 
                   return (
-                    <tr key={student.id} className="hover:bg-slate-50 transition-colors">
-                      {/* Row number */}
+                    <tr key={student.studentId} className="hover:bg-slate-50 transition-colors">
                       <td className="sticky left-0 z-10 bg-white border-b border-r border-lms-border
                                      px-2 py-2 text-center text-xs font-medium text-lms-muted
                                      w-[48px] min-w-[48px] select-none">
                         {index + 1}
                       </td>
 
-                      {/*
-                       * Frozen left column: student name pinned at left-[48px],
-                       * after the № column.
-                       */}
                       <td className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-2 font-medium text-lms-heading whitespace-nowrap">
-                        {student.fullName}
+                        {student.studentName} {student.studentSurname}
                       </td>
 
                       {allLessons.map((lesson) => {
-                        const cell = getCell(student.id, lesson.id);
+                        const cell = getCell(student.studentId, lesson.id);
                         return (
                           <React.Fragment key={lesson.id}>
-                            {/* Attendance cell */}
                             <td className="border-b border-r border-lms-border px-1 py-1.5 w-[140px]">
                               <div className="flex items-center gap-1">
                                 <select
                                   value={cell.attendance ?? ''}
                                   onChange={(e) => {
                                     const val = (e.target.value || null) as JournalCell['attendance'];
-                                    setCell(student.id, lesson.id, {
+                                    setCell(student.studentId, lesson.id, {
+                                      attendance: val,
+                                      minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
+                                    });
+                                    dispatchCell(student.studentId, lesson.id, {
                                       attendance: val,
                                       minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
                                     });
@@ -506,12 +526,12 @@ export default function TeacherJournal() {
                                       min={1}
                                       max={90}
                                       value={cell.minutesLate ?? ''}
-                                      onChange={(e) =>
-                                        setCell(student.id, lesson.id, {
-                                          minutesLate:
-                                            e.target.value === '' ? 0 : Number(e.target.value),
-                                        })
-                                      }
+                                      onChange={(e) => {
+                                        const minutesLate =
+                                          e.target.value === '' ? 0 : Number(e.target.value);
+                                        setCell(student.studentId, lesson.id, { minutesLate });
+                                        dispatchCell(student.studentId, lesson.id, { minutesLate });
+                                      }}
                                       placeholder="dəq"
                                       className="w-[38px] text-xs border border-amber-300 rounded px-1 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50 text-amber-700"
                                       title="Gecikdiyi dəqiqə"
@@ -522,18 +542,17 @@ export default function TeacherJournal() {
                               </div>
                             </td>
 
-                            {/* Grade cell */}
                             <td className="border-b border-r border-lms-border px-1 py-1.5 w-[80px]">
                               <input
                                 type="number"
                                 min={0}
                                 max={100}
                                 value={cell.grade ?? ''}
-                                onChange={(e) =>
-                                  setCell(student.id, lesson.id, {
-                                    grade: e.target.value === '' ? null : Number(e.target.value),
-                                  })
-                                }
+                                onChange={(e) => {
+                                  const grade = e.target.value === '' ? null : Number(e.target.value);
+                                  setCell(student.studentId, lesson.id, { grade });
+                                  dispatchCell(student.studentId, lesson.id, { grade });
+                                }}
                                 placeholder="Bal"
                                 className="w-[60px] mx-auto block text-center text-xs border border-lms-border rounded px-1 py-1 focus:border-lms-navy focus:ring-1 focus:ring-lms-navy/30 outline-none bg-white text-lms-heading"
                               />
@@ -542,7 +561,6 @@ export default function TeacherJournal() {
                         );
                       })}
 
-                      {/* ── CHANGE 2: Placeholder body cells (dimmed, non-interactive) ── */}
                       <td className="border-b border-l border-lms-border px-1 py-1.5 w-[140px] bg-slate-50/60">
                         <span className="text-gray-300 text-xs block text-center">—</span>
                       </td>
@@ -550,7 +568,6 @@ export default function TeacherJournal() {
                         <span className="text-gray-300 text-xs block text-center">—</span>
                       </td>
 
-                      {/* Sticky average column */}
                       <td
                         className={`sticky right-0 z-10 bg-slate-100 border-b border-l border-lms-border px-3 py-2 text-center font-semibold text-sm ${avgColor}`}
                       >
@@ -565,7 +582,6 @@ export default function TeacherJournal() {
         </div>
       </div>
 
-      {/* Legend — fixed below table, never scrolls */}
       <div className="flex items-center gap-4 text-xs text-lms-muted flex-wrap mt-3 shrink-0">
         <span>Təlimat:</span>
         <span className="text-lms-navy font-bold">I/E</span><span>= İştirak edir</span>

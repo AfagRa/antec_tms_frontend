@@ -1,98 +1,115 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Users, BookOpen, CalendarCheck, PenLine } from 'lucide-react';
-
-const REPORT_DATA = {
-  groups: [
-    {
-      id: '1', name: 'Python-A1', studentCount: 6,
-      avgAttendance: 87, avgGrade: 78,
-      lessonCount: 12, completedLessons: 10,
-    },
-    {
-      id: '2', name: 'Code-A2', studentCount: 2,
-      avgAttendance: 92, avgGrade: 84,
-      lessonCount: 8, completedLessons: 8,
-    },
-    {
-      id: '3', name: 'JS-B1', studentCount: 2,
-      avgAttendance: 75, avgGrade: 71,
-      lessonCount: 6, completedLessons: 4,
-    },
-  ],
-  attendanceOverall: {
-    present: 68, late: 8, excused: 5, unexcused: 9,
-  },
-  gradesByCategory: [
-    { category: 'Dərs qiyməti',  count: 32, avg: 76 },
-    { category: 'Ev tapşırığı',  count: 18, avg: 82 },
-    { category: 'Modul imtahanı', count: 6,  avg: 74 },
-    { category: 'Layihə',        count: 4,  avg: 88 },
-    { category: 'Final imtahanı', count: 2,  avg: 79 },
-  ],
-  topStudents: [
-    { name: 'Leyla Əliyeva',    group: 'Python-A1', avg: 94, attendance: 100 },
-    { name: 'Nigar Babayeva',   group: 'Code-A2',   avg: 91, attendance: 95  },
-    { name: 'Könül Nəsirov',    group: 'JS-B1',     avg: 88, attendance: 92  },
-    { name: 'Əli Məmmədov',     group: 'Python-A1', avg: 85, attendance: 88  },
-    { name: 'Rauf İsmayılov',   group: 'Code-A2',   avg: 81, attendance: 85  },
-  ],
-};
-
-const GROUP_ATTENDANCE: Record<string, typeof REPORT_DATA.attendanceOverall> = {
-  '1': { present: 42, late: 5, excused: 3, unexcused: 6 },
-  '2': { present: 14, late: 2, excused: 1, unexcused: 1 },
-  '3': { present: 12, late: 1, excused: 1, unexcused: 2 },
-};
+import {
+  useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
+  getAttendanceStats, getGroupStats,
+} from '../store/academicStore.tsx';
 
 export default function Reports() {
+  const { state } = useAcademic();
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string>('all');
 
-  const filteredGroups = selectedGroupFilter === 'all'
-    ? REPORT_DATA.groups
-    : REPORT_DATA.groups.filter((g) => g.id === selectedGroupFilter);
+  const filteredGroupIds = useMemo(() => {
+    if (selectedGroupFilter === 'all') return SHARED_GROUPS.map((g) => g.id);
+    return [selectedGroupFilter];
+  }, [selectedGroupFilter]);
+
+  const groupsWithStats = useMemo(
+    () => SHARED_GROUPS.map((g) => ({ ...g, ...getGroupStats(state, g.id) })),
+    [state.attendance, state.grades],
+  );
+
+  const filteredGroups = useMemo(
+    () => groupsWithStats.filter((g) => filteredGroupIds.includes(g.id)),
+    [groupsWithStats, filteredGroupIds],
+  );
 
   const totalStudents = filteredGroups.reduce((s, g) => s + g.studentCount, 0);
   const totalLessons = filteredGroups.reduce((s, g) => s + g.lessonCount, 0);
 
   const overallAttendance = filteredGroups.length
-    ? Math.round(
-        filteredGroups.reduce((s, g) => s + g.avgAttendance, 0) / filteredGroups.length,
-      )
+    ? Math.round(filteredGroups.reduce((s, g) => s + g.avgAttendance, 0) / filteredGroups.length)
     : 0;
 
   const overallAvgGrade = filteredGroups.length
-    ? Math.round(
-        filteredGroups.reduce((s, g) => s + g.avgGrade, 0) / filteredGroups.length,
-      )
+    ? Math.round(filteredGroups.reduce((s, g) => s + g.avgGrade, 0) / filteredGroups.length)
     : 0;
 
-  const attendanceData = selectedGroupFilter === 'all'
-    ? REPORT_DATA.attendanceOverall
-    : (GROUP_ATTENDANCE[selectedGroupFilter] ?? REPORT_DATA.attendanceOverall);
-
-  const attTotal = attendanceData.present
-    + attendanceData.late
-    + attendanceData.excused
-    + attendanceData.unexcused;
+  const attStats = getAttendanceStats(state, selectedGroupFilter === 'all' ? undefined : selectedGroupFilter);
+  const attTotal = attStats.total || 1;
 
   const attendanceRows = [
-    { label: 'Dərsdə',        value: attendanceData.present,  color: 'bg-green-500' },
-    { label: 'Gecikdi',       value: attendanceData.late,      color: 'bg-amber-400' },
-    { label: 'Qayıb (üzrlü)',  value: attendanceData.excused,   color: 'bg-blue-400'  },
-    { label: 'Qayıb (üzrsüz)', value: attendanceData.unexcused, color: 'bg-red-400'   },
+    { label: 'Dərsdə',        value: attStats.present,  color: 'bg-green-500' },
+    { label: 'Gecikdi',       value: attStats.late,      color: 'bg-amber-400' },
+    { label: 'Qayıb (üzrlü)',  value: attStats.excused,   color: 'bg-blue-400'  },
+    { label: 'Qayıb (üzrsüz)', value: attStats.unexcused, color: 'bg-red-400'   },
   ];
+
+  // Grade categories from raw grades
+  const gradeCategories = useMemo(() => {
+    const filteredLessons = selectedGroupFilter === 'all'
+      ? SHARED_LESSONS
+      : SHARED_LESSONS.filter((l) => l.groupId === selectedGroupFilter);
+    const lessonIds = new Set(filteredLessons.map((l) => l.id));
+    const relevant = state.grades.filter((g) => lessonIds.has(g.lessonId) && g.score !== null);
+    const byCat: Record<string, { scores: number[]; count: number }> = {};
+    relevant.forEach((g) => {
+      if (!byCat[g.category]) byCat[g.category] = { scores: [], count: 0 };
+      byCat[g.category].scores.push(g.score as number);
+      byCat[g.category].count++;
+    });
+    return Object.entries(byCat).map(([category, data]) => ({
+      category,
+      count: data.count,
+      avg: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length) || 0,
+    }));
+  }, [state.grades, selectedGroupFilter]);
+
+  // Top students
+  const topStudents = useMemo(() => {
+    const filteredLessons = selectedGroupFilter === 'all'
+      ? SHARED_LESSONS
+      : SHARED_LESSONS.filter((l) => l.groupId === selectedGroupFilter);
+    const lessonIds = new Set(filteredLessons.map((l) => l.id));
+    const relevant = state.grades.filter((g) => lessonIds.has(g.lessonId) && g.score !== null);
+
+    const studentScores: Record<string, number[]> = {};
+    relevant.forEach((g) => {
+      if (!studentScores[g.studentId]) studentScores[g.studentId] = [];
+      studentScores[g.studentId].push(g.score as number);
+    });
+
+    const students = SHARED_STUDENTS.filter((s) => filteredGroupIds.includes(s.groupId));
+    const studentMap = new Map(students.map((s) => [s.studentId, s]));
+    const groupNameMap = new Map(SHARED_GROUPS.map((g) => [g.id, g.name]));
+
+    const ranked = Object.entries(studentScores)
+      .map(([studentId, scores]) => {
+        const info = studentMap.get(studentId);
+        if (!info) return null;
+        const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+        const totalAtt = state.attendance.filter((a) => a.studentId === studentId && lessonIds.has(a.lessonId));
+        const presentCount = totalAtt.filter((a) => a.status === 'present' || a.status === 'late').length;
+        const attendance = totalAtt.length > 0 ? Math.round((presentCount / totalAtt.length) * 100) : 0;
+        return { name: `${info.studentName} ${info.studentSurname}`, group: groupNameMap.get(info.groupId) ?? '', avg, attendance };
+      })
+      .filter((s): s is NonNullable<typeof s> => s !== null)
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 5);
+
+    return ranked;
+  }, [state.grades, state.attendance, selectedGroupFilter, filteredGroupIds]);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-lms-heading mb-6">Hesabatlar</h1>
 
-      {/* Group filter */}
       <div className="flex items-center gap-3 mb-5">
         <span className="text-sm text-lms-muted">Qrup:</span>
-        {['all', ...REPORT_DATA.groups.map((g) => g.id)].map((id) => {
+        {['all', ...SHARED_GROUPS.map((g) => g.id)].map((id) => {
           const label = id === 'all'
             ? 'Bütün qruplar'
-            : REPORT_DATA.groups.find((g) => g.id === id)?.name ?? id;
+            : SHARED_GROUPS.find((g) => g.id === id)?.name ?? id;
           return (
             <button
               key={id}
@@ -108,7 +125,6 @@ export default function Reports() {
         })}
       </div>
 
-      {/* ── SECTION A: KPI cards ── */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
           { icon: <Users size={20} />, label: 'Ümumi Tələbə', value: totalStudents },
@@ -128,9 +144,7 @@ export default function Reports() {
         ))}
       </div>
 
-      {/* ── SECTION B: Two-column grid ── */}
       <div className="grid grid-cols-[1fr_1fr] gap-4 mb-4">
-        {/* LEFT — Qrup üzrə müqayisə */}
         <div className="lms-card">
           <h3 className="text-base font-semibold mb-4 text-lms-heading">Qrup üzrə müqayisə</h3>
           {filteredGroups.map((g) => (
@@ -185,7 +199,6 @@ export default function Reports() {
           )}
         </div>
 
-        {/* RIGHT — Davamiyyət xülasəsi */}
         <div className="lms-card">
           <h3 className="text-base font-semibold mb-4 text-lms-heading">Davamiyyət xülasəsi</h3>
           {attendanceRows.map((row) => (
@@ -215,12 +228,10 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* ── SECTION C: Two-column grid ── */}
       <div className="grid grid-cols-[1fr_1fr] gap-4">
-        {/* LEFT — Qiymət kateqoriyaları */}
         <div className="lms-card">
           <h3 className="text-base font-semibold mb-4 text-lms-heading">Qiymət kateqoriyaları üzrə</h3>
-          {REPORT_DATA.gradesByCategory.map((cat) => (
+          {gradeCategories.length > 0 ? gradeCategories.map((cat) => (
             <div key={cat.category} className="flex items-center gap-3 mb-3 last:mb-0">
               <div className="flex-1">
                 <div className="flex justify-between mb-1">
@@ -235,14 +246,15 @@ export default function Reports() {
                 </div>
               </div>
             </div>
-          ))}
+          )) : (
+            <p className="text-sm text-lms-muted">Hələ qiymət daxil edilməyib.</p>
+          )}
         </div>
 
-        {/* RIGHT — Ən yüksək nəticəli tələbələr */}
         <div className="lms-card">
           <h3 className="text-base font-semibold mb-1 text-lms-heading">Ən yüksək nəticəli tələbələr</h3>
           <p className="text-xs text-lms-muted mb-4">Ortalama bal əsasında sıralama</p>
-          {REPORT_DATA.topStudents.map((s, i) => (
+          {topStudents.length > 0 ? topStudents.map((s, i) => (
             <div
               key={s.name}
               className="flex items-center gap-3 py-2.5 border-b border-lms-border last:border-0"
@@ -266,7 +278,9 @@ export default function Reports() {
                 <p className="text-xs text-lms-muted">Davamiyyət: {s.attendance}%</p>
               </div>
             </div>
-          ))}
+          )) : (
+            <p className="text-sm text-lms-muted">Hələ qiymət daxil edilməyib.</p>
+          )}
         </div>
       </div>
     </div>

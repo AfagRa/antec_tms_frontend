@@ -1,119 +1,91 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CalendarDays, Save, CheckCircle, Loader2, ArrowLeft,
 } from 'lucide-react';
 import { ROUTES } from '../constants/routes';
 import type { GradeCategory, AttendanceStatus, GradeRecord } from '../types';
-
-const MOCK_GROUPS = [
-  { id: '1', name: 'Python-A1' },
-  { id: '2', name: 'Code-A2' },
-  { id: '3', name: 'JS-B1' },
-];
-
-const MOCK_LESSONS_BY_GROUP: Record<string, { id: string; date: string; topic: string }[]> = {
-  '1': [
-    { id: 'l1', date: '04.06.2026', topic: 'Döngələr ve Massivlər' },
-    { id: 'l2', date: '06.06.2026', topic: 'Funksiyalar' },
-  ],
-  '2': [
-    { id: 'l3', date: '05.06.2026', topic: 'HTML Əsasları' },
-  ],
-  '3': [
-    { id: 'l4', date: '07.06.2026', topic: 'Dəyişənlər' },
-  ],
-};
-
-const MOCK_STUDENTS_BY_GROUP: Record<string, {
-  studentId: string; studentName: string; studentSurname: string;
-  attendanceStatus: AttendanceStatus
-}[]> = {
-  '1': [
-    { studentId: 's1', studentName: 'Əli',    studentSurname: 'Məmmədov', attendanceStatus: 'present' },
-    { studentId: 's2', studentName: 'Sona',   studentSurname: 'Quliyeva', attendanceStatus: 'absent_unexcused' },
-    { studentId: 's3', studentName: 'Orxan',  studentSurname: 'Rəsulov',  attendanceStatus: 'absent_unexcused' },
-    { studentId: 's4', studentName: 'Vüsal',  studentSurname: 'Qəfarov',  attendanceStatus: 'late' },
-    { studentId: 's5', studentName: 'Leyla',  studentSurname: 'Əliyeva',  attendanceStatus: 'present' },
-    { studentId: 's6', studentName: 'Murad',  studentSurname: 'Həsənov',  attendanceStatus: 'present' },
-  ],
-  '2': [
-    { studentId: 's7', studentName: 'Nigar',  studentSurname: 'Babayeva', attendanceStatus: 'present' },
-    { studentId: 's8', studentName: 'Rauf',   studentSurname: 'İsmayılov',attendanceStatus: 'late' },
-  ],
-  '3': [
-    { studentId: 's9', studentName: 'Könül',  studentSurname: 'Nəsirov',  attendanceStatus: 'present' },
-    { studentId: 's10',studentName: 'Tural',  studentSurname: 'Qədirov',  attendanceStatus: 'present' },
-  ],
-};
+import {
+  useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
+  getAttendanceForLesson, getGradesForLesson,
+  type GradeEntry,
+} from '../store/academicStore.tsx';
 
 export default function Grades() {
+  const { state, dispatch } = useAcademic();
   const navigate = useNavigate();
-  const [selectedGroupId, setSelectedGroupId] = useState(MOCK_GROUPS[0].id);
-  const [selectedLessonId, setSelectedLessonId] = useState(
-    MOCK_LESSONS_BY_GROUP[MOCK_GROUPS[0].id][0].id,
+  const [selectedGroupId, setSelectedGroupId] = useState(SHARED_GROUPS[0].id);
+  const lessons = useMemo(
+    () => SHARED_LESSONS.filter((l) => l.groupId === selectedGroupId),
+    [selectedGroupId],
   );
+  const [selectedLessonId, setSelectedLessonId] = useState(lessons[0]?.id ?? '');
   const [lessonCategory, setLessonCategory] = useState<GradeCategory>('daily');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [hasSaved, setHasSaved] = useState(false);
   const [lessonCompleted, setLessonCompleted] = useState(false);
 
-  const currentLesson = (MOCK_LESSONS_BY_GROUP[selectedGroupId] ?? [])
-    .find((l) => l.id === selectedLessonId);
+  const currentLesson = lessons.find((l) => l.id === selectedLessonId);
 
   const [records, setRecords] = useState<GradeRecord[]>([]);
 
+  const storedAttendance = getAttendanceForLesson(state, selectedLessonId);
+  const storedGrades = getGradesForLesson(state, selectedLessonId);
+
   useEffect(() => {
-    const students = MOCK_STUDENTS_BY_GROUP[selectedGroupId] ?? [];
+    const students = SHARED_STUDENTS.filter((s) => s.groupId === selectedGroupId);
+    const attMap = new Map(storedAttendance.map((e) => [e.studentId, e.status]));
+    const gradeMap = new Map(storedGrades.map((e) => [e.studentId, e]));
     setRecords(students.map((s) => ({
-      id: s.studentId,
+      id: `${selectedLessonId}-${s.studentId}`,
       lessonId: selectedLessonId,
       studentId: s.studentId,
       studentName: s.studentName,
       studentSurname: s.studentSurname,
-      attendanceStatus: s.attendanceStatus,
-      score: undefined,
-      maxScore: 100,
-      teacherNote: '',
+      attendanceStatus: attMap.get(s.studentId) ?? 'present',
+      score: gradeMap.get(s.studentId)?.score ?? undefined,
+      maxScore: gradeMap.get(s.studentId)?.maxScore ?? 100,
+      teacherNote: gradeMap.get(s.studentId)?.teacherNote ?? '',
       category: lessonCategory,
     })));
     setSaveStatus('idle');
-    setHasSaved(false);
-    setLessonCompleted(false);
-  }, [selectedGroupId, selectedLessonId]);
+  }, [selectedGroupId, selectedLessonId, state.attendance, state.grades]);
 
   const updateRecord = (studentId: string, field: keyof GradeRecord, value: unknown) => {
     setRecords((prev) => prev.map((r) =>
       r.studentId === studentId ? { ...r, [field]: value } : r,
     ));
-    setSaveStatus('idle');
+    if (saveStatus === 'saved') setSaveStatus('idle');
   };
 
   const handleSave = () => {
     const errors = records.filter((r) => {
-      const writeable = r.attendanceStatus === 'present' || r.attendanceStatus === 'late';
-      return writeable && (r.score === undefined || r.score === null);
+      return r.score === undefined || r.score === null;
     });
     if (errors.length > 0) {
       alert(`${errors.length} tələbənin balı boşdur. Zəhmət olmasa doldurun.`);
       return;
     }
     setSaveStatus('saving');
+    const entries: GradeEntry[] = records.map((r) => ({
+      lessonId: selectedLessonId,
+      studentId: r.studentId,
+      score: r.score ?? 0,
+      maxScore: r.maxScore,
+      teacherNote: r.teacherNote ?? '',
+      category: lessonCategory,
+    }));
+    dispatch({ type: 'BULK_GRADES', lessonId: selectedLessonId, entries });
     setTimeout(() => {
-      console.log('Grades saved:', { lessonId: selectedLessonId, lessonCategory, records });
-    setSaveStatus('saved');
-    setHasSaved(true);
-    setTimeout(() => setSaveStatus('idle'), 3000);
-    }, 800);
+      setSaveStatus('saved');
+      setHasSaved(true);
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }, 400);
   };
 
   const allScores = records
     .filter((r) => r.score !== undefined && r.score !== null)
     .map((r) => r.score as number);
-
-  const writeableCount = records.filter((r) =>
-    r.attendanceStatus === 'present' || r.attendanceStatus === 'late',
-  ).length;
 
   const avg = allScores.length
     ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
@@ -140,7 +112,6 @@ export default function Grades() {
     <div>
       <h1 className="mb-4 text-2xl font-semibold text-lms-heading">Qiymət Daxil Et</h1>
 
-      {/* Top selector bar */}
       <div className="lms-card mb-4">
         <div className="grid grid-cols-3 gap-4 items-end">
           <div>
@@ -149,13 +120,13 @@ export default function Grades() {
               value={selectedGroupId}
               onChange={(e) => {
                 setSelectedGroupId(e.target.value);
-                const firstLesson = MOCK_LESSONS_BY_GROUP[e.target.value]?.[0];
+                const firstLesson = SHARED_LESSONS.filter((l) => l.groupId === e.target.value)[0];
                 if (firstLesson) setSelectedLessonId(firstLesson.id);
               }}
               className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full
                          focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy bg-white"
             >
-              {MOCK_GROUPS.map((g) => (
+              {SHARED_GROUPS.map((g) => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
             </select>
@@ -169,7 +140,7 @@ export default function Grades() {
               className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full
                          focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy bg-white"
             >
-              {(MOCK_LESSONS_BY_GROUP[selectedGroupId] ?? []).map((l) => (
+              {lessons.map((l) => (
                 <option key={l.id} value={l.id}>{l.date} — {l.topic}</option>
               ))}
             </select>
@@ -186,10 +157,9 @@ export default function Grades() {
         </div>
       </div>
 
-      {/* Info bar */}
       <div className="flex items-center gap-3 mb-4 px-1">
         <span className="text-sm font-medium text-lms-heading">
-          {MOCK_GROUPS.find((g) => g.id === selectedGroupId)?.name}
+          {SHARED_GROUPS.find((g) => g.id === selectedGroupId)?.name}
         </span>
         <span className="text-lms-muted">·</span>
         <span className="text-sm text-lms-muted">{currentLesson?.topic}</span>
@@ -197,7 +167,6 @@ export default function Grades() {
         <span className="text-sm text-lms-muted">{currentLesson?.date}</span>
       </div>
 
-      {/* Table */}
       <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <table className="w-full min-w-[900px]">
           <colgroup>
@@ -260,9 +229,7 @@ export default function Grades() {
             </tr>
           </thead>
           <tbody>
-            {records.map((record, index) => {
-              const writeable = record.attendanceStatus === 'present' || record.attendanceStatus === 'late';
-              return (
+            {records.map((record, index) => (
               <tr key={record.id} className="border-b border-surface-dark/20 last:border-0">
                 <td className="border-b border-lms-border px-3 py-1.5 text-center text-xs
                                text-lms-muted font-medium select-none">
@@ -334,12 +301,10 @@ export default function Grades() {
                   />
                 </td>
               </tr>
-              );
-            })}
+            ))}
           </tbody>
         </table>
 
-        {/* Summary footer */}
         <div className="border-t border-surface-dark/20 bg-surface-light px-4 py-3 text-sm text-lms-muted">
           <div className="flex items-center gap-4">
             <span>Ortalama: <strong className="text-lms-heading">{avg ?? '—'}%</strong></span>
@@ -352,7 +317,6 @@ export default function Grades() {
         </div>
       </div>
 
-      {/* Action bar */}
       <div className="mt-6 flex items-center justify-end">
         <div className="flex gap-3">
           <button
@@ -373,27 +337,26 @@ export default function Grades() {
               <><Save size={15} /> Saxla</>
             )}
           </button>
-            <button
-              onClick={() => {
-                if (!hasSaved) {
-                  alert('Əvvəlcə qiymətləri saxlayın.');
-                  return;
-                }
-                setLessonCompleted(true);
-                console.log('Lesson marked completed:', selectedLessonId);
-              }}
-              disabled={!hasSaved}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                         transition-all cursor-pointer
-                         ${lessonCompleted
-                           ? 'bg-lms-navy text-white'
-                           : hasSaved
-                             ? 'bg-lms-navy hover:bg-lms-navy-dark text-white'
-                             : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
-            >
-              <CheckCircle size={15} />
-              {lessonCompleted ? 'Tamamlandı' : 'Dərsi Tamamla'}
-            </button>
+          <button
+            onClick={() => {
+              if (!hasSaved) {
+                alert('Əvvəlcə qiymətləri saxlayın.');
+                return;
+              }
+              setLessonCompleted(true);
+            }}
+            disabled={!hasSaved}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                       transition-all cursor-pointer
+                       ${lessonCompleted
+                         ? 'bg-lms-navy text-white'
+                         : hasSaved
+                           ? 'bg-lms-navy hover:bg-lms-navy-dark text-white'
+                           : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
+          >
+            <CheckCircle size={15} />
+            {lessonCompleted ? 'Tamamlandı' : 'Dərsi Tamamla'}
+          </button>
         </div>
       </div>
 
