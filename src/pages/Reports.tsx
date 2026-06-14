@@ -102,10 +102,10 @@ export default function Reports() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-lms-heading mb-6">Hesabatlar</h1>
+      <h1 className="text-2xl font-semibold text-text-base mb-6">Hesabatlar</h1>
 
       <div className="flex items-center gap-3 mb-5">
-        <span className="text-sm text-lms-muted">Qrup:</span>
+        <span className="text-sm text-text-base/50">Qrup:</span>
         {['all', ...SHARED_GROUPS.map((g) => g.id)].map((id) => {
           const label = id === 'all'
             ? 'Bütün qruplar'
@@ -116,8 +116,8 @@ export default function Reports() {
               onClick={() => setSelectedGroupFilter(id)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all
                 ${selectedGroupFilter === id
-                  ? 'bg-lms-navy text-white border-lms-navy'
-                  : 'bg-white text-lms-muted border-lms-border hover:border-lms-navy/50'}`}
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-white text-text-base/50 border-surface-dark/20 hover:border-primary/50'}`}
             >
               {label}
             </button>
@@ -132,80 +132,80 @@ export default function Reports() {
           { icon: <CalendarCheck size={20} />, label: 'Ortalama Davamiyyət', value: `${overallAttendance}%` },
           { icon: <PenLine size={20} />, label: 'Ortalama Qiymət', value: `${overallAvgGrade}%` },
         ].map((card) => (
-          <div key={card.label} className="lms-card flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-lms-navy/10 text-lms-navy flex items-center justify-center flex-shrink-0">
+          <div key={card.label} className="rounded-neu bg-surface shadow-neu-sm p-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
               {card.icon}
             </div>
             <div>
-              <div className="text-2xl font-bold text-lms-heading">{card.value}</div>
-              <div className="text-sm text-lms-muted">{card.label}</div>
+              <div className="text-2xl font-bold text-text-base">{card.value}</div>
+              <div className="text-sm text-text-base/50">{card.label}</div>
             </div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-[1fr_1fr] gap-4 mb-4">
-        <div className="lms-card">
-          <h3 className="text-base font-semibold mb-4 text-lms-heading">Qrup üzrə müqayisə</h3>
+        <div className="rounded-neu bg-surface shadow-neu-sm p-5">
+          <h3 className="text-base font-semibold mb-4 text-text-base">Qrup üzrə müqayisə</h3>
           {filteredGroups.map((g) => (
             <div key={g.id} className="mb-4 last:mb-0">
               <div className="flex justify-between items-baseline mb-1">
-                <span className="text-sm font-medium text-lms-heading">{g.name}</span>
-                <span className="text-xs text-lms-muted">{g.studentCount} tələbə</span>
+                <span className="text-sm font-medium text-text-base">{g.name}</span>
+                <span className="text-xs text-text-base/50">{g.studentCount} tələbə</span>
               </div>
 
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-lms-muted w-[80px]">Davamiyyət</span>
+                <span className="text-xs text-text-base/50 w-[80px]">Davamiyyət</span>
                 <div className="flex-1 bg-gray-100 rounded-full h-2">
                   <div
                     className="bg-green-500 h-2 rounded-full transition-all"
                     style={{ width: `${g.avgAttendance}%` }}
                   />
                 </div>
-                <span className="text-xs font-medium text-lms-heading w-[36px] text-right">
+                <span className="text-xs font-medium text-text-base w-[36px] text-right">
                   {g.avgAttendance}%
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-lms-muted w-[80px]">Ortalama bal</span>
+                <span className="text-xs text-text-base/50 w-[80px]">Ortalama bal</span>
                 <div className="flex-1 bg-gray-100 rounded-full h-2">
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all"
                     style={{ width: `${g.avgGrade}%` }}
                   />
                 </div>
-                <span className="text-xs font-medium text-lms-heading w-[36px] text-right">
+                <span className="text-xs font-medium text-text-base w-[36px] text-right">
                   {g.avgGrade}%
                 </span>
               </div>
 
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-lms-muted w-[80px]">Dərslər</span>
+                <span className="text-xs text-text-base/50 w-[80px]">Dərslər</span>
                 <div className="flex-1 bg-gray-100 rounded-full h-1.5">
                   <div
                     className="bg-amber-400 h-1.5 rounded-full"
                     style={{ width: `${Math.round((g.completedLessons / g.lessonCount) * 100)}%` }}
                   />
                 </div>
-                <span className="text-xs text-lms-muted w-[36px] text-right">
+                <span className="text-xs text-text-base/50 w-[36px] text-right">
                   {g.completedLessons}/{g.lessonCount}
                 </span>
               </div>
             </div>
           ))}
           {filteredGroups.length === 0 && (
-            <p className="text-sm text-lms-muted">Bu qrup üçün məlumat yoxdur.</p>
+            <p className="text-sm text-text-base/50">Bu qrup üçün məlumat yoxdur.</p>
           )}
         </div>
 
-        <div className="lms-card">
-          <h3 className="text-base font-semibold mb-4 text-lms-heading">Davamiyyət xülasəsi</h3>
+        <div className="rounded-neu bg-surface shadow-neu-sm p-5">
+          <h3 className="text-base font-semibold mb-4 text-text-base">Davamiyyət xülasəsi</h3>
           {attendanceRows.map((row) => (
             <div key={row.label} className="mb-3 last:mb-0">
               <div className="flex justify-between mb-1">
-                <span className="text-sm text-lms-heading">{row.label}</span>
-                <span className="text-sm font-medium text-lms-muted">
+                <span className="text-sm text-text-base">{row.label}</span>
+                <span className="text-sm font-medium text-text-base/50">
                   {row.value} ({Math.round((row.value / attTotal) * 100)}%)
                 </span>
               </div>
@@ -219,7 +219,7 @@ export default function Reports() {
           ))}
           <div className="flex flex-wrap gap-2 mt-4">
             {attendanceRows.map((row) => (
-              <span key={row.label} className="flex items-center gap-1.5 text-xs text-lms-muted">
+              <span key={row.label} className="flex items-center gap-1.5 text-xs text-text-base/50">
                 <span className={`w-2.5 h-2.5 rounded-full ${row.color}`} />
                 {row.label}
               </span>
@@ -229,14 +229,14 @@ export default function Reports() {
       </div>
 
       <div className="grid grid-cols-[1fr_1fr] gap-4">
-        <div className="lms-card">
-          <h3 className="text-base font-semibold mb-4 text-lms-heading">Qiymət kateqoriyaları üzrə</h3>
+        <div className="rounded-neu bg-surface shadow-neu-sm p-5">
+          <h3 className="text-base font-semibold mb-4 text-text-base">Qiymət kateqoriyaları üzrə</h3>
           {gradeCategories.length > 0 ? gradeCategories.map((cat) => (
             <div key={cat.category} className="flex items-center gap-3 mb-3 last:mb-0">
               <div className="flex-1">
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm text-lms-heading">{cat.category}</span>
-                  <span className="text-xs text-lms-muted">{cat.count} qiymət · ort. {cat.avg}%</span>
+                  <span className="text-sm text-text-base">{cat.category}</span>
+                  <span className="text-xs text-text-base/50">{cat.count} qiymət · ort. {cat.avg}%</span>
                 </div>
                 <div className="bg-gray-100 rounded-full h-2">
                   <div
@@ -247,17 +247,17 @@ export default function Reports() {
               </div>
             </div>
           )) : (
-            <p className="text-sm text-lms-muted">Hələ qiymət daxil edilməyib.</p>
+            <p className="text-sm text-text-base/50">Hələ qiymət daxil edilməyib.</p>
           )}
         </div>
 
-        <div className="lms-card">
-          <h3 className="text-base font-semibold mb-1 text-lms-heading">Ən yüksək nəticəli tələbələr</h3>
-          <p className="text-xs text-lms-muted mb-4">Ortalama bal əsasında sıralama</p>
+        <div className="rounded-neu bg-surface shadow-neu-sm p-5">
+          <h3 className="text-base font-semibold mb-1 text-text-base">Ən yüksək nəticəli tələbələr</h3>
+          <p className="text-xs text-text-base/50 mb-4">Ortalama bal əsasında sıralama</p>
           {topStudents.length > 0 ? topStudents.map((s, i) => (
             <div
               key={s.name}
-              className="flex items-center gap-3 py-2.5 border-b border-lms-border last:border-0"
+              className="flex items-center gap-3 py-2.5 border-b border-surface-dark/20 last:border-0"
             >
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center
@@ -270,16 +270,16 @@ export default function Reports() {
                 {i + 1}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-lms-heading truncate">{s.name}</p>
-                <p className="text-xs text-lms-muted">{s.group}</p>
+                <p className="text-sm font-medium text-text-base truncate">{s.name}</p>
+                <p className="text-xs text-text-base/50">{s.group}</p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-bold text-lms-heading">{s.avg}%</p>
-                <p className="text-xs text-lms-muted">Davamiyyət: {s.attendance}%</p>
+                <p className="text-sm font-bold text-text-base">{s.avg}%</p>
+                <p className="text-xs text-text-base/50">Davamiyyət: {s.attendance}%</p>
               </div>
             </div>
           )) : (
-            <p className="text-sm text-lms-muted">Hələ qiymət daxil edilməyib.</p>
+            <p className="text-sm text-text-base/50">Hələ qiymət daxil edilməyib.</p>
           )}
         </div>
       </div>

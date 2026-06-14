@@ -98,17 +98,15 @@ export default function StudentGroups() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-lms-student-text">
+      <h1 className="text-2xl font-semibold text-text-base">
         Mənim Qruplarım və Kurslarım
       </h1>
 
-      {/* SECTION 1 — Active Groups List */}
-      <div className="neu-card">
-        {/* Stat pill above the table */}
+      <div className="rounded-neu bg-surface shadow-neu-sm p-5">
         <div className="mb-4">
-          <div className="inline-flex items-center gap-2 neu-card-inset px-4 py-2 text-sm font-medium rounded-full">
-            <Grid size={16} className="text-lms-student-accent" />
-            <span>Ümumi Aktiv Qruplarım: {groups.length}</span>
+          <div className="inline-flex items-center gap-2 rounded-neu bg-surface-dark/30 shadow-neu-inset-sm px-4 py-2 text-sm font-medium">
+            <Grid size={16} className="text-primary" />
+            <span className="text-text-base">Ümumi Aktiv Qruplarım: {groups.length}</span>
           </div>
         </div>
 
@@ -126,34 +124,33 @@ export default function StudentGroups() {
             </colgroup>
             <thead>
               <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Qrup adı
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Kurs adı
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Müəllimin adı
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Qrupa qoşulma tarixi
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Status
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Davamiyyət faizi (%)
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Ortalama bal (%)
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
-                  {/* Actions column */}
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                 </th>
               </tr>
               <tr>
                 <td colSpan={8} className="p-0 pb-1">
-                  <div className="bg-lms-student-inset h-px w-full" />
+                  <div className="bg-surface-dark/20 h-px w-full" />
                 </td>
               </tr>
             </thead>
@@ -161,27 +158,27 @@ export default function StudentGroups() {
               {groups.map((group, index) => (
                 <React.Fragment key={group.id}>
                   <tr>
-                    <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={group.name}>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={group.name}>
                       {group.name}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={group.courseName}>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={group.courseName}>
                       {group.courseName}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={group.teacherName}>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={group.teacherName}>
                       {group.teacherName}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                    <td className="py-3.5 text-sm text-text-base pr-2">
                       {group.joinedAt}
                     </td>
                     <td className="py-3.5 text-sm">
-                      <span className="neu-badge bg-lms-student-accentLt text-lms-student-accent">
+                      <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-primary/10 text-primary">
                         {group.status}
                       </span>
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                    <td className="py-3.5 text-sm text-text-base pr-2">
                       {group.attendancePercent}%
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                    <td className="py-3.5 text-sm text-text-base pr-2">
                       {group.avgGrade}%
                     </td>
                     <td className="py-3.5 text-sm">
@@ -193,13 +190,13 @@ export default function StudentGroups() {
                             setActiveGroupId(group.id)
                             lessonsRef.current?.scrollIntoView({ behavior: 'smooth' })
                           }}
-                          className="text-lms-student-accent text-sm font-medium hover:underline cursor-pointer"
+                          className="text-primary text-sm font-medium hover:underline cursor-pointer"
                         >
                           Dərslərimə Bax
                         </a>
                         <Link
                           to={`${ROUTES.STUDENT_MATERIALS}?group=${group.id}`}
-                          className="text-lms-student-accent text-sm font-medium hover:underline"
+                          className="text-primary text-sm font-medium hover:underline"
                         >
                           Materiallarıma Bax
                         </Link>
@@ -209,7 +206,7 @@ export default function StudentGroups() {
                   {index < groups.length - 1 && (
                     <tr>
                       <td colSpan={8} className="p-0">
-                        <div className="bg-lms-student-inset h-px w-full" />
+                        <div className="bg-surface-dark/20 h-px w-full" />
                       </td>
                     </tr>
                   )}
@@ -220,16 +217,15 @@ export default function StudentGroups() {
         </div>
       </div>
 
-      {/* SECTION 2 — Mənim Dərslərim Dynamic Data Grid */}
-      <div ref={lessonsRef} className="neu-card">
+      <div ref={lessonsRef} className="rounded-neu bg-surface shadow-neu-sm p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-lms-student-text">
+          <h2 className="text-base font-semibold text-text-base">
             Mənim Dərslərim Dynamic Data Grid
           </h2>
           {activeGroupId !== 'all' && (
             <button
               onClick={() => setActiveGroupId('all')}
-              className="text-xs text-lms-student-accent font-medium hover:underline bg-transparent border-0 cursor-pointer"
+              className="text-xs text-primary font-medium hover:underline bg-transparent border-0 cursor-pointer"
             >
               Filtri sıfırla (Hamısını göstər)
             </button>
@@ -240,28 +236,28 @@ export default function StudentGroups() {
           <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
               <col style={{ width: '120px' }} />
-              <col /> {/* flex-1 equivalent */}
+              <col />
               <col style={{ width: '200px' }} />
               <col style={{ width: '180px' }} />
             </colgroup>
             <thead>
               <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Dərs tarixi
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Mövzu
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Müəllim
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Materiallar
                 </th>
               </tr>
               <tr>
                 <td colSpan={4} className="p-0 pb-1">
-                  <div className="bg-lms-student-inset h-px w-full" />
+                  <div className="bg-surface-dark/20 h-px w-full" />
                 </td>
               </tr>
             </thead>
@@ -269,13 +265,13 @@ export default function StudentGroups() {
               {filteredLessons.map((lesson, index) => (
                 <React.Fragment key={lesson.id}>
                   <tr>
-                    <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                    <td className="py-3.5 text-sm text-text-base pr-2">
                       {lesson.date}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={lesson.topic}>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={lesson.topic}>
                       {lesson.topic}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={lesson.teacherName}>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={lesson.teacherName}>
                       {lesson.teacherName}
                     </td>
                     <td className="py-3.5 text-sm">
@@ -284,7 +280,7 @@ export default function StudentGroups() {
                           {lesson.materials.map((mat, mIdx) => {
                             const isSanad = mat.type === 'sanad'
                             const Icon = isSanad ? Link2 : Video
-                            const colorClass = isSanad ? 'text-lms-student-accent' : 'text-red-500'
+                            const colorClass = isSanad ? 'text-primary' : 'text-red-500'
                             return (
                               <a
                                 key={mIdx}
@@ -299,14 +295,14 @@ export default function StudentGroups() {
                           })}
                         </div>
                       ) : (
-                        <span className="text-lms-student-muted">—</span>
+                        <span className="text-text-base/50">—</span>
                       )}
                     </td>
                   </tr>
                   {index < filteredLessons.length - 1 && (
                     <tr>
                       <td colSpan={4} className="p-0">
-                        <div className="bg-lms-student-inset h-px w-full" />
+                        <div className="bg-surface-dark/20 h-px w-full" />
                       </td>
                     </tr>
                   )}
@@ -314,7 +310,7 @@ export default function StudentGroups() {
               ))}
               {filteredLessons.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-sm text-lms-student-muted">
+                  <td colSpan={4} className="py-6 text-center text-sm text-text-base/50">
                     Seçilmiş qrup üçün dərs tapılmadı.
                   </td>
                 </tr>

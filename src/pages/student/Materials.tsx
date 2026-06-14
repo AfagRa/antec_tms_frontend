@@ -145,7 +145,6 @@ export default function StudentMaterials() {
     setCurrentPage(1)
   }, [selectedGroup, selectedType])
 
-  // Filter logic
   const filteredMaterials = materials
     .filter(m => selectedGroup === 'Bütün Qruplar' || m.groupName === selectedGroup)
     .filter(m => selectedType === 'Hamısı' || m.type === typeFilterMap[selectedType])
@@ -170,23 +169,21 @@ export default function StudentMaterials() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold text-lms-student-text">
+      <h1 className="text-2xl font-semibold text-text-base">
         Dərs Materialları
       </h1>
 
-      {/* FILTER BAR: flex items-center gap-4 flex-wrap inside .neu-card mb-5 */}
-      <div className="neu-card mb-5">
+      <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
         <div className="flex items-end gap-6 flex-wrap">
-          {/* Group dropdown */}
           <div className="flex flex-col">
-            <label htmlFor="group-select" className="text-xs text-lms-student-muted mb-1 block font-semibold">
+            <label htmlFor="group-select" className="text-xs text-text-base/50 mb-1 block font-semibold">
               Group
             </label>
             <select
               id="group-select"
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
-              className="neu-input w-[180px] h-[38px] cursor-pointer"
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 w-[180px] h-[38px] cursor-pointer"
             >
               <option value="Python-A1">Python-A1</option>
               <option value="Python-A2">Python-A2</option>
@@ -194,9 +191,8 @@ export default function StudentMaterials() {
             </select>
           </div>
 
-          {/* Type filter pill buttons */}
           <div className="flex flex-col">
-            <span className="text-xs text-lms-student-muted mb-1 block font-semibold">
+            <span className="text-xs text-text-base/50 mb-1 block font-semibold">
               Materialın Tipi
             </span>
             <div className="flex items-center gap-2 flex-wrap min-h-[38px]">
@@ -208,8 +204,8 @@ export default function StudentMaterials() {
                     onClick={() => setSelectedType(opt)}
                     className={
                       isSelected
-                        ? "border-2 border-lms-student-accent bg-lms-student-accentLt text-lms-student-accent font-medium rounded-full px-4 py-1.5 text-sm transition-all shadow-[inset_4px_4px_8px_#C8D0D8,inset_-4px_-4px_8px_#FFFFFF] cursor-pointer"
-                        : "border border-lms-student-inset bg-lms-student-surface text-lms-student-muted rounded-full px-4 py-1.5 text-sm transition-all shadow-[4px_4px_8px_#C8D0D8,-4px_-4px_8px_#FFFFFF] hover:border-lms-student-accent hover:text-lms-student-accent cursor-pointer"
+                        ? "border-2 border-primary bg-primary/10 text-primary font-medium rounded-full px-4 py-1.5 text-sm transition-all shadow-neu-inset-sm cursor-pointer"
+                        : "border border-surface-dark/20 bg-surface text-text-base/50 rounded-full px-4 py-1.5 text-sm transition-all shadow-neu-sm hover:border-primary hover:text-primary cursor-pointer"
                     }
                   >
                     {opt}
@@ -221,8 +217,7 @@ export default function StudentMaterials() {
         </div>
       </div>
 
-      {/* MAIN TABLE: inside .neu-card */}
-      <div className="neu-card">
+      <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
@@ -234,17 +229,17 @@ export default function StudentMaterials() {
               <col style={{ width: '120px' }} />
             </colgroup>
             <thead>
-              <tr className="text-xs font-semibold text-lms-student-muted uppercase tracking-wide">
-                <th className="pb-2">Materialın Adı / Başlığı</th>
-                <th className="pb-2">Aid Olduğu Dərs / Mövzu</th>
-                <th className="pb-2">Paylaşan Müəllim</th>
-                <th className="pb-2">Materialın Tipi</th>
-                <th className="pb-2">Yüklənmə / Baxış Tarixi</th>
-                <th className="pb-2">Keçid / Fəaliyyət</th>
+              <tr className="text-xs font-semibold text-text-base/50 uppercase tracking-wide">
+                <th className="pb-2 px-4 pt-4">Materialın Adı / Başlığı</th>
+                <th className="pb-2 px-4 pt-4">Aid Olduğu Dərs / Mövzu</th>
+                <th className="pb-2 px-4 pt-4">Paylaşan Müəllim</th>
+                <th className="pb-2 px-4 pt-4">Materialın Tipi</th>
+                <th className="pb-2 px-4 pt-4">Yüklənmə / Baxış Tarixi</th>
+                <th className="pb-2 px-4 pt-4">Keçid / Fəaliyyət</th>
               </tr>
               <tr>
                 <td colSpan={6} className="p-0 pb-1">
-                  <div className="bg-lms-student-inset h-px w-full" />
+                  <div className="bg-surface-dark/20 h-px w-full" />
                 </td>
               </tr>
             </thead>
@@ -252,35 +247,35 @@ export default function StudentMaterials() {
               {paginatedMaterials.map((row, index) => (
                 <React.Fragment key={row.id}>
                   <tr>
-                    <td className="py-3.5 text-sm text-lms-student-text font-medium whitespace-normal break-words pr-2">
+                    <td className="py-3.5 text-sm text-text-base font-medium whitespace-normal break-words pr-2 px-4">
                       {row.title}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-muted pr-2">
+                    <td className="py-3.5 text-sm text-text-base/50 pr-2 px-4">
                       Mövzu: {row.topic}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                    <td className="py-3.5 text-sm text-text-base pr-2 px-4">
                       {row.teacherName}
                     </td>
-                    <td className="py-3.5 text-sm pr-2">
+                    <td className="py-3.5 text-sm pr-2 px-4">
                       <span className="rounded-md bg-gray-100 text-gray-700 px-2.5 py-1 text-xs font-medium inline-block">
                         {row.type}
                       </span>
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-muted pr-2">
+                    <td className="py-3.5 text-sm text-text-base/50 pr-2 px-4">
                       {row.uploadDate}
                     </td>
-                    <td className="py-3.5 text-sm">
+                    <td className="py-3.5 text-sm px-4">
                       {row.type === 'Fayl' || row.type === 'YouTube' ? (
                         <span
                           onClick={() => window.open(row.url, '_blank')}
-                          className="text-lms-student-accent text-sm font-medium hover:underline cursor-pointer"
+                          className="text-primary text-sm font-medium hover:underline cursor-pointer"
                         >
                           [Aç / Yüklə]
                         </span>
                       ) : (
                         <span
                           onClick={() => window.open(row.url, '_blank')}
-                          className="text-lms-student-accent text-sm font-medium hover:underline cursor-pointer"
+                          className="text-primary text-sm font-medium hover:underline cursor-pointer"
                         >
                           [Bax]
                         </span>
@@ -290,7 +285,7 @@ export default function StudentMaterials() {
                   {index < paginatedMaterials.length - 1 && (
                     <tr>
                       <td colSpan={6} className="p-0">
-                        <div className="bg-lms-student-inset h-px w-full" />
+                        <div className="bg-surface-dark/20 h-px w-full" />
                       </td>
                     </tr>
                   )}
@@ -298,7 +293,7 @@ export default function StudentMaterials() {
               ))}
               {paginatedMaterials.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-sm text-lms-student-muted">
+                  <td colSpan={6} className="py-6 text-center text-sm text-text-base/50 px-4">
                     Uyğun gələn məlumat tapılmadı.
                   </td>
                 </tr>
@@ -307,34 +302,30 @@ export default function StudentMaterials() {
           </table>
         </div>
 
-        {/* PAGINATION: [◀◀] [◀] [1] [2] [▶] [▶▶] */}
-        <div className="flex items-center justify-center gap-1 pt-4 mt-4 border-t border-lms-student-inset">
-          {/* First page jump (◀◀) */}
+        <div className="flex items-center justify-center gap-1 pt-4 pb-4 border-t border-surface-dark/20">
           <button
             onClick={handleFirstPage}
             disabled={currentPage === 1}
-            className={`neu-btn-primary px-3 py-1.5 text-sm ${currentPage === 1 ? 'opacity-50 cursor-not-allowed active:scale-100' : ''}`}
+            className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             ◀◀
           </button>
 
-          {/* Prev page (◀) */}
           <button
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
-            className={`neu-btn-primary px-3 py-1.5 text-sm ${currentPage === 1 ? 'opacity-50 cursor-not-allowed active:scale-100' : ''}`}
+            className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             ◀
           </button>
 
-          {/* Page numbers */}
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
             const isActive = p === currentPage
             if (isActive) {
               return (
                 <button
                   key={p}
-                  className="neu-card-inset !px-3 !py-1.5 !rounded-lg text-lms-student-accent font-medium select-none text-sm"
+                  className="rounded-neu-sm bg-surface-dark/30 shadow-neu-inset-sm px-3 py-1.5 text-sm font-medium text-primary select-none"
                 >
                   {p}
                 </button>
@@ -344,7 +335,7 @@ export default function StudentMaterials() {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className="neu-btn-primary px-3 py-1.5 text-sm"
+                  className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all cursor-pointer"
                 >
                   {p}
                 </button>
@@ -352,20 +343,18 @@ export default function StudentMaterials() {
             }
           })}
 
-          {/* Next page (▶) */}
           <button
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
-            className={`neu-btn-primary px-3 py-1.5 text-sm ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed active:scale-100' : ''}`}
+            className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             ▶
           </button>
 
-          {/* Last page jump (▶▶) */}
           <button
             onClick={handleLastPage}
             disabled={currentPage === totalPages}
-            className={`neu-btn-primary px-3 py-1.5 text-sm ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed active:scale-100' : ''}`}
+            className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             ▶▶
           </button>

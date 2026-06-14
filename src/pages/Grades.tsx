@@ -110,12 +110,12 @@ export default function Grades() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-lms-heading">Qiymət Daxil Et</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-text-base">Qiymət Daxil Et</h1>
 
-      <div className="lms-card mb-4">
+      <div className="rounded-neu bg-surface shadow-neu-sm p-4 mb-4">
         <div className="grid grid-cols-3 gap-4 items-end">
           <div>
-            <label className="text-xs text-lms-muted mb-1 block">Qrup</label>
+            <label className="text-xs text-text-base/50 mb-1 block">Qrup</label>
             <select
               value={selectedGroupId}
               onChange={(e) => {
@@ -123,8 +123,8 @@ export default function Grades() {
                 const firstLesson = SHARED_LESSONS.filter((l) => l.groupId === e.target.value)[0];
                 if (firstLesson) setSelectedLessonId(firstLesson.id);
               }}
-              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full
-                         focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy bg-white"
+              className="border border-surface-dark/20 rounded-lg px-3 py-2 text-sm w-full
+                         focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
             >
               {SHARED_GROUPS.map((g) => (
                 <option key={g.id} value={g.id}>{g.name}</option>
@@ -133,12 +133,12 @@ export default function Grades() {
           </div>
 
           <div>
-            <label className="text-xs text-lms-muted mb-1 block">Dərs</label>
+            <label className="text-xs text-text-base/50 mb-1 block">Dərs</label>
             <select
               value={selectedLessonId}
               onChange={(e) => setSelectedLessonId(e.target.value)}
-              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full
-                         focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy bg-white"
+              className="border border-surface-dark/20 rounded-lg px-3 py-2 text-sm w-full
+                         focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
             >
               {lessons.map((l) => (
                 <option key={l.id} value={l.id}>{l.date} — {l.topic}</option>
@@ -147,10 +147,10 @@ export default function Grades() {
           </div>
 
           <div>
-            <label className="text-xs text-lms-muted mb-1 block">Tarix</label>
-            <div className="border border-lms-border rounded-lg px-3 py-2 text-sm
-                            bg-gray-50 text-lms-muted flex items-center gap-2">
-              <CalendarDays size={15} className="text-lms-muted" />
+            <label className="text-xs text-text-base/50 mb-1 block">Tarix</label>
+            <div className="border border-surface-dark/20 rounded-lg px-3 py-2 text-sm
+                            bg-gray-50 text-text-base/50 flex items-center gap-2">
+              <CalendarDays size={15} className="text-text-base/50" />
               {currentLesson?.date ?? '—'}
             </div>
           </div>
@@ -158,13 +158,13 @@ export default function Grades() {
       </div>
 
       <div className="flex items-center gap-3 mb-4 px-1">
-        <span className="text-sm font-medium text-lms-heading">
+        <span className="text-sm font-medium text-text-base">
           {SHARED_GROUPS.find((g) => g.id === selectedGroupId)?.name}
         </span>
-        <span className="text-lms-muted">·</span>
-        <span className="text-sm text-lms-muted">{currentLesson?.topic}</span>
-        <span className="text-lms-muted">·</span>
-        <span className="text-sm text-lms-muted">{currentLesson?.date}</span>
+        <span className="text-text-base/50">·</span>
+        <span className="text-sm text-text-base/50">{currentLesson?.topic}</span>
+        <span className="text-text-base/50">·</span>
+        <span className="text-sm text-text-base/50">{currentLesson?.date}</span>
       </div>
 
       <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
@@ -180,20 +180,20 @@ export default function Grades() {
           </colgroup>
           <thead>
             <tr className="border-b border-surface-dark/20 bg-surface-light">
-              <th className="border-b border-lms-border px-3 py-3 text-center text-xs
-                             font-medium text-lms-muted uppercase tracking-wide">
+              <th className="border-b border-surface-dark/20 px-3 py-3 text-center text-xs
+                             font-medium text-text-base/50 uppercase tracking-wide">
                 №
               </th>
-              <th className="border-b border-lms-border px-3 py-3 text-left text-xs
-                             font-medium text-lms-muted uppercase tracking-wide">
+              <th className="border-b border-surface-dark/20 px-3 py-3 text-left text-xs
+                             font-medium text-text-base/50 uppercase tracking-wide">
                 Ad + Soyad
               </th>
-              <th className="border-b border-lms-border px-3 py-3 text-left text-xs
-                             font-medium text-lms-muted uppercase tracking-wide">
+              <th className="border-b border-surface-dark/20 px-3 py-3 text-left text-xs
+                             font-medium text-text-base/50 uppercase tracking-wide">
                 Davamiyyət statusu
               </th>
-              <th className="border-b border-lms-border px-3 py-2 text-left text-xs
-                             font-medium text-lms-muted uppercase tracking-wide">
+              <th className="border-b border-surface-dark/20 px-3 py-2 text-left text-xs
+                             font-medium text-text-base/50 uppercase tracking-wide">
                 <div className="mb-1">Bal</div>
                 <select
                   value={lessonCategory}
@@ -202,9 +202,9 @@ export default function Grades() {
                     setLessonCategory(cat);
                     setRecords((prev) => prev.map((r) => ({ ...r, category: cat })));
                   }}
-                  className="border border-lms-border rounded px-1.5 py-0.5 text-[11px]
-                             font-normal normal-case tracking-normal text-lms-heading
-                             focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy
+                  className="border border-surface-dark/20 rounded px-1.5 py-0.5 text-[11px]
+                             font-normal normal-case tracking-normal text-text-base
+                             focus:ring-1 focus:ring-primary/30 focus:border-primary
                              bg-white w-[110px]"
                 >
                   <option value="daily">Dərs qiyməti</option>
@@ -214,16 +214,16 @@ export default function Grades() {
                   <option value="final">Final imtahanı</option>
                 </select>
               </th>
-              <th className="border-b border-lms-border px-3 py-3 text-center text-xs
-                             font-medium text-lms-muted uppercase tracking-wide">
+              <th className="border-b border-surface-dark/20 px-3 py-3 text-center text-xs
+                             font-medium text-text-base/50 uppercase tracking-wide">
                 Maks. bal
               </th>
-              <th className="border-b border-lms-border px-3 py-3 text-left text-xs
-                             font-medium text-lms-muted uppercase tracking-wide">
+              <th className="border-b border-surface-dark/20 px-3 py-3 text-left text-xs
+                             font-medium text-text-base/50 uppercase tracking-wide">
                 Faiz (%)
               </th>
-              <th className="border-b border-lms-border px-3 py-3 text-left text-xs
-                             font-medium text-lms-muted uppercase tracking-wide">
+              <th className="border-b border-surface-dark/20 px-3 py-3 text-left text-xs
+                             font-medium text-text-base/50 uppercase tracking-wide">
                 Müəllim qeydi (optional)
               </th>
             </tr>
@@ -231,14 +231,14 @@ export default function Grades() {
           <tbody>
             {records.map((record, index) => (
               <tr key={record.id} className="border-b border-surface-dark/20 last:border-0">
-                <td className="border-b border-lms-border px-3 py-1.5 text-center text-xs
-                               text-lms-muted font-medium select-none">
+                <td className="border-b border-surface-dark/20 px-3 py-1.5 text-center text-xs
+                               text-text-base/50 font-medium select-none">
                   {index + 1}
                 </td>
-                <td className="px-4 py-1.5 text-sm text-lms-heading">
+                <td className="px-4 py-1.5 text-sm text-text-base">
                   {record.studentName} {record.studentSurname}
                 </td>
-                <td className="px-4 py-1.5 text-sm text-lms-muted">
+                <td className="px-4 py-1.5 text-sm text-text-base/50">
                   <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
                     record.attendanceStatus === 'present' ? 'bg-green-100 text-green-700' :
                     record.attendanceStatus === 'late' ? 'bg-amber-100 text-amber-700' :
@@ -268,8 +268,8 @@ export default function Grades() {
                         updateRecord(record.studentId, 'score', record.maxScore);
                       }
                     }}
-                    className="w-full text-center text-sm border border-lms-border rounded px-1.5 py-0.5
-                               bg-white focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy outline-none"
+                    className="w-full text-center text-sm border border-surface-dark/20 rounded px-1.5 py-0.5
+                               bg-white focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none"
                     placeholder="0"
                   />
                 </td>
@@ -281,11 +281,11 @@ export default function Grades() {
                     onChange={(e) =>
                       updateRecord(record.studentId, 'maxScore', Number(e.target.value))
                     }
-                    className="w-full text-center text-sm border border-lms-border rounded px-1.5 py-0.5
-                               focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy outline-none"
+                    className="w-full text-center text-sm border border-surface-dark/20 rounded px-1.5 py-0.5
+                               focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none"
                   />
                 </td>
-                <td className="px-4 py-1.5 text-sm font-medium text-lms-navy text-center">
+                <td className="px-4 py-1.5 text-sm font-medium text-primary text-center">
                   {calcPercent(record.score, record.maxScore)}
                 </td>
                 <td className="px-4 py-1.5">
@@ -296,8 +296,8 @@ export default function Grades() {
                     onChange={(e) =>
                       updateRecord(record.studentId, 'teacherNote', e.target.value)
                     }
-                    className="w-full border border-lms-border rounded px-1.5 py-0.5 text-sm
-                               focus:ring-1 focus:ring-lms-navy/30 focus:border-lms-navy resize-none outline-none"
+                    className="w-full border border-surface-dark/20 rounded px-1.5 py-0.5 text-sm
+                               focus:ring-1 focus:ring-primary/30 focus:border-primary resize-none outline-none"
                   />
                 </td>
               </tr>
@@ -305,9 +305,9 @@ export default function Grades() {
           </tbody>
         </table>
 
-        <div className="border-t border-surface-dark/20 bg-surface-light px-4 py-3 text-sm text-lms-muted">
+        <div className="border-t border-surface-dark/20 bg-surface-light px-4 py-3 text-sm text-text-base/50">
           <div className="flex items-center gap-4">
-            <span>Ortalama: <strong className="text-lms-heading">{avg ?? '—'}%</strong></span>
+            <span>Ortalama: <strong className="text-text-base">{avg ?? '—'}%</strong></span>
             <span>Ən yüksək: <strong className="text-green-600">{highest ?? '—'}</strong></span>
             <span>Ən aşağı: <strong className="text-red-500">{lowest ?? '—'}</strong></span>
             <span className="text-xs">
@@ -349,9 +349,9 @@ export default function Grades() {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
                        transition-all cursor-pointer
                        ${lessonCompleted
-                         ? 'bg-lms-navy text-white'
+                         ? 'bg-primary text-white'
                          : hasSaved
-                           ? 'bg-lms-navy hover:bg-lms-navy-dark text-white'
+                           ? 'bg-primary hover:bg-primary-dark text-white'
                            : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
           >
             <CheckCircle size={15} />
@@ -363,7 +363,7 @@ export default function Grades() {
       <div className="mt-4">
         <button
           onClick={() => navigate(ROUTES.TEACHER_ATTENDANCE_HOME)}
-          className="text-sm text-lms-muted hover:text-lms-heading flex items-center gap-1.5 transition-colors"
+          className="text-sm text-text-base/50 hover:text-text-base flex items-center gap-1.5 transition-colors"
         >
           <ArrowLeft size={15} /> Davamiyyətə Qayıt
         </button>

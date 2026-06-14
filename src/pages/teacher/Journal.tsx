@@ -227,15 +227,15 @@ export default function TeacherJournal() {
     <div className="flex flex-col h-full overflow-hidden">
 
       <div className="shrink-0">
-        <h1 className="text-2xl font-semibold text-lms-heading mb-4">Jurnal</h1>
+        <h1 className="text-2xl font-semibold text-text-base mb-4">Jurnal</h1>
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <label className="text-sm text-lms-muted mr-2">Qrup seçin:</label>
+            <label className="text-sm text-text-base/50 mr-2">Qrup seçin:</label>
             <select
               value={selectedGroupId}
               onChange={(e) => setSelectedGroupId(e.target.value)}
-              className="border border-lms-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy bg-white"
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
             >
               {SHARED_GROUPS.map((g) => (
                 <option key={g.id} value={g.id}>
@@ -246,8 +246,8 @@ export default function TeacherJournal() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="lms-card px-3 py-1.5 text-sm">👥 {students.length} tələbə</span>
-            <span className="lms-card px-3 py-1.5 text-sm">📅 {allLessons.length} dərs</span>
+            <span className="rounded-neu-sm bg-surface shadow-neu-sm px-3 py-1.5 text-sm text-text-base">👥 {students.length} tələbə</span>
+            <span className="rounded-neu-sm bg-surface shadow-neu-sm px-3 py-1.5 text-sm text-text-base">📅 {allLessons.length} dərs</span>
             <button
               onClick={handleSaveJournal}
               disabled={toast === 'saving'}
@@ -266,7 +266,7 @@ export default function TeacherJournal() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="lms-card p-0 h-full overflow-hidden">
+        <div className="rounded-neu bg-surface shadow-neu-sm p-0 h-full overflow-hidden">
           <div className="overflow-auto h-full w-full">
             <table
               className="border-collapse text-sm"
@@ -275,15 +275,15 @@ export default function TeacherJournal() {
               <thead>
                 <tr>
                   <th
-                    className="sticky left-0 z-20 bg-white border-b border-r border-lms-border
-                               px-2 py-3 text-center text-xs font-medium text-lms-muted
+                    className="sticky left-0 z-20 bg-white border-b border-r border-surface-dark/20
+                               px-2 py-3 text-center text-xs font-medium text-text-base/50
                                uppercase tracking-wide w-[48px] min-w-[48px]"
                   >
                     №
                   </th>
 
                   <th
-                    className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-3 text-left font-medium text-lms-muted text-xs uppercase tracking-wide min-w-[180px]"
+                    className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-3 text-left font-medium text-text-base/50 text-xs uppercase tracking-wide min-w-[180px]"
                   >
                     Tələbənin adı
                   </th>
@@ -296,9 +296,9 @@ export default function TeacherJournal() {
                     <th
                       key={lesson.id}
                       colSpan={2}
-                      className="border-b border-r border-lms-border px-2 py-2 text-center font-medium text-lms-heading text-xs min-w-[140px]"
+                      className="border-b border-r border-surface-dark/20 px-2 py-2 text-center font-medium text-text-base text-xs min-w-[140px]"
                     >
-                      <div className="font-semibold text-lms-heading">{lesson.date}</div>
+                      <div className="font-semibold text-text-base">{lesson.date}</div>
                       {isEditing ? (
                         <div className="flex items-center gap-1 mt-1">
                           <input
@@ -306,12 +306,12 @@ export default function TeacherJournal() {
                             value={topic}
                             onChange={(e) => setLessonTopic(lesson.id, e.target.value)}
                             placeholder="Mövzu..."
-                            className="w-full text-[10px] px-1 py-0.5 border border-lms-border rounded bg-white text-lms-heading focus:border-lms-navy outline-none"
+                            className="w-full text-[10px] px-1 py-0.5 border border-surface-dark/20 rounded bg-white text-text-base focus:border-primary outline-none"
                             autoFocus
                           />
                           <button
                             onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: false }))}
-                            className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-lms-navy text-white hover:bg-lms-navy-dark transition-colors"
+                            className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary text-white hover:bg-primary-dark transition-colors"
                           >
                             Done
                           </button>
@@ -319,7 +319,7 @@ export default function TeacherJournal() {
                       ) : (
                         <>
                           <div
-                            className="text-lms-muted font-normal text-[11px] truncate max-w-[130px] mx-auto mt-0.5 leading-tight"
+                            className="text-text-base/50 font-normal text-[11px] truncate max-w-[130px] mx-auto mt-0.5 leading-tight"
                             title={topic}
                           >
                             {topic.length > 16 ? topic.slice(0, 16) + '…' : topic}
@@ -327,7 +327,7 @@ export default function TeacherJournal() {
                           {isExtra && (
                             <button
                               onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: true }))}
-                              className="mt-0.5 text-[9px] text-lms-navy hover:text-lms-navy-dark transition-colors"
+                              className="mt-0.5 text-[9px] text-primary hover:text-primary-dark transition-colors"
                             >
                               Redaktə et
                             </button>
@@ -340,12 +340,12 @@ export default function TeacherJournal() {
 
                   <th
                     colSpan={2}
-                    className="relative border-b border-l border-lms-border px-2 py-2 text-center min-w-[130px] bg-slate-50/60"
+                    className="relative border-b border-l border-surface-dark/20 px-2 py-2 text-center min-w-[130px] bg-slate-50/60"
                   >
                     <button
                       type="button"
                       onClick={handleNewDateClick}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-lms-navy hover:text-lms-navy-dark transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-dark transition-colors cursor-pointer"
                     >
                       <Plus size={14} />
                       Yeni Tarix
@@ -360,42 +360,42 @@ export default function TeacherJournal() {
                   </th>
 
                   <th
-                    className="sticky right-0 z-20 bg-slate-100 border-b border-l border-lms-border px-3 py-3 text-center font-semibold text-slate-700 text-xs uppercase tracking-wide min-w-[80px]"
+                    className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-3 text-center font-semibold text-slate-700 text-xs uppercase tracking-wide min-w-[80px]"
                   >
                     Ümumi %
                   </th>
                 </tr>
 
                 <tr>
-                  <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border
+                  <th className="sticky left-0 z-20 bg-white border-b border-r border-surface-dark/20
                                  w-[48px] min-w-[48px]" />
-                  <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-1" />
+                  <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-1" />
                   {allLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
-                      <th className="border-b border-r border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-gray-50 w-[140px]">
+                      <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[140px]">
                         Davamiyyət
                       </th>
-                      <th className="border-b border-r border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-gray-50 w-[120px]">
+                      <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[120px]">
                         Qiymət
                       </th>
                     </React.Fragment>
                   ))}
-                  <th className="border-b border-l border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-slate-50/60 w-[140px]">
+                  <th className="border-b border-l border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-slate-50/60 w-[140px]">
                     <div>Davamiyyət</div>
                   </th>
-                  <th className="border-b border-lms-border px-1 py-1 text-center text-xs text-lms-muted bg-slate-50/60 w-[120px]">
+                  <th className="border-b border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-slate-50/60 w-[120px]">
                     Qiymət
                   </th>
-                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-lms-border px-3 py-1" />
+                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1" />
                 </tr>
 
                 <tr>
-                  <th className="sticky left-0 z-20 bg-white border-b border-r border-lms-border
+                  <th className="sticky left-0 z-20 bg-white border-b border-r border-surface-dark/20
                                  w-[48px] min-w-[48px]" />
-                  <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-1" />
+                  <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-1" />
                   {allLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
-                      <th className="border-b border-r border-lms-border px-1 py-1 text-center">
+                      <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center">
                         <button
                           onClick={() => handleBulkPresent(lesson.id)}
                           className="w-full text-[9px] font-medium px-0.5 py-0.5 rounded
@@ -408,7 +408,7 @@ export default function TeacherJournal() {
                           Hamısı dərsdə
                         </button>
                       </th>
-                      <th className="border-b border-r border-lms-border px-1 py-1 text-center">
+                      <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center">
                         <select
                           value={columnCategories[lesson.id] ?? 'daily'}
                           onChange={(e) =>
@@ -417,7 +417,7 @@ export default function TeacherJournal() {
                               [lesson.id]: e.target.value as GradeCategory,
                             }))
                           }
-                          className="w-[90px] text-center text-xs border border-lms-border rounded px-1 py-0.5 focus:border-lms-navy focus:ring-1 focus:ring-lms-navy/30 outline-none bg-white text-lms-muted"
+                          className="w-[90px] text-center text-xs border border-surface-dark/20 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-white text-text-base/50"
                           title="Qiymət kateqoriyası"
                         >
                           {CATEGORY_OPTIONS.map((cat) => (
@@ -429,17 +429,17 @@ export default function TeacherJournal() {
                       </th>
                     </React.Fragment>
                   ))}
-                  <th className="border-b border-l border-lms-border px-1 py-1 bg-slate-50/60" />
-                  <th className="border-b border-lms-border px-1 py-1 text-center bg-slate-50/60">
+                  <th className="border-b border-l border-surface-dark/20 px-1 py-1 bg-slate-50/60" />
+                  <th className="border-b border-surface-dark/20 px-1 py-1 text-center bg-slate-50/60">
                     <select
-                      className="w-[90px] text-center text-xs border border-lms-border rounded px-1 py-0.5 outline-none bg-gray-100 text-lms-muted cursor-not-allowed"
+                      className="w-[90px] text-center text-xs border border-surface-dark/20 rounded px-1 py-0.5 outline-none bg-gray-100 text-text-base/50 cursor-not-allowed"
                       disabled
                       title="Yeni tarix seçdikdən sonra kateqoriya seçilə bilər"
                     >
                       <option>—</option>
                     </select>
                   </th>
-                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-lms-border px-3 py-1" />
+                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1" />
                 </tr>
               </thead>
 
@@ -458,20 +458,20 @@ export default function TeacherJournal() {
                     avg === null
                       ? 'text-gray-300'
                       : avg >= 80
-                        ? 'text-lms-navy font-semibold'
+                        ? 'text-primary font-semibold'
                         : avg >= 60
                           ? 'text-amber-600 font-semibold'
                           : 'text-red-500 font-semibold';
 
                   return (
                     <tr key={student.studentId} className="hover:bg-slate-50 transition-colors">
-                      <td className="sticky left-0 z-10 bg-white border-b border-r border-lms-border
-                                     px-2 py-2 text-center text-xs font-medium text-lms-muted
+                      <td className="sticky left-0 z-10 bg-white border-b border-r border-surface-dark/20
+                                     px-2 py-2 text-center text-xs font-medium text-text-base/50
                                      w-[48px] min-w-[48px] select-none">
                         {index + 1}
                       </td>
 
-                      <td className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-lms-border px-4 py-2 font-medium text-lms-heading whitespace-nowrap">
+                      <td className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-2 font-medium text-text-base whitespace-nowrap">
                         {student.studentName} {student.studentSurname}
                       </td>
 
@@ -479,7 +479,7 @@ export default function TeacherJournal() {
                         const cell = getCell(student.studentId, lesson.id);
                         return (
                           <React.Fragment key={lesson.id}>
-                            <td className="border-b border-r border-lms-border px-1 py-1.5 w-[140px]">
+                            <td className="border-b border-r border-surface-dark/20 px-1 py-1.5 w-[140px]">
                               <div className="flex items-center gap-1">
                                 <select
                                   value={cell.attendance ?? ''}
@@ -494,7 +494,7 @@ export default function TeacherJournal() {
                                       minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
                                     });
                                   }}
-                                  className={`text-xs border border-lms-border rounded px-1 py-1 focus:ring-1 focus:ring-lms-navy/40 focus:border-lms-navy bg-white outline-none min-w-0 ${
+                                  className={`text-xs border border-surface-dark/20 rounded px-1 py-1 focus:ring-1 focus:ring-primary/40 focus:border-primary bg-white outline-none min-w-0 ${
                                     cell.attendance === 'G' ? 'w-[60px] flex-none' : 'flex-1'
                                   }`}
                                   style={{
@@ -520,7 +520,7 @@ export default function TeacherJournal() {
 
                                 {cell.attendance === 'G' && (
                                   <div className="flex items-center gap-0.5 shrink-0">
-                                    <span className="text-xs text-lms-muted">(</span>
+                                    <span className="text-xs text-text-base/50">(</span>
                                     <input
                                       type="number"
                                       min={1}
@@ -536,13 +536,13 @@ export default function TeacherJournal() {
                                       className="w-[38px] text-xs border border-amber-300 rounded px-1 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50 text-amber-700"
                                       title="Gecikdiyi dəqiqə"
                                     />
-                                    <span className="text-xs text-lms-muted">)</span>
+                                    <span className="text-xs text-text-base/50">)</span>
                                   </div>
                                 )}
                               </div>
                             </td>
 
-                            <td className="border-b border-r border-lms-border px-1 py-1.5 w-[80px]">
+                            <td className="border-b border-r border-surface-dark/20 px-1 py-1.5 w-[80px]">
                               <input
                                 type="number"
                                 min={0}
@@ -554,22 +554,22 @@ export default function TeacherJournal() {
                                   dispatchCell(student.studentId, lesson.id, { grade });
                                 }}
                                 placeholder="Bal"
-                                className="w-[60px] mx-auto block text-center text-xs border border-lms-border rounded px-1 py-1 focus:border-lms-navy focus:ring-1 focus:ring-lms-navy/30 outline-none bg-white text-lms-heading"
+                                className="w-[60px] mx-auto block text-center text-xs border border-surface-dark/20 rounded px-1 py-1 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-white text-text-base"
                               />
                             </td>
                           </React.Fragment>
                         );
                       })}
 
-                      <td className="border-b border-l border-lms-border px-1 py-1.5 w-[140px] bg-slate-50/60">
+                      <td className="border-b border-l border-surface-dark/20 px-1 py-1.5 w-[140px] bg-slate-50/60">
                         <span className="text-gray-300 text-xs block text-center">—</span>
                       </td>
-                      <td className="border-b border-lms-border px-1 py-1.5 w-[80px] bg-slate-50/60">
+                      <td className="border-b border-surface-dark/20 px-1 py-1.5 w-[80px] bg-slate-50/60">
                         <span className="text-gray-300 text-xs block text-center">—</span>
                       </td>
 
                       <td
-                        className={`sticky right-0 z-10 bg-slate-100 border-b border-l border-lms-border px-3 py-2 text-center font-semibold text-sm ${avgColor}`}
+                        className={`sticky right-0 z-10 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-2 text-center font-semibold text-sm ${avgColor}`}
                       >
                         {avg !== null ? `${avg}%` : '—'}
                       </td>
@@ -582,9 +582,9 @@ export default function TeacherJournal() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-lms-muted flex-wrap mt-3 shrink-0">
+      <div className="flex items-center gap-4 text-xs text-text-base/50 flex-wrap mt-3 shrink-0">
         <span>Təlimat:</span>
-        <span className="text-lms-navy font-bold">I/E</span><span>= İştirak edir</span>
+        <span className="text-primary font-bold">I/E</span><span>= İştirak edir</span>
         <span className="text-red-500 font-bold">Q</span><span>= Qayıb</span>
         <span className="text-blue-500 font-bold">QÜ</span><span>= Qayıb (üzrlü)</span>
         <span className="text-amber-500 font-bold">G</span><span>= Gecikdi</span>

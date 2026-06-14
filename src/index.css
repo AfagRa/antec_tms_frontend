@@ -75,47 +75,4 @@
   }
 }
 
-@layer components {
-  .neu-card {
-    @apply bg-lms-student-surface rounded-2xl p-5;
-    box-shadow: 6px 6px 12px #C8D0D8, -6px -6px 12px #FFFFFF;
-  }
-  .neu-card-inset {
-    @apply bg-lms-student-inset rounded-2xl p-5;
-    box-shadow: inset 4px 4px 8px #C8D0D8, inset -4px -4px 8px #FFFFFF;
-  }
-  .neu-btn-primary {
-    @apply bg-lms-student-surface text-lms-student-accent font-medium
-           rounded-xl px-4 py-2 text-sm transition-all active:scale-95;
-    box-shadow: 4px 4px 8px #C8D0D8, -4px -4px 8px #FFFFFF;
-  }
-  .neu-btn-primary:hover {
-    box-shadow: 2px 2px 5px #C8D0D8, -2px -2px 5px #FFFFFF;
-  }
-  .neu-btn-primary:active {
-    box-shadow: inset 2px 2px 5px #C8D0D8, inset -2px -2px 5px #FFFFFF;
-  }
-  .neu-input {
-    @apply bg-lms-student-inset rounded-xl px-3 py-2 text-sm
-           text-lms-student-text border-0 outline-none w-full
-           focus:ring-2 focus:ring-lms-student-accent/30;
-    box-shadow: inset 3px 3px 7px #C8D0D8, inset -3px -3px 7px #FFFFFF;
-  }
-  .neu-badge {
-    @apply rounded-full px-3 py-1 text-xs font-medium;
-    box-shadow: 2px 2px 4px #C8D0D8, -2px -2px 4px #FFFFFF;
-  }
-  .student-nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm
-           font-medium text-lms-student-muted transition-all cursor-pointer;
-  }
-  .student-nav-item.active {
-    @apply text-lms-student-accent;
-    box-shadow: inset 3px 3px 7px #C8D0D8, inset -3px -3px 7px #FFFFFF;
-    background: #E8EDF2;
-  }
-  .student-nav-item:not(.active):hover {
-    box-shadow: 2px 2px 5px #C8D0D8, -2px -2px 5px #FFFFFF;
-    background: #EEF2F7;
-  }
-}
+

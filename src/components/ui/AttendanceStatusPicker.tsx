@@ -41,7 +41,7 @@ export default function AttendanceStatusPicker({
       </div>
       {value === 'late' && onMinutesChange && (
         <div className="flex items-center gap-1 mt-1">
-          <span className="text-xs text-lms-muted">Gecikdi:</span>
+          <span className="text-xs text-text-base/50">Gecikdi:</span>
           <input
             type="number"
             min={1}
@@ -51,7 +51,7 @@ export default function AttendanceStatusPicker({
             className="w-14 text-xs border border-amber-300 rounded px-1.5 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50"
             placeholder="dəq"
           />
-          <span className="text-xs text-lms-muted">dəq</span>
+          <span className="text-xs text-text-base/50">dəq</span>
         </div>
       )}
     </div>

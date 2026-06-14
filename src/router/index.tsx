@@ -53,7 +53,7 @@ function StudentRoute({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-lms-student-bg">
+      <div className="flex min-h-screen items-center justify-center bg-surface">
         Yüklənir...
       </div>
     );

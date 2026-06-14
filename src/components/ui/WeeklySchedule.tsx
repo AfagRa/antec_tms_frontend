@@ -25,7 +25,7 @@ export default function WeeklySchedule({ lessons, onLessonClick }: WeeklySchedul
         const dayLessons = lessonsByDay[dayIdx];
         return (
           <div key={day} className="flex flex-col gap-2">
-            <div className="text-xs font-medium text-lms-muted uppercase tracking-wide text-center pb-1 border-b border-lms-border">
+            <div className="text-xs font-medium text-text-base/50 uppercase tracking-wide text-center pb-1 border-b border-surface-dark/20">
               {day}
             </div>
             {dayLessons.length > 0
@@ -33,21 +33,21 @@ export default function WeeklySchedule({ lessons, onLessonClick }: WeeklySchedul
                   <button
                     key={lesson.id}
                     onClick={() => onLessonClick(lesson.groupId)}
-                    className="lms-card text-left p-3 hover:border-lms-green hover:shadow-md transition-all cursor-pointer group w-full"
+                    className="rounded-neu bg-surface shadow-neu-sm text-left p-3 hover:border-success hover:shadow-md transition-all cursor-pointer group w-full"
                   >
-                    <p className="text-sm font-medium text-lms-heading group-hover:text-lms-green transition-colors truncate">
+                    <p className="text-sm font-medium text-text-base group-hover:text-success transition-colors truncate">
                       {lesson.groupName}
                     </p>
-                    <p className="text-xs text-lms-muted mt-0.5 truncate">
+                    <p className="text-xs text-text-base/50 mt-0.5 truncate">
                       {lesson.topic}
                     </p>
-                    <p className="text-xs text-lms-green mt-1 font-medium">
+                    <p className="text-xs text-success mt-1 font-medium">
                       {lesson.timeSlot}
                     </p>
                   </button>
                 ))
               : (
-                  <div className="text-xs text-lms-muted text-center py-4 italic">—</div>
+                  <div className="text-xs text-text-base/50 text-center py-4 italic">—</div>
                 )}
           </div>
         );

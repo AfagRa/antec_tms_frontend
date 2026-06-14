@@ -4,11 +4,11 @@ import StudentHeader from './StudentHeader';
 
 export default function StudentLayout() {
   return (
-    <div className="flex h-screen overflow-hidden bg-lms-student-bg">
+    <div className="flex h-screen overflow-hidden bg-surface text-text-base">
       <StudentSidebar />
-      <div className="ml-[260px] flex flex-1 flex-col min-w-0">
+      <div className="flex flex-1 flex-col min-w-0">
         <StudentHeader />
-        <main className="flex-1 overflow-y-auto bg-lms-student-bg p-6">
+        <main className="flex-1 overflow-y-auto p-8">
           <Outlet />
         </main>
       </div>
