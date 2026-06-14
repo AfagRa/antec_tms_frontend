@@ -122,22 +122,21 @@ export default function StudentGrades() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold text-lms-student-text">
+      <h1 className="text-2xl font-semibold text-text-base">
         Qiymət Jurnalı
       </h1>
 
-      {/* FILTER BAR */}
-      <div className="neu-card mb-5">
+      <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_1fr_1fr] gap-4 items-end">
           <div className="flex flex-col">
-            <label htmlFor="group-select" className="text-xs font-semibold text-lms-student-muted mb-1">
+            <label htmlFor="group-select" className="text-xs font-semibold text-text-base/50 mb-1">
               Group
             </label>
             <select
               id="group-select"
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
-              className="neu-input h-[38px] cursor-pointer"
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer"
             >
               <option value="Python-A1">Python-A1</option>
               <option value="Python-A2">Python-A2</option>
@@ -146,7 +145,7 @@ export default function StudentGrades() {
           </div>
 
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-lms-student-muted mb-1">
+            <span className="text-xs font-semibold text-text-base/50 mb-1">
               Tarix aralığı
             </span>
             <DateRangePicker
@@ -158,14 +157,14 @@ export default function StudentGrades() {
           </div>
 
           <div className="flex flex-col">
-            <label htmlFor="category-select" className="text-xs font-semibold text-lms-student-muted mb-1">
+            <label htmlFor="category-select" className="text-xs font-semibold text-text-base/50 mb-1">
               Kateqoriya
             </label>
             <select
               id="category-select"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value as GradeCategory | 'all')}
-              className="neu-input h-[38px] cursor-pointer"
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer"
             >
               <option value="all">Bütün kateqoriyalar</option>
               {Object.entries(GRADE_CATEGORY_LABELS).map(([value, label]) => (
@@ -175,14 +174,14 @@ export default function StudentGrades() {
           </div>
 
           <div className="flex flex-col">
-            <label htmlFor="sort-select" className="text-xs font-semibold text-lms-student-muted mb-1">
+            <label htmlFor="sort-select" className="text-xs font-semibold text-text-base/50 mb-1">
               Sorting
             </label>
             <select
               id="sort-select"
               value={sorting}
               onChange={(e) => setSorting(e.target.value)}
-              className="neu-input h-[38px] cursor-pointer"
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer"
             >
               <option value="Ən yeni">Ən yeni</option>
               <option value="Ən köhnə">Ən köhnə</option>
@@ -193,44 +192,42 @@ export default function StudentGrades() {
         </div>
       </div>
 
-      {/* STAT CARDS ROW: 4 cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-        <div className="neu-card p-4 flex flex-col justify-between">
-          <span className="text-xs text-lms-student-muted mb-1 leading-snug">
+        <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
+          <span className="text-xs text-text-base/50 mb-1 leading-snug">
             Ümumi Qiymətləndirilmiş Dərslər
           </span>
-          <span className="text-2xl font-bold text-lms-student-text">
+          <span className="text-2xl font-bold text-text-base">
             15 dərs
           </span>
         </div>
-        <div className="neu-card p-4 flex flex-col justify-between">
-          <span className="text-xs text-lms-student-muted mb-1 leading-snug">
+        <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
+          <span className="text-xs text-text-base/50 mb-1 leading-snug">
             Ortalama Faiz Balı (%)
           </span>
-          <span className="text-2xl font-bold text-lms-student-text">
+          <span className="text-2xl font-bold text-text-base">
             88%
           </span>
         </div>
-        <div className="neu-card p-4 flex flex-col justify-between">
-          <span className="text-xs text-lms-student-muted mb-1 leading-snug">
+        <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
+          <span className="text-xs text-text-base/50 mb-1 leading-snug">
             Ən Yüksək Bal
           </span>
-          <span className="text-2xl font-bold text-lms-student-text">
+          <span className="text-2xl font-bold text-text-base">
             100
           </span>
         </div>
-        <div className="neu-card p-4 flex flex-col justify-between">
-          <span className="text-xs text-lms-student-muted mb-1 leading-snug">
+        <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
+          <span className="text-xs text-text-base/50 mb-1 leading-snug">
             Ən Aşağı Bal
           </span>
-          <span className="text-2xl font-bold text-lms-student-text">
+          <span className="text-2xl font-bold text-text-base">
             70
           </span>
         </div>
       </div>
 
-      {/* MAIN TABLE */}
-      <div className="neu-card">
+      <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
@@ -245,34 +242,34 @@ export default function StudentGrades() {
             </colgroup>
             <thead>
               <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Dərs tarixi
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Group Name
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Kateqoriya
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Lesson Topic
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Bal
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Maksimum bal
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Faiz (%)
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Müəllim qeydi
                 </th>
               </tr>
               <tr>
                 <td colSpan={8} className="p-0 pb-1">
-                  <div className="bg-lms-student-inset h-px w-full" />
+                  <div className="bg-surface-dark/20 h-px w-full" />
                 </td>
               </tr>
             </thead>
@@ -282,31 +279,31 @@ export default function StudentGrades() {
                 return (
                   <React.Fragment key={row.id}>
                     <tr>
-                      <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                      <td className="py-3.5 text-sm text-text-base pr-2 px-4">
                         {row.date}
                       </td>
-                      <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={row.groupName}>
+                      <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.groupName}>
                         {row.groupName}
                       </td>
                       <td className="py-3 pr-4">
                         {row.category ? (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium neu-badge ${GRADE_CATEGORY_STYLES[row.category]}`}>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium shadow-neu-sm ${GRADE_CATEGORY_STYLES[row.category]}`}>
                             {GRADE_CATEGORY_LABELS[row.category]}
                           </span>
                         ) : (
-                          <span className="text-lms-student-muted text-xs">—</span>
+                          <span className="text-text-base/50 text-xs">—</span>
                         )}
                       </td>
-                      <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={row.topic}>
+                      <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.topic}>
                         {row.topic}
                       </td>
-                      <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                      <td className="py-3.5 text-sm text-text-base pr-2 px-4">
                         {row.score}
                       </td>
-                      <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                      <td className="py-3.5 text-sm text-text-base pr-2 px-4">
                         {row.maxScore}
                       </td>
-                      <td className={`py-3.5 text-sm pr-2 ${getFaizColorClass(faiz)}`}>
+                      <td className={`py-3.5 text-sm pr-2 px-4 ${getFaizColorClass(faiz)}`}>
                         {faiz}%
                       </td>
                       <td className="py-3 pr-4">
@@ -319,7 +316,7 @@ export default function StudentGrades() {
                     {index < paginatedGrades.length - 1 && (
                       <tr>
                         <td colSpan={8} className="p-0">
-                          <div className="bg-lms-student-inset h-px w-full" />
+                          <div className="bg-surface-dark/20 h-px w-full" />
                         </td>
                       </tr>
                     )}
@@ -328,7 +325,7 @@ export default function StudentGrades() {
               })}
               {paginatedGrades.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-sm text-lms-student-muted">
+                  <td colSpan={8} className="py-6 text-center text-sm text-text-base/50 px-4">
                     Uyğun gələn məlumat tapılmadı.
                   </td>
                 </tr>
@@ -337,27 +334,26 @@ export default function StudentGrades() {
           </table>
         </div>
 
-        {/* PAGINATION */}
-        <div className="flex items-center justify-between pt-4 mt-4 border-t border-lms-student-inset">
+        <div className="flex items-center justify-between px-5 pb-4 pt-4 border-t border-surface-dark/20">
           <div />
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className={`neu-btn-primary px-3 py-1.5 ${currentPage === 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >‹</button>
 
             {getPageNumbers().map((page, idx) =>
               page === null ? (
-                <span key={`ellipsis-${idx}`} className="px-2 text-lms-student-muted">...</span>
+                <span key={`ellipsis-${idx}`} className="px-2 text-text-base/50">...</span>
               ) : (
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page as number)}
                   className={
                     currentPage === page
-                      ? 'neu-card-inset !px-3 !py-1.5 !rounded-lg text-lms-student-accent font-medium select-none text-sm'
-                      : 'neu-btn-primary px-3 py-1.5 text-sm'
+                      ? 'rounded-neu-sm bg-surface-dark/30 shadow-neu-inset-sm px-3 py-1.5 text-sm font-medium text-primary select-none'
+                      : 'rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all cursor-pointer'
                   }
                 >{page}</button>
               )
@@ -366,10 +362,10 @@ export default function StudentGrades() {
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className={`neu-btn-primary px-3 py-1.5 ${currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >›</button>
           </div>
-          <span className="text-xs text-lms-student-muted">
+          <span className="text-xs text-text-base/50">
             Nəticə {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredGrades.length)} ({filteredGrades.length})
           </span>
         </div>

@@ -111,14 +111,14 @@ export default function Attendance() {
     <div>
       <h1 className="mb-4 text-2xl font-semibold text-text-base">Davamiyyət Daxil Et</h1>
 
-      <div className="lms-card mb-4 p-4">
+      <div className="rounded-neu bg-surface shadow-neu-sm mb-4 p-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-lms-muted mb-1 block">Qrup seçin</label>
+            <label className="text-xs text-text-base/50 mb-1 block">Qrup seçin</label>
             <select
               value={selectedGroupId}
               onChange={(e) => handleGroupChange(e.target.value)}
-              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy"
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base w-full focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
             >
               {SHARED_GROUPS.map((g) => (
                 <option key={g.id} value={g.id}>{g.name}</option>
@@ -126,11 +126,11 @@ export default function Attendance() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-lms-muted mb-1 block">Dərs seçin</label>
+            <label className="text-xs text-text-base/50 mb-1 block">Dərs seçin</label>
             <select
               value={selectedLessonId}
               onChange={(e) => handleLessonChange(e.target.value)}
-              className="border border-lms-border rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-lms-navy/30 focus:border-lms-navy"
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base w-full focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
             >
               {lessons.map((l) => (
                 <option key={l.id} value={l.id}>{l.date} — {l.topic}</option>
@@ -225,7 +225,7 @@ export default function Attendance() {
                       value={record.reason ?? ''}
                       placeholder="Səbəb"
                       onChange={(event) => updateRecord(record.studentId, 'reason', event.target.value)}
-                      className="w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-lms-navy/30"
+                      className="w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -234,7 +234,7 @@ export default function Attendance() {
                       value={record.teacherNote ?? ''}
                       placeholder="optional"
                       onChange={(event) => updateRecord(record.studentId, 'teacherNote', event.target.value)}
-                      className="w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-lms-navy/30 resize-none"
+                      className="w-full border border-surface-dark/20 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
                     />
                   </td>
                 </tr>
@@ -244,17 +244,17 @@ export default function Attendance() {
       </div>
 
       <div className="mt-3 mb-2 px-1">
-        <p className="text-xs font-medium text-lms-muted mb-1.5 uppercase tracking-wide">
+        <p className="text-xs font-medium text-text-base/50 mb-1.5 uppercase tracking-wide">
           Status izahı:
         </p>
         <div className="flex flex-wrap gap-x-5 gap-y-1">
           {[
-            { abbr: 'İ/E', label: 'İştirak edib',  color: 'text-lms-navy'  },
+            { abbr: 'İ/E', label: 'İştirak edib',  color: 'text-primary'  },
             { abbr: 'G',   label: 'Gecikdi',        color: 'text-amber-600' },
             { abbr: 'Q/Ü', label: 'Qayıb (üzrlü)',   color: 'text-blue-600'  },
             { abbr: 'Q',   label: 'Qayıb (üzrsüz)',  color: 'text-red-600'   },
           ].map((item) => (
-            <span key={item.abbr} className="flex items-center gap-1.5 text-xs text-lms-muted">
+            <span key={item.abbr} className="flex items-center gap-1.5 text-xs text-text-base/50">
               <span className={`font-bold text-xs ${item.color}`}>{item.abbr}</span>
               <span>=</span>
               <span>{item.label}</span>

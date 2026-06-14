@@ -152,13 +152,13 @@ export default function StudentAttendance() {
   const getStatusBadge = (status: AttendanceStatus) => {
     switch (status) {
       case 'Dərsdə':
-        return <span className="neu-badge bg-green-100 text-green-700">Dərsdə</span>
+        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-green-100 text-green-700">Dərsdə</span>
       case 'Qayıb (üzrsüz)':
-        return <span className="neu-badge bg-red-100 text-red-600">Qayıb (üzrsüz)</span>
+        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-red-100 text-red-600">Qayıb (üzrsüz)</span>
       case 'Gecikdi':
-        return <span className="neu-badge bg-amber-100 text-amber-700">Gecikdi</span>
+        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-amber-100 text-amber-700">Gecikdi</span>
       case 'Qayıb (üzrlü)':
-        return <span className="neu-badge bg-blue-100 text-blue-600">Qayıb (üzrlü)</span>
+        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-blue-100 text-blue-600">Qayıb (üzrlü)</span>
       default:
         return null
     }
@@ -166,16 +166,14 @@ export default function StudentAttendance() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold text-lms-student-text">
+      <h1 className="text-2xl font-semibold text-text-base">
         Davamiyyət Jurnalı
       </h1>
 
-      {/* FILTER BAR: 3-column grid inside .neu-card mb-5 */}
-      <div className="neu-card mb-5">
+      <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Qrup filter */}
           <div className="flex flex-col">
-            <label htmlFor="group-select" className="text-xs font-semibold text-lms-student-muted mb-1">
+            <label htmlFor="group-select" className="text-xs font-semibold text-text-base/50 mb-1">
               Qrup
             </label>
             <select
@@ -185,7 +183,7 @@ export default function StudentAttendance() {
                 setSelectedGroup(e.target.value)
                 setCurrentPage(1)
               }}
-              className="neu-input h-[38px] cursor-pointer"
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer"
             >
               <option value="Python-A1">Python-A1</option>
               <option value="Python-A2">Python-A2</option>
@@ -193,9 +191,8 @@ export default function StudentAttendance() {
             </select>
           </div>
 
-          {/* Status filter */}
           <div className="flex flex-col">
-            <label htmlFor="status-select" className="text-xs font-semibold text-lms-student-muted mb-1">
+            <label htmlFor="status-select" className="text-xs font-semibold text-text-base/50 mb-1">
               Statusu
             </label>
             <select
@@ -205,7 +202,7 @@ export default function StudentAttendance() {
                 setSelectedStatus(e.target.value)
                 setCurrentPage(1)
               }}
-              className="neu-input h-[38px] cursor-pointer"
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer"
             >
               <option value="Tilter">Tilter</option>
               <option value="Dərsdə">Dərsdə</option>
@@ -215,9 +212,8 @@ export default function StudentAttendance() {
             </select>
           </div>
 
-          {/* Data filter */}
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-lms-student-muted mb-1">
+            <span className="text-xs font-semibold text-text-base/50 mb-1">
               Data
             </span>
             <DateRangePicker
@@ -230,61 +226,54 @@ export default function StudentAttendance() {
         </div>
       </div>
 
-      {/* STAT CARDS ROW: 5 cards below filter bar */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5">
-        {/* Card 1 */}
-        <div className="neu-card py-4 px-4 flex flex-col justify-between">
+        <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-green-600 leading-snug">
             Dərsdə
           </span>
-          <span className="text-2xl font-bold text-lms-student-text mt-1">
+          <span className="text-2xl font-bold text-text-base mt-1">
             18 dərs
           </span>
         </div>
 
-        {/* Card 2 */}
-        <div className="neu-card py-4 px-4 flex flex-col justify-between">
+        <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-blue-500 leading-snug">
             Qayıb (üzrlü)
           </span>
-          <span className="text-2xl font-bold text-lms-student-text mt-1">
+          <span className="text-2xl font-bold text-text-base mt-1">
             1 dərs
           </span>
         </div>
 
-        {/* Card 3 */}
-        <div className="neu-card py-4 px-4 flex flex-col justify-between">
+        <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-red-500 leading-snug">
             Qayıb (üzrsüz)
           </span>
-          <span className="text-2xl font-bold text-lms-student-text mt-1">
+          <span className="text-2xl font-bold text-text-base mt-1">
             2 dərs
           </span>
         </div>
 
-        {/* Card 4 */}
-        <div className="neu-card py-4 px-4 flex flex-col justify-between">
+        <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-amber-500 leading-snug">
             Gecikdi
           </span>
-          <span className="text-2xl font-bold text-lms-student-text mt-1">
+          <span className="text-2xl font-bold text-text-base mt-1">
             3 dərs
           </span>
         </div>
 
-        {/* Card 5 */}
-        <div className="neu-card py-4 px-4 flex flex-col justify-between col-span-2 md:col-span-1">
-          <span className="text-sm font-semibold text-lms-student-muted leading-snug">
+        <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between col-span-2 md:col-span-1">
+          <span className="text-sm font-semibold text-text-base/50 leading-snug">
             Ümumi Davamiyyət Faizi
           </span>
-          <span className="text-3xl font-bold text-lms-student-text mt-1">
+          <span className="text-3xl font-bold text-text-base mt-1">
             85%
           </span>
         </div>
       </div>
 
-      {/* MAIN TABLE: inside .neu-card */}
-      <div className="neu-card">
+      <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
@@ -298,31 +287,31 @@ export default function StudentAttendance() {
             </colgroup>
             <thead>
               <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Dərs tarixi
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Qrup adı
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Dərs mövzusu
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Status
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Gecikma dəqiqəsi
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Səbəb
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-lms-student-muted">
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Müəllim qeydi
                 </th>
               </tr>
               <tr>
                 <td colSpan={7} className="p-0 pb-1">
-                  <div className="bg-lms-student-inset h-px w-full" />
+                  <div className="bg-surface-dark/20 h-px w-full" />
                 </td>
               </tr>
             </thead>
@@ -330,22 +319,22 @@ export default function StudentAttendance() {
               {paginatedRecords.map((row, index) => (
                 <React.Fragment key={row.id}>
                   <tr>
-                    <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                    <td className="py-3.5 text-sm text-text-base pr-2 px-4">
                       {row.date}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={row.groupName}>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.groupName}>
                       {row.groupName}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={row.topic}>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.topic}>
                       {row.topic}
                     </td>
-                    <td className="py-3.5 text-sm">
+                    <td className="py-3.5 text-sm px-4">
                       {getStatusBadge(row.statusLabel)}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text pr-2">
+                    <td className="py-3.5 text-sm text-text-base pr-2 px-4">
                       {row.minutesLate > 0 ? `${row.minutesLate} daq` : '—'}
                     </td>
-                    <td className="py-3.5 text-sm text-lms-student-text truncate pr-2" title={row.reason}>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.reason}>
                       {row.reason ? row.reason : '—'}
                     </td>
                     <td className="py-3 pr-4">
@@ -358,7 +347,7 @@ export default function StudentAttendance() {
                   {index < paginatedRecords.length - 1 && (
                     <tr>
                       <td colSpan={7} className="p-0">
-                        <div className="bg-lms-student-inset h-px w-full" />
+                        <div className="bg-surface-dark/20 h-px w-full" />
                       </td>
                     </tr>
                   )}
@@ -366,7 +355,7 @@ export default function StudentAttendance() {
               ))}
               {paginatedRecords.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-6 text-center text-sm text-lms-student-muted">
+                  <td colSpan={7} className="py-6 text-center text-sm text-text-base/50 px-4">
                     Uyğun gələn məlumat tapılmadı.
                   </td>
                 </tr>
@@ -375,27 +364,26 @@ export default function StudentAttendance() {
           </table>
         </div>
 
-        {/* PAGINATION: below table, inside .neu-card */}
-        <div className="flex items-center justify-between pt-4 mt-4 border-t border-lms-student-inset">
+        <div className="flex items-center justify-between px-5 pb-4 pt-4 border-t border-surface-dark/20">
           <div />
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className={`neu-btn-primary px-3 py-1.5 ${currentPage === 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >‹</button>
 
             {getPageNumbers().map((page, idx) =>
               page === null ? (
-                <span key={`ellipsis-${idx}`} className="px-2 text-lms-student-muted">...</span>
+                <span key={`ellipsis-${idx}`} className="px-2 text-text-base/50">...</span>
               ) : (
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page as number)}
                   className={
                     currentPage === page
-                      ? 'neu-card-inset !px-3 !py-1.5 !rounded-lg text-lms-student-accent font-medium select-none text-sm'
-                      : 'neu-btn-primary px-3 py-1.5 text-sm'
+                      ? 'rounded-neu-sm bg-surface-dark/30 shadow-neu-inset-sm px-3 py-1.5 text-sm font-medium text-primary select-none'
+                      : 'rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all cursor-pointer'
                   }
                 >{page}</button>
               )
@@ -404,10 +392,10 @@ export default function StudentAttendance() {
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className={`neu-btn-primary px-3 py-1.5 ${currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >›</button>
           </div>
-          <span className="text-xs text-lms-student-muted">
+          <span className="text-xs text-text-base/50">
             Nəticə {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredRecords.length)} ({filteredRecords.length})
           </span>
         </div>

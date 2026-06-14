@@ -5,7 +5,6 @@ interface DateRangePickerProps {
   endDate: string
   onStartChange: (v: string) => void
   onEndChange: (v: string) => void
-  variant?: 'student' | 'teacher'
 }
 
 export default function DateRangePicker({
@@ -13,21 +12,16 @@ export default function DateRangePicker({
   endDate,
   onStartChange,
   onEndChange,
-  variant = 'student',
 }: DateRangePickerProps) {
   const wrapperClass =
-    variant === 'teacher'
-      ? 'flex items-center gap-2 w-full border border-lms-border rounded-lg px-3 py-2'
-      : 'neu-input flex items-center gap-2 w-full'
+    'flex items-center gap-2 w-full rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2'
 
   const inputClass =
-    variant === 'teacher'
-      ? 'bg-transparent border-0 outline-none text-sm text-lms-heading min-w-0 flex-1 cursor-pointer [color-scheme:light]'
-      : 'bg-transparent border-0 outline-none text-sm text-lms-student-text min-w-0 flex-1 cursor-pointer [color-scheme:light]'
+    'bg-transparent border-0 outline-none text-sm text-text-base min-w-0 flex-1 cursor-pointer [color-scheme:light]'
 
   return (
     <div className={wrapperClass}>
-      <CalendarDays size={16} className="text-lms-student-muted flex-shrink-0" />
+      <CalendarDays size={16} className="text-text-base/50 flex-shrink-0" />
       <input
         type="date"
         value={startDate}
@@ -35,7 +29,7 @@ export default function DateRangePicker({
         max={endDate || undefined}
         className={inputClass}
       />
-      <span className="text-lms-student-muted text-sm">—</span>
+      <span className="text-text-base/50 text-sm">—</span>
       <input
         type="date"
         value={endDate}
@@ -46,7 +40,7 @@ export default function DateRangePicker({
       {(startDate || endDate) && (
         <button
           onClick={() => { onStartChange(''); onEndChange('') }}
-          className="ml-auto text-lms-student-muted hover:text-lms-student-text transition-colors"
+          className="ml-auto text-text-base/50 hover:text-text-base transition-colors"
           title="Tarixi sıfırla"
         >
           <X size={14} />

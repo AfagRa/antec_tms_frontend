@@ -235,31 +235,31 @@ export default function MaterialUpload() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full border-2 border-dashed border-lms-border rounded-xl p-8 text-center hover:border-lms-green hover:bg-lms-green-light/10 transition-all cursor-pointer group"
+                  className="w-full border-2 border-dashed border-surface-dark/20 rounded-xl p-8 text-center hover:border-success hover:bg-success/10 transition-all cursor-pointer group"
                 >
-                  <Upload size={28} className="mx-auto text-lms-muted group-hover:text-lms-green transition-colors mb-2" />
-                  <p className="text-sm font-medium text-lms-heading">
-                    Faylı buraya çəkin və ya <span className="text-lms-green">seçin</span>
+                  <Upload size={28} className="mx-auto text-text-base/50 group-hover:text-success transition-colors mb-2" />
+                  <p className="text-sm font-medium text-text-base">
+                    Faylı buraya çəkin və ya <span className="text-success">seçin</span>
                   </p>
-                  <p className="text-xs text-lms-muted mt-1">
+                  <p className="text-xs text-text-base/50 mt-1">
                     PDF, Word, Excel, PPT, şəkil, video — maks. 50MB
                   </p>
                 </button>
               ) : (
-                <div className="lms-card flex items-center gap-3 p-3">
-                  <div className="w-10 h-10 rounded-lg bg-lms-green-light flex items-center justify-center flex-shrink-0">
-                    <FileCheck size={20} className="text-lms-green" />
+                <div className="rounded-neu bg-surface shadow-neu-sm flex items-center gap-3 p-3">
+                  <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
+                    <FileCheck size={20} className="text-success" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-lms-heading truncate">{selectedFile.name}</p>
-                    <p className="text-xs text-lms-muted mt-0.5">
+                    <p className="text-sm font-medium text-text-base truncate">{selectedFile.name}</p>
+                    <p className="text-xs text-text-base/50 mt-0.5">
                       {(selectedFile.size / 1024 / 1024).toFixed(2)} MB · {selectedFile.type || 'fayl'}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => { setSelectedFile(null); setFilePreview(''); }}
-                    className="flex-shrink-0 text-lms-muted hover:text-red-500 transition-colors p-1"
+                    className="flex-shrink-0 text-text-base/50 hover:text-red-500 transition-colors p-1"
                     title="Faylı sil"
                   >
                     <X size={16} />
@@ -267,7 +267,7 @@ export default function MaterialUpload() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-shrink-0 text-lms-muted hover:text-lms-green transition-colors text-xs border border-lms-border rounded-md px-2 py-1"
+                    className="flex-shrink-0 text-text-base/50 hover:text-success transition-colors text-xs border border-surface-dark/20 rounded-md px-2 py-1"
                   >
                     Dəyiş
                   </button>

@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -6,9 +6,12 @@ import {
   CalendarCheck,
   FolderOpen,
   UserCircle,
+  LogOut,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
+import { useAuth } from '@/hooks/useAuth';
+import Button from '@/components/ui/Button';
 
 interface NavItem {
   key: string;
@@ -64,57 +67,71 @@ const navItems: NavItem[] = [
 ];
 
 export default function StudentSidebar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   return (
     <aside
-      className="fixed left-0 top-0 z-20 flex h-full w-[260px] flex-col bg-lms-student-bg"
-      style={{ boxShadow: '4px 0 15px rgba(200,208,216,0.6)' }}
+      className="flex h-screen w-60 shrink-0 flex-col bg-surface shadow-neu-lg"
+      aria-label="Əsas naviqasiya"
     >
-      <div className="flex h-[64px] items-center gap-3 px-4">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="shrink-0 text-lms-student-accent"
-          aria-hidden="true"
-        >
-          <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
-          <path d="M22 10v6" />
-          <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
-        </svg>
-        <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-bold leading-tight text-lms-student-text">
+      <div className="flex items-center gap-3 border-b border-surface-dark/20 px-6 py-6">
+        <div className="flex h-9 w-9 items-center justify-center rounded-neu bg-primary shadow-neu-sm">
+          <span className="text-sm font-bold text-white">T</span>
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-bold leading-none text-text-base">
             Tədris Mərkəzi
           </p>
-          <p className="text-[11px] leading-tight text-lms-student-muted">
-            İdarəetmə Sistemi
-          </p>
+          <p className="mt-0.5 text-xs text-text-base/40">Tələbə Paneli</p>
         </div>
-        <span className="shrink-0 rounded-full bg-lms-student-accentLt px-2 py-0.5 text-[10px] font-semibold text-lms-student-accent">
+        <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
           Tələbə
         </span>
       </div>
 
-      <nav className="flex flex-col gap-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navItems.map(({ key, to, icon: Icon, label, end }) => (
           <NavLink
             key={key}
             to={to}
             end={end}
             className={({ isActive }) =>
-              isActive ? 'student-nav-item active' : 'student-nav-item'
+              `flex items-center gap-3 rounded-neu px-4 py-2.5 text-sm font-bold tracking-wide transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary ${
+                isActive
+                  ? 'bg-primary text-white shadow-neu-sm'
+                  : 'text-text-base/60 hover:text-text-base hover:shadow-neu-sm'
+              }`
             }
           >
-            <Icon size={18} strokeWidth={1.5} />
+            <Icon size={16} aria-hidden />
             <span>{label}</span>
           </NavLink>
         ))}
       </nav>
+
+      <div className="border-t border-surface-dark/20 p-4">
+        <div className="mb-3 rounded-neu px-3 py-2.5 shadow-neu-inset-sm">
+          <p className="truncate text-xs font-bold text-text-base">
+            {user?.name} {user?.surname}
+          </p>
+          <p className="truncate text-xs text-text-base/40">{user?.email}</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          className="w-full justify-start text-danger hover:text-danger"
+        >
+          <LogOut size={14} />
+          Çıxış
+        </Button>
+      </div>
     </aside>
   );
 }

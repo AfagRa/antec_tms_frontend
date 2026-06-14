@@ -63,7 +63,7 @@ export default function GroupDetail() {
     <div>
       <button
         onClick={() => navigate(ROUTES.TEACHER_GROUPS)}
-        className="flex items-center gap-1.5 text-sm text-lms-muted hover:text-lms-heading transition-colors mb-4 group"
+        className="flex items-center gap-1.5 text-sm text-text-base/50 hover:text-text-base transition-colors mb-4 group"
       >
         <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
         Mənim Qruplarıma Qayıt
@@ -140,15 +140,15 @@ export default function GroupDetail() {
           {activeTab === 'students' && (
             <div className="overflow-x-auto">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-lms-muted">Status:</span>
+                <span className="text-xs text-text-base/50">Status:</span>
                 {(['all', 'Aktiv', 'Passiv', 'Çıxıb', 'Məzun'] as const).map((s) => (
                   <button
                     key={s}
                     onClick={() => setStatusFilter(s)}
                     className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
                       statusFilter === s
-                        ? 'bg-lms-green text-white border-lms-green'
-                        : 'bg-white text-lms-muted border-lms-border hover:border-lms-green/50'
+                        ? 'bg-success text-white border-success'
+                        : 'bg-white text-text-base/50 border-surface-dark/20 hover:border-success/50'
                     }`}
                   >
                     {s === 'all' ? 'Hamısı' : s}
