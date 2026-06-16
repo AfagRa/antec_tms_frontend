@@ -35,7 +35,7 @@ export default function Attendance() {
   const storedEntries = getAttendanceForLesson(state, selectedLessonId);
 
   useEffect(() => {
-    const students = SHARED_STUDENTS.filter((s) => s.groupId === selectedGroupId);
+    const students = SHARED_STUDENTS.filter((s) => s.groupIds.includes(selectedGroupId));
     const initialized: AttendanceRecord[] = students.map((s) => {
       const existing = storedEntries.find((e) => e.studentId === s.studentId);
       return {

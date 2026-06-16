@@ -33,7 +33,7 @@ export default function Grades() {
   const storedGrades = getGradesForLesson(state, selectedLessonId);
 
   useEffect(() => {
-    const students = SHARED_STUDENTS.filter((s) => s.groupId === selectedGroupId);
+    const students = SHARED_STUDENTS.filter((s) => s.groupIds.includes(selectedGroupId));
     const attMap = new Map(storedAttendance.map((e) => [e.studentId, e.status]));
     const gradeMap = new Map(storedGrades.map((e) => [e.studentId, e]));
     setRecords(students.map((s) => ({

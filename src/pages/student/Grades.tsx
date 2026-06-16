@@ -3,63 +3,27 @@ import DateRangePicker from '../../components/ui/DateRangePicker'
 import NoteCell from '../../components/ui/NoteCell'
 import type { GradeCategory } from '../../types'
 import { GRADE_CATEGORY_LABELS, GRADE_CATEGORY_STYLES } from '../../types'
+import {
+  useAcademic, getStudentGrades,
+} from '../../store/academicStore'
 
-interface GradeRow {
-  id: string;
-  date: string;
-  groupName: string;
-  topic: string;
-  score: number;
-  maxScore: number;
-  teacherNote: string;
-  category?: GradeCategory;
-}
-
-const grades: GradeRow[] = [
-  {
-    id: '1',
-    date: '02.06.2026',
-    groupName: 'Python-A1',
-    topic: 'Obyekt yönümlü proqramlaşdırma',
-    score: 90,
-    maxScore: 100,
-    teacherNote: 'Layihə işi mükəmməldir',
-    category: 'daily',
-  },
-  {
-    id: '2',
-    date: '29.05.2026',
-    groupName: 'Python-A1',
-    topic: 'Funksiyalar va Return ifadası',
-    score: 95,
-    maxScore: 100,
-    teacherNote: 'Super!',
-    category: 'homework',
-  },
-  {
-    id: '3',
-    date: '22.05.2026',
-    groupName: 'Python-A1',
-    topic: 'Şərt operatorları (if, else)',
-    score: 80,
-    maxScore: 100,
-    teacherNote: 'Daha çox çalışmaq lazımdır',
-    category: 'module',
-  },
-  {
-    id: '4',
-    date: '15.05.2026',
-    groupName: 'Python-A1',
-    topic: 'Dəyişənlər va Malumat Tipləri',
-    score: 100,
-    maxScore: 100,
-    teacherNote: 'Əla nəticə!',
-    category: 'final',
-  },
-]
+const MOCK_STUDENT_ID = 's1'
 
 export default function StudentGrades() {
-  const [selectedGroup, setSelectedGroup] = useState<string>('Python-A1')
+  const { state } = useAcademic()
+
+  const allGrades = useMemo(
+    () => getStudentGrades(state, MOCK_STUDENT_ID)
+      .map((g) => ({ ...g, percent: Math.round((g.score ?? 0) / g.maxScore * 100) })),
+    [state.grades],
+  )
+
+  const groupOptions = useMemo(
+    () => ['Hamısı', ...Array.from(new Set(allGrades.map((g) => g.groupName)))],
+    [allGrades],
+  )
+
+  const [selectedGroup, setSelectedGroup] = useState<string>('Hamısı')
   const [startDate, setStartDate] = useState('2026-05-01')
   const [endDate, setEndDate] = useState('2026-05-31')
   const [selectedCategory, setSelectedCategory] = useState<GradeCategory | 'all'>('all')
@@ -71,30 +35,38 @@ export default function StudentGrades() {
     setCurrentPage(1)
   }, [selectedGroup, startDate, endDate, selectedCategory, sorting])
 
+  const scores = allGrades.filter((g) => g.score !== null).map((g) => g.score as number)
+  const stats = {
+    count:   allGrades.length,
+    avg:     scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0,
+    highest: scores.length ? Math.max(...scores) : 0,
+    lowest:  scores.length ? Math.min(...scores) : 0,
+  }
+
   const filteredGrades = useMemo(() => {
-    return grades
-      .filter(r => selectedGroup === 'Hamısı' || r.groupName === selectedGroup)
-      .filter(r => {
+    return allGrades
+      .filter((r) => selectedGroup === 'Hamısı' || r.groupName === selectedGroup)
+      .filter((r) => {
         if (selectedCategory !== 'all' && r.category !== selectedCategory) return false
         return true
       })
-      .filter(r => {
+      .filter((r) => {
         if (!startDate && !endDate) return true
-        const d = new Date(r.date.split('.').reverse().join('-'))
+        const d = new Date(r.lessonDate.split('.').reverse().join('-'))
         if (startDate && d < new Date(startDate)) return false
-        if (endDate   && d > new Date(endDate))   return false
+        if (endDate && d > new Date(endDate)) return false
         return true
       })
       .sort((a, b) => {
-        const da = new Date(a.date.split('.').reverse().join('-')).getTime()
-        const db = new Date(b.date.split('.').reverse().join('-')).getTime()
+        const da = new Date(a.lessonDate.split('.').reverse().join('-')).getTime()
+        const db = new Date(b.lessonDate.split('.').reverse().join('-')).getTime()
         if (sorting === 'Ən yeni') return db - da
         if (sorting === 'Ən köhnə') return da - db
-        if (sorting === 'Ən yüksək bal') return b.score - a.score
-        if (sorting === 'Ən aşağı bal') return a.score - b.score
+        if (sorting === 'Ən yüksək bal') return (b.score ?? 0) - (a.score ?? 0)
+        if (sorting === 'Ən aşağı bal') return (a.score ?? 0) - (b.score ?? 0)
         return 0
       })
-  }, [selectedGroup, startDate, endDate, selectedCategory, sorting])
+  }, [allGrades, selectedGroup, startDate, endDate, selectedCategory, sorting])
 
   const totalPages = Math.max(1, Math.ceil(filteredGrades.length / ITEMS_PER_PAGE))
 
@@ -102,7 +74,7 @@ export default function StudentGrades() {
     const safePage = Math.min(currentPage, totalPages)
     return filteredGrades.slice(
       (safePage - 1) * ITEMS_PER_PAGE,
-      safePage * ITEMS_PER_PAGE
+      safePage * ITEMS_PER_PAGE,
     )
   }, [filteredGrades, currentPage, totalPages])
 
@@ -138,9 +110,9 @@ export default function StudentGrades() {
               onChange={(e) => setSelectedGroup(e.target.value)}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer"
             >
-              <option value="Python-A1">Python-A1</option>
-              <option value="Python-A2">Python-A2</option>
-              <option value="Hamısı">Hamısı</option>
+              {groupOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
 
@@ -198,7 +170,7 @@ export default function StudentGrades() {
             Ümumi Qiymətləndirilmiş Dərslər
           </span>
           <span className="text-2xl font-bold text-text-base">
-            15 dərs
+            {stats.count} dərs
           </span>
         </div>
         <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
@@ -206,7 +178,7 @@ export default function StudentGrades() {
             Ortalama Faiz Balı (%)
           </span>
           <span className="text-2xl font-bold text-text-base">
-            88%
+            {stats.avg}%
           </span>
         </div>
         <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
@@ -214,7 +186,7 @@ export default function StudentGrades() {
             Ən Yüksək Bal
           </span>
           <span className="text-2xl font-bold text-text-base">
-            100
+            {stats.highest}
           </span>
         </div>
         <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
@@ -222,7 +194,7 @@ export default function StudentGrades() {
             Ən Aşağı Bal
           </span>
           <span className="text-2xl font-bold text-text-base">
-            70
+            {stats.lowest}
           </span>
         </div>
       </div>
@@ -274,55 +246,52 @@ export default function StudentGrades() {
               </tr>
             </thead>
             <tbody>
-              {paginatedGrades.map((row, index) => {
-                const faiz = Math.round((row.score / row.maxScore) * 100)
-                return (
-                  <React.Fragment key={row.id}>
+              {paginatedGrades.map((row, index) => (
+                <React.Fragment key={row.lessonId + row.studentId}>
+                  <tr>
+                    <td className="py-3.5 text-sm text-text-base pr-2 px-4">
+                      {row.lessonDate}
+                    </td>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.groupName}>
+                      {row.groupName}
+                    </td>
+                    <td className="py-3 pr-4">
+                      {row.category ? (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium shadow-neu-sm ${GRADE_CATEGORY_STYLES[row.category]}`}>
+                          {GRADE_CATEGORY_LABELS[row.category]}
+                        </span>
+                      ) : (
+                        <span className="text-text-base/50 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.lessonTopic}>
+                      {row.lessonTopic}
+                    </td>
+                    <td className="py-3.5 text-sm text-text-base pr-2 px-4">
+                      {row.score ?? '—'}
+                    </td>
+                    <td className="py-3.5 text-sm text-text-base pr-2 px-4">
+                      {row.maxScore}
+                    </td>
+                    <td className={`py-3.5 text-sm pr-2 px-4 ${getFaizColorClass(row.percent)}`}>
+                      {row.percent}%
+                    </td>
+                    <td className="py-3 pr-4">
+                      <NoteCell
+                        note={row.teacherNote}
+                        meta={`${row.lessonTopic} | ${row.lessonDate}`}
+                      />
+                    </td>
+                  </tr>
+                  {index < paginatedGrades.length - 1 && (
                     <tr>
-                      <td className="py-3.5 text-sm text-text-base pr-2 px-4">
-                        {row.date}
-                      </td>
-                      <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.groupName}>
-                        {row.groupName}
-                      </td>
-                      <td className="py-3 pr-4">
-                        {row.category ? (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium shadow-neu-sm ${GRADE_CATEGORY_STYLES[row.category]}`}>
-                            {GRADE_CATEGORY_LABELS[row.category]}
-                          </span>
-                        ) : (
-                          <span className="text-text-base/50 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.topic}>
-                        {row.topic}
-                      </td>
-                      <td className="py-3.5 text-sm text-text-base pr-2 px-4">
-                        {row.score}
-                      </td>
-                      <td className="py-3.5 text-sm text-text-base pr-2 px-4">
-                        {row.maxScore}
-                      </td>
-                      <td className={`py-3.5 text-sm pr-2 px-4 ${getFaizColorClass(faiz)}`}>
-                        {faiz}%
-                      </td>
-                      <td className="py-3 pr-4">
-                        <NoteCell
-                          note={row.teacherNote}
-                          meta={`${row.topic} | ${row.date}`}
-                        />
+                      <td colSpan={8} className="p-0">
+                        <div className="bg-surface-dark/20 h-px w-full" />
                       </td>
                     </tr>
-                    {index < paginatedGrades.length - 1 && (
-                      <tr>
-                        <td colSpan={8} className="p-0">
-                          <div className="bg-surface-dark/20 h-px w-full" />
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                )
-              })}
+                  )}
+                </React.Fragment>
+              ))}
               {paginatedGrades.length === 0 && (
                 <tr>
                   <td colSpan={8} className="py-6 text-center text-sm text-text-base/50 px-4">
@@ -338,7 +307,7 @@ export default function StudentGrades() {
           <div />
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >‹</button>
@@ -360,7 +329,7 @@ export default function StudentGrades() {
             )}
 
             <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >›</button>

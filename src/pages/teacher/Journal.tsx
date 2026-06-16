@@ -58,7 +58,7 @@ export default function TeacherJournal() {
 
   const lessons = SHARED_LESSONS.filter((l) => l.groupId === selectedGroupId);
   const allLessons = [...lessons, ...extraLessons];
-  const students = SHARED_STUDENTS.filter((s) => s.groupId === selectedGroupId);
+  const students = SHARED_STUDENTS.filter((s) => s.groupIds.includes(selectedGroupId));
 
   // Initialize journal data from store
   useEffect(() => {
