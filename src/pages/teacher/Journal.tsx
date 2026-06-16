@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Save, Check, Pencil } from 'lucide-react';
+import { Plus, Save, Check, Pencil, Download, AlertCircle } from 'lucide-react';
 import type { JournalLesson, JournalCell, GradeCategory, AttendanceStatus } from '../../types';
 import {
   useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
   getAttendanceForLesson, getGradesForLesson,
 } from '../../store/academicStore.tsx';
 import { AttendanceSegment } from '../../components/ui/AttendanceSegment';
+import { exportJournalToExcel } from '../../utils/exportJournal';
 
 const CATEGORY_OPTIONS: { value: GradeCategory; label: string }[] = [
   { value: 'daily',    label: 'Dərs' },
@@ -27,6 +28,25 @@ export default function TeacherJournal() {
   const [lessonTopics, setLessonTopics] = useState<Record<string, string>>({});
   const [editingTopics, setEditingTopics] = useState<Record<string, boolean>>({});
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const [exportToast, setExportToast] = useState('');
+
+  const handleExport = () => {
+    const lessons = SHARED_LESSONS.filter(l => l.groupId === selectedGroupId)
+    const students = SHARED_STUDENTS.filter(s => s.groupIds.includes(selectedGroupId))
+
+    if (lessons.length === 0) {
+      setExportToast('Bu qrupun dərsi yoxdur')
+      setTimeout(() => setExportToast(''), 3000)
+      return
+    }
+    if (students.length === 0) {
+      setExportToast('Bu qrupda tələbə yoxdur')
+      setTimeout(() => setExportToast(''), 3000)
+      return
+    }
+
+    exportJournalToExcel(selectedGroupId, state)
+  }
 
   useEffect(() => {
     if (toast === 'done') {
@@ -265,6 +285,14 @@ export default function TeacherJournal() {
             >
               <Save size={15} />
               {toast === 'saving' ? 'Saxlanılır...' : 'Yadda Saxla'}
+            </button>
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-surface-dark/20 text-text-base bg-surface hover:bg-surface-dark/20 hover:border-primary hover:text-primary transition-all"
+              title="Seçilmiş qrupun jurnalını Excel formatında yüklə"
+            >
+              <Download size={15} />
+              Export to Excel
             </button>
             {toast === 'done' && (
               <span className="text-sm text-emerald-600 font-medium ml-2">
@@ -579,6 +607,13 @@ export default function TeacherJournal() {
           Hamı "İE" olaraq işarələnib. Yalnız fərqli statusları dəyişin.
         </span>
       </div>
+
+      {exportToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-white shadow-neu-lg px-4 py-3 text-sm text-red-600 border border-red-200 rounded-lg flex items-center gap-2">
+          <AlertCircle size={15} />
+          {exportToast}
+        </div>
+      )}
     </div>
   );
 }
