@@ -15,6 +15,8 @@ function statusBadgeClass(status: GroupStatus) {
 }
 
 export default function Groups() {
+  const visibleGroups = MOCK_GROUPS
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-semibold text-text-base">Mənim Qruplarım</h1>
@@ -22,7 +24,7 @@ export default function Groups() {
       <div className="rounded-neu bg-surface shadow-neu-sm p-6">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-text-base">
-            Cəmi Qruplar: <span className="font-semibold">{MOCK_GROUPS.length}</span>
+            Cəmi Qruplar: <span className="font-semibold">{visibleGroups.length}</span>
           </p>
         </div>
 
@@ -60,7 +62,7 @@ export default function Groups() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_GROUPS.map((group, index) => (
+              {visibleGroups.map((group, index) => (
                 <tr key={group.id} className="border-b border-surface-dark/20 last:border-0">
                   <td className="px-3 py-3 text-sm text-text-base">{index + 1}</td>
                   <td className="px-3 py-3 text-sm text-text-base">{group.name}</td>

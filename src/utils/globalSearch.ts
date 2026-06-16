@@ -1,95 +1,130 @@
-import { ROUTES } from '../constants/routes';
 import {
-  DEFAULT_GROUP_ID,
-  MOCK_GROUPS,
-  MOCK_LESSONS,
-  MOCK_MATERIALS,
-  MOCK_STUDENTS,
-} from '../data/teacherMock';
+  SHARED_GROUPS, SHARED_STUDENTS, SHARED_LESSONS, SHARED_MATERIALS,
+} from '../store/academicStore'
+import { ROUTES } from '../constants/routes'
 
-export type SearchResultCategory = 'Qruplar' | 'Tələbələr' | 'Dərslər' | 'Materiallar';
-
-export type SearchResultType = 'group' | 'student' | 'lesson' | 'material';
+export type SearchResultType = 'group' | 'student' | 'lesson' | 'material'
 
 export interface GlobalSearchResult {
-  id: string;
-  label: string;
-  category: SearchResultCategory;
-  type: SearchResultType;
-  to: string;
-}
-
-function matchesQuery(text: string, query: string): boolean {
-  return text.toLowerCase().includes(query.toLowerCase());
+  id: string
+  type: SearchResultType
+  label: string
+  category: string
+  to: string
 }
 
 export function searchGlobal(query: string): GlobalSearchResult[] {
-  const trimmed = query.trim();
-  if (!trimmed) {
-    return [];
-  }
+  const q = query.trim().toLowerCase()
+  if (q.length < 1) return []
 
-  const results: GlobalSearchResult[] = [];
+  const results: GlobalSearchResult[] = []
 
-  for (const group of MOCK_GROUPS) {
-    if (
-      matchesQuery(group.name, trimmed) ||
-      matchesQuery(group.courseName, trimmed)
-    ) {
+  SHARED_GROUPS.forEach((g) => {
+    if (g.name.toLowerCase().includes(q)) {
       results.push({
-        id: `group-${group.id}`,
-        label: group.name,
-        category: 'Qruplar',
+        id: `group-${g.id}`,
         type: 'group',
-        to: ROUTES.TEACHER_GROUP(group.id),
-      });
+        label: g.name,
+        category: 'Qrup',
+        to: ROUTES.TEACHER_GROUP(g.id),
+      })
     }
-  }
+  })
 
-  for (const student of MOCK_STUDENTS) {
-    const fullName = `${student.name} ${student.surname}`;
-    if (
-      matchesQuery(student.name, trimmed) ||
-      matchesQuery(student.surname, trimmed) ||
-      matchesQuery(fullName, trimmed) ||
-      matchesQuery(student.email, trimmed)
-    ) {
+  SHARED_STUDENTS.forEach((s) => {
+    const full = `${s.studentName} ${s.studentSurname}`.toLowerCase()
+    if (full.includes(q)) {
       results.push({
-        id: `student-${student.id}`,
-        label: fullName,
-        category: 'Tələbələr',
+        id: `student-${s.studentId}`,
         type: 'student',
-        to: ROUTES.TEACHER_GROUP(DEFAULT_GROUP_ID),
-      });
+        label: `${s.studentName} ${s.studentSurname}`,
+        category: 'Tələbə',
+        to: ROUTES.TEACHER_GROUPS,
+      })
     }
-  }
+  })
 
-  for (const lesson of MOCK_LESSONS) {
-    if (
-      matchesQuery(lesson.topic, trimmed) ||
-      matchesQuery(lesson.groupName, trimmed)
-    ) {
+  SHARED_LESSONS.forEach((l) => {
+    if (l.topic.toLowerCase().includes(q) || l.date.includes(q)) {
+      const group = SHARED_GROUPS.find((g) => g.id === l.groupId)
       results.push({
-        id: `lesson-${lesson.id}`,
-        label: lesson.topic,
-        category: 'Dərslər',
+        id: `lesson-${l.id}`,
         type: 'lesson',
-        to: ROUTES.TEACHER_ATTENDANCE(lesson.id),
-      });
+        label: `${l.topic} — ${l.date}`,
+        category: group?.name ?? 'Dərs',
+        to: ROUTES.TEACHER_JOURNAL,
+      })
     }
-  }
+  })
 
-  for (const material of MOCK_MATERIALS) {
-    if (matchesQuery(material.title, trimmed)) {
+  SHARED_MATERIALS.forEach((m) => {
+    if (m.title.toLowerCase().includes(q)) {
       results.push({
-        id: `material-${material.id}`,
-        label: material.title,
-        category: 'Materiallar',
+        id: `material-${m.id}`,
         type: 'material',
+        label: m.title,
+        category: m.type,
         to: ROUTES.TEACHER_MATERIAL,
-      });
+      })
     }
-  }
+  })
 
-  return results;
+  return results.slice(0, 8)
+}
+
+export function searchGlobalStudent(query: string, studentId: string): GlobalSearchResult[] {
+  const q = query.trim().toLowerCase()
+  if (q.length < 1) return []
+
+  const student = SHARED_STUDENTS.find((s) => s.studentId === studentId)
+  const myGroupIds = new Set(student?.groupIds ?? [])
+
+  const results: GlobalSearchResult[] = []
+
+  SHARED_GROUPS
+    .filter((g) => myGroupIds.has(g.id))
+    .forEach((g) => {
+      if (g.name.toLowerCase().includes(q)) {
+        results.push({
+          id: `group-${g.id}`,
+          type: 'group',
+          label: g.name,
+          category: 'Qrup',
+          to: ROUTES.STUDENT_GROUPS,
+        })
+      }
+    })
+
+  SHARED_LESSONS
+    .filter((l) => myGroupIds.has(l.groupId))
+    .forEach((l) => {
+      if (l.topic.toLowerCase().includes(q) || l.date.includes(q)) {
+        const group = SHARED_GROUPS.find((g) => g.id === l.groupId)
+        results.push({
+          id: `lesson-${l.id}`,
+          type: 'lesson',
+          label: `${l.topic} — ${l.date}`,
+          category: group?.name ?? 'Dərs',
+          to: ROUTES.STUDENT_GROUPS,
+        })
+      }
+    })
+
+  SHARED_MATERIALS
+    .filter((m) => myGroupIds.has(
+      SHARED_LESSONS.find((l) => l.id === m.lessonId)?.groupId ?? '',
+    ))
+    .forEach((m) => {
+      if (m.title.toLowerCase().includes(q)) {
+        results.push({
+          id: `material-${m.id}`,
+          type: 'material',
+          label: m.title,
+          category: m.type,
+          to: ROUTES.STUDENT_MATERIALS,
+        })
+      }
+    })
+
+  return results.slice(0, 8)
 }

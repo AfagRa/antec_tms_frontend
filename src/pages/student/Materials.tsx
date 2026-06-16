@@ -1,128 +1,10 @@
 import React, { useState, useEffect } from 'react'
-
-interface MaterialRow {
-  id: string;
-  title: string;
-  topic: string;
-  groupName: string;
-  teacherName: string;
-  type: 'Fayl' | 'YouTube' | 'Google Drive' | 'Linklər';
-  uploadDate: string;
-  url: string;
-}
-
-const materials: MaterialRow[] = [
-  {
-    id: '1',
-    title: 'Dərs 05 - OOP Prinsipləri və İrsi Keçmə',
-    topic: 'Python-A1',
-    groupName: 'Python-A1',
-    teacherName: 'Aahan Hakrın Aman',
-    type: 'Fayl',
-    uploadDate: '04.06.2026',
-    url: '#',
-  },
-  {
-    id: '2',
-    title: 'Dərs 04 - OOP Prinsipləri və İri Keçmə',
-    topic: 'Python-A1',
-    groupName: 'Python-A1',
-    teacherName: 'Barian HakarMak',
-    type: 'YouTube',
-    uploadDate: '04.06.2026',
-    url: 'https://youtube.com',
-  },
-  {
-    id: '3',
-    title: 'Dərs 03 - OOP Prinsipləri və İrsi Keçmə',
-    topic: 'Python-A1',
-    groupName: 'Python-A1',
-    teacherName: 'Bahan HakarMak',
-    type: 'Google Drive',
-    uploadDate: '04.06.2026',
-    url: 'https://drive.google.com',
-  },
-  {
-    id: '4',
-    title: 'Dərs 02 - OOP Prinsipləri və İrsi Keçmə',
-    topic: 'Python-A1',
-    groupName: 'Python-A1',
-    teacherName: 'Aahan Hakrın Aman',
-    type: 'Fayl',
-    uploadDate: '04.06.2026',
-    url: '#',
-  },
-  {
-    id: '5',
-    title: 'Dərs 05 - OOP Prinsipləri və İri Keçmə',
-    topic: 'Python-A1',
-    groupName: 'Python-A1',
-    teacherName: 'Barian HakarMak',
-    type: 'Google Drive',
-    uploadDate: '04.06.2026',
-    url: 'https://drive.google.com',
-  },
-  {
-    id: '6',
-    title: 'Dərs 01 - Giriş və Sintaksis',
-    topic: 'Python-A1',
-    groupName: 'Python-A1',
-    teacherName: 'Aahan Hakrın Aman',
-    type: 'Fayl',
-    uploadDate: '20.05.2026',
-    url: '#',
-  },
-  {
-    id: '7',
-    title: 'Dərs 02 - Dəyişənlər və Operatorlar',
-    topic: 'Python-A2',
-    groupName: 'Python-A2',
-    teacherName: 'Aahan Hakrın Aman',
-    type: 'YouTube',
-    uploadDate: '22.05.2026',
-    url: 'https://youtube.com',
-  },
-  {
-    id: '8',
-    title: 'Dərs 03 - Şərt və Döngə Operatorları',
-    topic: 'Python-A2',
-    groupName: 'Python-A2',
-    teacherName: 'Barian HakarMak',
-    type: 'Google Drive',
-    uploadDate: '25.05.2026',
-    url: 'https://drive.google.com',
-  },
-  {
-    id: '9',
-    title: 'Dərs 04 - Siyahılar (Lists) və Lüğətlər (Dicts)',
-    topic: 'Python-A2',
-    groupName: 'Python-A2',
-    teacherName: 'Barian HakarMak',
-    type: 'Linklər',
-    uploadDate: '28.05.2026',
-    url: 'https://google.com',
-  },
-  {
-    id: '10',
-    title: 'Dərs 05 - Metodlar və Funksiyalar',
-    topic: 'Python-A1',
-    groupName: 'Python-A1',
-    teacherName: 'Bahan HakarMak',
-    type: 'Fayl',
-    uploadDate: '01.06.2026',
-    url: '#',
-  },
-  {
-    id: '11',
-    title: 'Dərs 06 - Fildər və Modullar',
-    topic: 'Python-A1',
-    groupName: 'Python-A1',
-    teacherName: 'Aahan Hakrın Aman',
-    type: 'Linklər',
-    uploadDate: '03.06.2026',
-    url: '#',
-  },
-]
+import { useAuth } from '../../hooks/useAuth'
+import {
+  useAcademic, getStudentMaterials, resolveStudentId,
+} from '../../store/academicStore'
+import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
+import type { MaterialTypeName } from '../../types'
 
 const typeFilterMap: Record<string, 'Fayl' | 'YouTube' | 'Google Drive' | 'Linklər' | null> = {
   'Hamısı': null,
@@ -136,7 +18,13 @@ const typeFilterMap: Record<string, 'Fayl' | 'YouTube' | 'Google Drive' | 'Linkl
 const filterOptions = ['Hamısı', 'Fayllar', 'Linklər', 'Videolar', 'Google Drive', 'YouTube']
 
 export default function StudentMaterials() {
-  const [selectedGroup, setSelectedGroup] = useState<string>('Python-A1')
+  const { user } = useAuth()
+  const studentId = resolveStudentId(user?.id)
+  const allMaterials = getStudentMaterials(studentId)
+
+  const groupOptions = ['Bütün Qruplar', ...Array.from(new Set(allMaterials.map((m) => m.groupName)))]
+
+  const [selectedGroup, setSelectedGroup] = useState<string>('Bütün Qruplar')
   const [selectedType, setSelectedType] = useState<string>('Hamısı')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const ITEMS_PER_PAGE = 5
@@ -145,26 +33,22 @@ export default function StudentMaterials() {
     setCurrentPage(1)
   }, [selectedGroup, selectedType])
 
-  const filteredMaterials = materials
-    .filter(m => selectedGroup === 'Bütün Qruplar' || m.groupName === selectedGroup)
-    .filter(m => selectedType === 'Hamısı' || m.type === typeFilterMap[selectedType])
+  const filteredMaterials = allMaterials
+    .filter((m) => selectedGroup === 'Bütün Qruplar' || m.groupName === selectedGroup)
+    .filter((m) => selectedType === 'Hamısı' || m.type === typeFilterMap[selectedType])
 
   const totalPages = Math.max(1, Math.ceil(filteredMaterials.length / ITEMS_PER_PAGE))
   const paginatedMaterials = filteredMaterials.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   )
 
   const handleFirstPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(1)
-    }
+    if (currentPage > 1) setCurrentPage(1)
   }
 
   const handleLastPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(totalPages)
-    }
+    if (currentPage < totalPages) setCurrentPage(totalPages)
   }
 
   return (
@@ -185,9 +69,9 @@ export default function StudentMaterials() {
               onChange={(e) => setSelectedGroup(e.target.value)}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 w-[180px] h-[38px] cursor-pointer"
             >
-              <option value="Python-A1">Python-A1</option>
-              <option value="Python-A2">Python-A2</option>
-              <option value="Bütün Qruplar">Bütün Qruplar</option>
+              {groupOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
 
@@ -204,8 +88,8 @@ export default function StudentMaterials() {
                     onClick={() => setSelectedType(opt)}
                     className={
                       isSelected
-                        ? "border-2 border-primary bg-primary/10 text-primary font-medium rounded-full px-4 py-1.5 text-sm transition-all shadow-neu-inset-sm cursor-pointer"
-                        : "border border-surface-dark/20 bg-surface text-text-base/50 rounded-full px-4 py-1.5 text-sm transition-all shadow-neu-sm hover:border-primary hover:text-primary cursor-pointer"
+                        ? 'border-2 border-primary bg-primary/10 text-primary font-medium rounded-full px-4 py-1.5 text-sm transition-all shadow-neu-inset-sm cursor-pointer'
+                        : 'border border-surface-dark/20 bg-surface text-text-base/50 rounded-full px-4 py-1.5 text-sm transition-all shadow-neu-sm hover:border-primary hover:text-primary cursor-pointer'
                     }
                   >
                     {opt}
@@ -251,15 +135,13 @@ export default function StudentMaterials() {
                       {row.title}
                     </td>
                     <td className="py-3.5 text-sm text-text-base/50 pr-2 px-4">
-                      Mövzu: {row.topic}
+                      Mövzu: {row.lessonTopic}
                     </td>
                     <td className="py-3.5 text-sm text-text-base pr-2 px-4">
                       {row.teacherName}
                     </td>
                     <td className="py-3.5 text-sm pr-2 px-4">
-                      <span className="rounded-md bg-gray-100 text-gray-700 px-2.5 py-1 text-xs font-medium inline-block">
-                        {row.type}
-                      </span>
+                      <MaterialTypeBadge type={row.type as MaterialTypeName} />
                     </td>
                     <td className="py-3.5 text-sm text-text-base/50 pr-2 px-4">
                       {row.uploadDate}
@@ -312,7 +194,7 @@ export default function StudentMaterials() {
           </button>
 
           <button
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
             className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
@@ -321,30 +203,26 @@ export default function StudentMaterials() {
 
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
             const isActive = p === currentPage
-            if (isActive) {
-              return (
-                <button
-                  key={p}
-                  className="rounded-neu-sm bg-surface-dark/30 shadow-neu-inset-sm px-3 py-1.5 text-sm font-medium text-primary select-none"
-                >
-                  {p}
-                </button>
-              )
-            } else {
-              return (
-                <button
-                  key={p}
-                  onClick={() => setCurrentPage(p)}
-                  className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all cursor-pointer"
-                >
-                  {p}
-                </button>
-              )
-            }
+            return isActive ? (
+              <button
+                key={p}
+                className="rounded-neu-sm bg-surface-dark/30 shadow-neu-inset-sm px-3 py-1.5 text-sm font-medium text-primary select-none"
+              >
+                {p}
+              </button>
+            ) : (
+              <button
+                key={p}
+                onClick={() => setCurrentPage(p)}
+                className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all cursor-pointer"
+              >
+                {p}
+              </button>
+            )
           })}
 
           <button
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
             className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >

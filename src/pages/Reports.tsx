@@ -79,7 +79,7 @@ export default function Reports() {
       studentScores[g.studentId].push(g.score as number);
     });
 
-    const students = SHARED_STUDENTS.filter((s) => filteredGroupIds.includes(s.groupId));
+    const students = SHARED_STUDENTS.filter((s) => s.groupIds.some((gid) => filteredGroupIds.includes(gid)));
     const studentMap = new Map(students.map((s) => [s.studentId, s]));
     const groupNameMap = new Map(SHARED_GROUPS.map((g) => [g.id, g.name]));
 
@@ -91,7 +91,8 @@ export default function Reports() {
         const totalAtt = state.attendance.filter((a) => a.studentId === studentId && lessonIds.has(a.lessonId));
         const presentCount = totalAtt.filter((a) => a.status === 'present' || a.status === 'late').length;
         const attendance = totalAtt.length > 0 ? Math.round((presentCount / totalAtt.length) * 100) : 0;
-        return { name: `${info.studentName} ${info.studentSurname}`, group: groupNameMap.get(info.groupId) ?? '', avg, attendance };
+        const studentGroupId = info.groupIds.find((gid) => filteredGroupIds.includes(gid)) ?? info.groupIds[0];
+        return { name: `${info.studentName} ${info.studentSurname}`, group: groupNameMap.get(studentGroupId) ?? '', avg, attendance };
       })
       .filter((s): s is NonNullable<typeof s> => s !== null)
       .sort((a, b) => b.avg - a.avg)

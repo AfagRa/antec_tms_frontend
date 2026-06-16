@@ -2,10 +2,11 @@ import { createContext, useContext, useReducer, type ReactNode } from 'react'
 import type { AttendanceStatus, GradeCategory, JournalCell } from '../types'
 
 export interface SharedStudent {
+  userId: number
   studentId: string
   studentName: string
   studentSurname: string
-  groupId: string
+  groupIds: string[]
 }
 
 export interface SharedLesson {
@@ -33,6 +34,18 @@ export interface GradeEntry {
   category: GradeCategory
 }
 
+export interface SharedMaterial {
+  id: string
+  lessonId: string
+  teacherId: string
+  teacherName: string
+  title: string
+  type: 'Fayl' | 'YouTube' | 'Google Drive' | 'Linklər'
+  uploadDate: string
+  url: string
+  filePath?: string
+}
+
 export interface AcademicState {
   attendance: AttendanceEntry[]
   grades: GradeEntry[]
@@ -58,16 +71,43 @@ export const SHARED_LESSONS: SharedLesson[] = [
 ]
 
 export const SHARED_STUDENTS: SharedStudent[] = [
-  { studentId: 's1', studentName: 'Əli',    studentSurname: 'Məmmədov', groupId: '1' },
-  { studentId: 's2', studentName: 'Sona',   studentSurname: 'Quliyeva', groupId: '1' },
-  { studentId: 's3', studentName: 'Orxan',  studentSurname: 'Rəsulov',  groupId: '1' },
-  { studentId: 's4', studentName: 'Vüsal',  studentSurname: 'Qəfarov',  groupId: '1' },
-  { studentId: 's5', studentName: 'Leyla',  studentSurname: 'Əliyeva',  groupId: '1' },
-  { studentId: 's6', studentName: 'Murad',  studentSurname: 'Həsənov',  groupId: '1' },
-  { studentId: 's7', studentName: 'Nigar',  studentSurname: 'Babayeva', groupId: '2' },
-  { studentId: 's8', studentName: 'Rauf',   studentSurname: 'İsmayılov',groupId: '2' },
-  { studentId: 's9', studentName: 'Könül',  studentSurname: 'Nəsirov',  groupId: '3' },
-  { studentId: 's10',studentName: 'Tural',  studentSurname: 'Qədirov',  groupId: '3' },
+  { userId: 3, studentId: 's1', studentName: 'Əli',    studentSurname: 'Məmmədov', groupIds: ['1', '2'] },
+  { userId: 4, studentId: 's2', studentName: 'Sona',   studentSurname: 'Quliyeva', groupIds: ['1'] },
+  { userId: 5, studentId: 's3', studentName: 'Orxan',  studentSurname: 'Rəsulov',  groupIds: ['1'] },
+  { userId: 6, studentId: 's4', studentName: 'Vüsal',  studentSurname: 'Qəfarov',  groupIds: ['1'] },
+  { userId: 7, studentId: 's5', studentName: 'Leyla',  studentSurname: 'Əliyeva',  groupIds: ['1'] },
+  { userId: 8, studentId: 's6', studentName: 'Murad',  studentSurname: 'Həsənov',  groupIds: ['1'] },
+  { userId: 9, studentId: 's7', studentName: 'Nigar',  studentSurname: 'Babayeva', groupIds: ['2'] },
+  { userId: 10,studentId: 's8', studentName: 'Rauf',   studentSurname: 'İsmayılov', groupIds: ['2'] },
+  { userId: 11,studentId: 's9', studentName: 'Könül',  studentSurname: 'Nəsirov',  groupIds: ['3'] },
+  { userId: 12,studentId: 's10',studentName: 'Tural',  studentSurname: 'Qədirov',  groupIds: ['3'] },
+]
+
+export const SHARED_MATERIALS: SharedMaterial[] = [
+  { id:'m1', lessonId:'l1', teacherId:'t1', teacherName:'Əli Həsənov',
+    title:'Dərs 01 - Giriş Konspekti', type:'Fayl',
+    uploadDate:'01.06.2026', url:'#', filePath:'#' },
+  { id:'m2', lessonId:'l2', teacherId:'t1', teacherName:'Əli Həsənov',
+    title:'Dəyişənlər - Videodərs', type:'YouTube',
+    uploadDate:'03.06.2026', url:'https://youtube.com' },
+  { id:'m3', lessonId:'l3', teacherId:'t1', teacherName:'Əli Həsənov',
+    title:'Massivlər Sənədi', type:'Google Drive',
+    uploadDate:'06.06.2026', url:'https://drive.google.com' },
+  { id:'m4', lessonId:'l4', teacherId:'t1', teacherName:'Əli Həsənov',
+    title:'Funksiyalar - Faydalı Keçidlər', type:'Linklər',
+    uploadDate:'08.06.2026', url:'https://python.org' },
+  { id:'m5', lessonId:'l5', teacherId:'t1', teacherName:'Əli Həsənov',
+    title:'Döngülər Konspekti', type:'Fayl',
+    uploadDate:'10.06.2026', url:'#', filePath:'#' },
+  { id:'m6', lessonId:'l6', teacherId:'t1', teacherName:'Əli Həsənov',
+    title:'HTML Əsasları - Slaydlar', type:'Fayl',
+    uploadDate:'02.06.2026', url:'#', filePath:'#' },
+  { id:'m7', lessonId:'l7', teacherId:'t1', teacherName:'Əli Həsənov',
+    title:'CSS Flex - Praktiki Tapşırıq', type:'Google Drive',
+    uploadDate:'05.06.2026', url:'https://drive.google.com' },
+  { id:'m8', lessonId:'l9', teacherId:'t1', teacherName:'Əli Həsənov',
+    title:'JS-B1 Dərs Materialları', type:'YouTube',
+    uploadDate:'04.06.2026', url:'https://youtube.com' },
 ]
 
 const initialState: AcademicState = { attendance: [], grades: [] }
@@ -141,6 +181,11 @@ export function useAcademic() {
   return ctx
 }
 
+export function resolveStudentId(userId?: number): string {
+  if (!userId) return 's1'
+  return SHARED_STUDENTS.find((s) => s.userId === userId)?.studentId ?? 's1'
+}
+
 export function getAttendanceForLesson(
   state: AcademicState, lessonId: string,
 ): AttendanceEntry[] {
@@ -186,19 +231,23 @@ export function getGradeStats(state: AcademicState, groupId?: string) {
 }
 
 export function getGroupStats(state: AcademicState, groupId: string) {
-  const students = SHARED_STUDENTS.filter((s) => s.groupId === groupId)
+  const students = SHARED_STUDENTS.filter((s) => s.groupIds.includes(groupId))
   const lessons = SHARED_LESSONS.filter((l) => l.groupId === groupId)
   const att = getAttendanceStats(state, groupId)
   const gr = getGradeStats(state, groupId)
   const attPct = att.total > 0
     ? Math.round(((att.present + att.late) / att.total) * 100)
     : 0
+  const lessonIdsWithData = new Set([
+    ...state.attendance.map((e) => e.lessonId),
+    ...state.grades.map((e) => e.lessonId),
+  ])
   return {
     studentCount:     students.length,
     lessonCount:      lessons.length,
     avgAttendance:    attPct,
     avgGrade:         gr.avg,
-    completedLessons: lessons.length,
+    completedLessons: lessons.filter((l) => lessonIdsWithData.has(l.id)).length,
   }
 }
 
@@ -216,4 +265,101 @@ export function codeToAttStatus(c: JournalCell['attendance']): AttendanceStatus 
   if (c === 'QÜ')  return 'absent_excused'
   if (c === 'Q')   return 'absent_unexcused'
   return 'present'
+}
+
+// ── Student selectors ──────────────────────────────────────────────
+
+export function getStudentAttendance(
+  state: AcademicState, studentId: string, groupId?: string,
+) {
+  const student = SHARED_STUDENTS.find((s) => s.studentId === studentId)
+  if (!student) return []
+  const allGroupIds = groupId ? [groupId] : student.groupIds
+  const lessonIds = new Set(
+    SHARED_LESSONS.filter((l) => allGroupIds.includes(l.groupId)).map((l) => l.id),
+  )
+  return state.attendance
+    .filter((a) => a.studentId === studentId && lessonIds.has(a.lessonId))
+    .map((a) => {
+      const lesson = SHARED_LESSONS.find((l) => l.id === a.lessonId)
+      const group = SHARED_GROUPS.find((g) => g.id === lesson?.groupId)
+      return {
+        ...a,
+        lessonDate: lesson?.date ?? '—',
+        lessonTopic: lesson?.topic ?? '—',
+        groupName: group?.name ?? '—',
+      }
+    })
+}
+
+export function getStudentGrades(
+  state: AcademicState, studentId: string, groupId?: string,
+) {
+  const student = SHARED_STUDENTS.find((s) => s.studentId === studentId)
+  if (!student) return []
+  const allGroupIds = groupId ? [groupId] : student.groupIds
+  const lessonIds = new Set(
+    SHARED_LESSONS.filter((l) => allGroupIds.includes(l.groupId)).map((l) => l.id),
+  )
+  return state.grades
+    .filter((g) => g.studentId === studentId && lessonIds.has(g.lessonId))
+    .map((g) => {
+      const lesson = SHARED_LESSONS.find((l) => l.id === g.lessonId)
+      const group = SHARED_GROUPS.find((gr) => gr.id === lesson?.groupId)
+      return {
+        ...g,
+        lessonDate: lesson?.date ?? '—',
+        lessonTopic: lesson?.topic ?? '—',
+        groupName: group?.name ?? '—',
+      }
+    })
+}
+
+export function getStudentDashboardStats(state: AcademicState, studentId: string) {
+  const student = SHARED_STUDENTS.find((s) => s.studentId === studentId)
+  if (!student) {
+    return { groupCount: 0, totalLessons: 0, attendancePct: 0, avgGrade: 0 }
+  }
+  const groups = SHARED_GROUPS.filter((g) => student.groupIds.includes(g.id))
+  const lessonIds = new Set(
+    SHARED_LESSONS.filter((l) => student.groupIds.includes(l.groupId)).map((l) => l.id),
+  )
+  const att = state.attendance.filter((a) => a.studentId === studentId && lessonIds.has(a.lessonId))
+  const gr = state.grades
+    .filter((g) => g.studentId === studentId && lessonIds.has(g.lessonId) && g.score !== null)
+    .map((g) => g.score as number)
+  const attPct = att.length
+    ? Math.round(att.filter((a) => a.status === 'present' || a.status === 'late').length / att.length * 100)
+    : 0
+  const avgGrade = gr.length
+    ? Math.round(gr.reduce((a, b) => a + b, 0) / gr.length)
+    : 0
+  return {
+    groupCount:   groups.length,
+    totalLessons: lessonIds.size,
+    attendancePct: attPct,
+    avgGrade,
+  }
+}
+
+export function getStudentMaterials(studentId: string) {
+  const student = SHARED_STUDENTS.find((s) => s.studentId === studentId)
+  if (!student) return []
+  const allGroupIds = student.groupIds
+  const groupLessonIds = new Set(
+    SHARED_LESSONS
+      .filter((l) => allGroupIds.includes(l.groupId))
+      .map((l) => l.id),
+  )
+  return SHARED_MATERIALS
+    .filter((m) => groupLessonIds.has(m.lessonId))
+    .map((m) => {
+      const lesson = SHARED_LESSONS.find((l) => l.id === m.lessonId)
+      const group = SHARED_GROUPS.find((g) => g.id === lesson?.groupId)
+      return {
+        ...m,
+        lessonTopic: lesson?.topic ?? '—',
+        groupName:   group?.name  ?? '—',
+      }
+    })
 }

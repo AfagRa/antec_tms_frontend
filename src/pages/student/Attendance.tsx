@@ -1,106 +1,45 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import NoteCell from '../../components/ui/NoteCell'
+import { useAuth } from '../../hooks/useAuth'
+import {
+  useAcademic, getStudentAttendance, resolveStudentId,
+} from '../../store/academicStore'
+import type { AttendanceStatus } from '../../types'
 
-type AttendanceStatus = 'Dərsdə' | 'Qayıb (üzrsüz)' | 'Gecikdi' | 'Qayıb (üzrlü)'
-
-interface AttendanceRecord {
-  id: string;
-  date: string;
-  groupName: string;
-  topic: string;
-  statusLabel: AttendanceStatus;
-  minutesLate: number;
-  reason: string;
-  teacherNote: string;
+const STATUS_LABEL_MAP: Record<AttendanceStatus, string> = {
+  present:          'Dərsdə',
+  late:             'Gecikdi',
+  absent_excused:   'Qaib (üzrlü)',
+  absent_unexcused: 'Qaib (üzrsüz)',
 }
 
-const records: AttendanceRecord[] = [
-  {
-    id: '1',
-    date: '02.06.2026',
-    groupName: 'Python-A1',
-    topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'Dərsdə',
-    minutesLate: 0,
-    reason: '',
-    teacherNote: 'Tapşırığı tam yerinə yetirib',
-  },
-  {
-    id: '2',
-    date: '02.06.2026',
-    groupName: 'Python-A1',
-    topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'Qayıb (üzrsüz)',
-    minutesLate: 0,
-    reason: '',
-    teacherNote: 'Tapşırığı tam yerinə yetirib',
-  },
-  {
-    id: '3',
-    date: '02.06.2026',
-    groupName: 'Python-A1',
-    topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'Gecikdi',
-    minutesLate: 15,
-    reason: '',
-    teacherNote: 'Tapşırığı tam yerinə yetirib',
-  },
-  {
-    id: '4',
-    date: '02.06.2026',
-    groupName: 'Python-A1',
-    topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'Gecikdi',
-    minutesLate: 15,
-    reason: 'Sazrü qayı',
-    teacherNote: 'Tapşırığı tam yerinə yetirib',
-  },
-  {
-    id: '5',
-    date: '02.06.2026',
-    groupName: 'Python-A1',
-    topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'Dərsdə',
-    minutesLate: 0,
-    reason: '',
-    teacherNote: 'Tapşırığı tam yerinə yetirib',
-  },
-  {
-    id: '6',
-    date: '02.06.2026',
-    groupName: 'Python-A1',
-    topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'Dərsdə',
-    minutesLate: 0,
-    reason: '',
-    teacherNote: 'Tapşırığı tam yerinə yetirib',
-  },
-  {
-    id: '7',
-    date: '01.06.2026',
-    groupName: 'Python-A1',
-    topic: 'Giriş dərsi',
-    statusLabel: 'Qayıb (üzrlü)',
-    minutesLate: 0,
-    reason: 'Xəstəlik',
-    teacherNote: 'Növbəti dərsə hazırlaşsın',
-  },
-  {
-    id: '8',
-    date: '01.06.2026',
-    groupName: 'Python-A2',
-    topic: 'Massivlərlə iş',
-    statusLabel: 'Dərsdə',
-    minutesLate: 0,
-    reason: '',
-    teacherNote: 'Aktiv iştirak etdi',
-  },
+const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'Hamısı',    label: 'Hamısı' },
+  { value: 'Dərsdə',    label: 'Dərsdə' },
+  { value: 'Qaib (üzrlü)',  label: 'Qaib (üzrlü)' },
+  { value: 'Qaib (üzrsüz)', label: 'Qaib (üzrsüz)' },
+  { value: 'Gecikdi',   label: 'Gecikdi' },
 ]
 
 export default function StudentAttendance() {
-  const [selectedGroup, setSelectedGroup] = useState<string>('Python-A1')
-  const [selectedStatus, setSelectedStatus] = useState<string>('Tilter')
+  const { state } = useAcademic()
+  const { user } = useAuth()
+  const studentId = resolveStudentId(user?.id)
+
+  const allRecords = useMemo(
+    () => getStudentAttendance(state, studentId)
+      .sort((a, b) => b.lessonDate.localeCompare(a.lessonDate)),
+    [state.attendance],
+  )
+
+  const groupOptions = useMemo(
+    () => ['Bütün Qruplar', ...Array.from(new Set(allRecords.map((r) => r.groupName)))],
+    [allRecords],
+  )
+
+  const [selectedGroup, setSelectedGroup] = useState<string>('Bütün Qruplar')
+  const [selectedStatus, setSelectedStatus] = useState<string>('Hamısı')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [currentPage, setCurrentPage] = useState<number>(1)
@@ -110,27 +49,28 @@ export default function StudentAttendance() {
     setCurrentPage(1)
   }, [selectedGroup, selectedStatus, startDate, endDate])
 
+  const summaryStats = useMemo(() => {
+    const present = allRecords.filter((a) => a.status === 'present').length
+    const excused = allRecords.filter((a) => a.status === 'absent_excused').length
+    const unexcused = allRecords.filter((a) => a.status === 'absent_unexcused').length
+    const late = allRecords.filter((a) => a.status === 'late').length
+    const total = allRecords.length
+    const pct = total > 0 ? Math.round(((present + late) / total) * 100) : 0
+    return { present, excused, unexcused, late, total, pct }
+  }, [allRecords])
+
   const filteredRecords = useMemo(() => {
-    return records
-      .filter(r => selectedGroup === 'Bütün Qruplar' || r.groupName === selectedGroup)
-      .filter(r => {
-        if (selectedStatus === 'Tilter') return true
-        if (selectedStatus === 'Dərsdə') return r.statusLabel === 'Dərsdə'
-        if (selectedStatus === 'Qayıb (üzrlü)') return r.statusLabel === 'Qayıb (üzrlü)'
-        if (selectedStatus === 'Qayıb (üzrsüz)') return r.statusLabel === 'Qayıb (üzrsüz)'
-        if (selectedStatus === 'Gecikdi') return r.statusLabel === 'Gecikdi'
-        return true
-      })
-      .filter(r => {
+    return allRecords
+      .filter((r) => selectedGroup === 'Bütün Qruplar' || r.groupName === selectedGroup)
+      .filter((r) => selectedStatus === 'Hamısı' || STATUS_LABEL_MAP[r.status] === selectedStatus)
+      .filter((r) => {
         if (!startDate && !endDate) return true
-        const rowDate = new Date(r.date.split('.').reverse().join('-'))
-        const from = startDate ? new Date(startDate) : null
-        const to   = endDate   ? new Date(endDate)   : null
-        if (from && rowDate < from) return false
-        if (to   && rowDate > to)   return false
+        const d = new Date(r.lessonDate.split('.').reverse().join('-'))
+        if (startDate && d < new Date(startDate)) return false
+        if (endDate && d > new Date(endDate)) return false
         return true
       })
-  }, [selectedGroup, selectedStatus, startDate, endDate])
+  }, [allRecords, selectedGroup, selectedStatus, startDate, endDate])
 
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / ITEMS_PER_PAGE))
 
@@ -138,7 +78,7 @@ export default function StudentAttendance() {
     const safePage = Math.min(currentPage, totalPages)
     return filteredRecords.slice(
       (safePage - 1) * ITEMS_PER_PAGE,
-      safePage * ITEMS_PER_PAGE
+      safePage * ITEMS_PER_PAGE,
     )
   }, [filteredRecords, currentPage, totalPages])
 
@@ -151,14 +91,14 @@ export default function StudentAttendance() {
 
   const getStatusBadge = (status: AttendanceStatus) => {
     switch (status) {
-      case 'Dərsdə':
+      case 'present':
         return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-green-100 text-green-700">Dərsdə</span>
-      case 'Qayıb (üzrsüz)':
-        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-red-100 text-red-600">Qayıb (üzrsüz)</span>
-      case 'Gecikdi':
+      case 'absent_unexcused':
+        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-red-100 text-red-600">Qaib (üzrsüz)</span>
+      case 'late':
         return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-amber-100 text-amber-700">Gecikdi</span>
-      case 'Qayıb (üzrlü)':
-        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-blue-100 text-blue-600">Qayıb (üzrlü)</span>
+      case 'absent_excused':
+        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-blue-100 text-blue-600">Qaib (üzrlü)</span>
       default:
         return null
     }
@@ -179,15 +119,12 @@ export default function StudentAttendance() {
             <select
               id="group-select"
               value={selectedGroup}
-              onChange={(e) => {
-                setSelectedGroup(e.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(e) => setSelectedGroup(e.target.value)}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer"
             >
-              <option value="Python-A1">Python-A1</option>
-              <option value="Python-A2">Python-A2</option>
-              <option value="Bütün Qruplar">Bütün Qruplar</option>
+              {groupOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
 
@@ -198,17 +135,12 @@ export default function StudentAttendance() {
             <select
               id="status-select"
               value={selectedStatus}
-              onChange={(e) => {
-                setSelectedStatus(e.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(e) => setSelectedStatus(e.target.value)}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer"
             >
-              <option value="Tilter">Tilter</option>
-              <option value="Dərsdə">Dərsdə</option>
-              <option value="Qayıb (üzrlü)">Qayıb (üzrlü)</option>
-              <option value="Qayıb (üzrsüz)">Qayıb (üzrsüz)</option>
-              <option value="Gecikdi">Gecikdi</option>
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
 
@@ -228,48 +160,24 @@ export default function StudentAttendance() {
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5">
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
-          <span className="text-sm font-semibold text-green-600 leading-snug">
-            Dərsdə
-          </span>
-          <span className="text-2xl font-bold text-text-base mt-1">
-            18 dərs
-          </span>
+          <span className="text-sm font-semibold text-green-600 leading-snug">Dərsdə</span>
+          <span className="text-2xl font-bold text-text-base mt-1">{summaryStats.present} dərs</span>
         </div>
-
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
-          <span className="text-sm font-semibold text-blue-500 leading-snug">
-            Qayıb (üzrlü)
-          </span>
-          <span className="text-2xl font-bold text-text-base mt-1">
-            1 dərs
-          </span>
+          <span className="text-sm font-semibold text-blue-500 leading-snug">Qaib (üzrlü)</span>
+          <span className="text-2xl font-bold text-text-base mt-1">{summaryStats.excused} dərs</span>
         </div>
-
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
-          <span className="text-sm font-semibold text-red-500 leading-snug">
-            Qayıb (üzrsüz)
-          </span>
-          <span className="text-2xl font-bold text-text-base mt-1">
-            2 dərs
-          </span>
+          <span className="text-sm font-semibold text-red-500 leading-snug">Qaib (üzrsüz)</span>
+          <span className="text-2xl font-bold text-text-base mt-1">{summaryStats.unexcused} dərs</span>
         </div>
-
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
-          <span className="text-sm font-semibold text-amber-500 leading-snug">
-            Gecikdi
-          </span>
-          <span className="text-2xl font-bold text-text-base mt-1">
-            3 dərs
-          </span>
+          <span className="text-sm font-semibold text-amber-500 leading-snug">Gecikdi</span>
+          <span className="text-2xl font-bold text-text-base mt-1">{summaryStats.late} dərs</span>
         </div>
-
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between col-span-2 md:col-span-1">
-          <span className="text-sm font-semibold text-text-base/50 leading-snug">
-            Ümumi Davamiyyət Faizi
-          </span>
-          <span className="text-3xl font-bold text-text-base mt-1">
-            85%
-          </span>
+          <span className="text-sm font-semibold text-text-base/50 leading-snug">Ümumi Davamiyyət Faizi</span>
+          <span className="text-3xl font-bold text-text-base mt-1">{summaryStats.pct}%</span>
         </div>
       </div>
 
@@ -302,10 +210,12 @@ export default function StudentAttendance() {
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Gecikma dəqiqəsi
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
+                {/* HIDDEN: səbəb column — kept for future use */}
+                <th className="hidden pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Səbəb
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
+                {/* HIDDEN: müəllim qeydi column — kept for future use */}
+                <th className="hidden pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Müəllim qeydi
                 </th>
               </tr>
@@ -317,30 +227,32 @@ export default function StudentAttendance() {
             </thead>
             <tbody>
               {paginatedRecords.map((row, index) => (
-                <React.Fragment key={row.id}>
+                <React.Fragment key={row.lessonId + row.studentId}>
                   <tr>
                     <td className="py-3.5 text-sm text-text-base pr-2 px-4">
-                      {row.date}
+                      {row.lessonDate}
                     </td>
                     <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.groupName}>
                       {row.groupName}
                     </td>
-                    <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.topic}>
-                      {row.topic}
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.lessonTopic}>
+                      {row.lessonTopic}
                     </td>
                     <td className="py-3.5 text-sm px-4">
-                      {getStatusBadge(row.statusLabel)}
+                      {getStatusBadge(row.status)}
                     </td>
                     <td className="py-3.5 text-sm text-text-base pr-2 px-4">
                       {row.minutesLate > 0 ? `${row.minutesLate} daq` : '—'}
                     </td>
-                    <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.reason}>
+                    {/* HIDDEN: səbəb — kept for future use */}
+                    <td className="hidden py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.reason}>
                       {row.reason ? row.reason : '—'}
                     </td>
-                    <td className="py-3 pr-4">
+                    {/* HIDDEN: müəllim qeydi — kept for future use */}
+                    <td className="hidden py-3 pr-4">
                       <NoteCell
                         note={row.teacherNote}
-                        meta={`Dərs: ${row.topic} | ${row.date}`}
+                        meta={`Dərs: ${row.lessonTopic} | ${row.lessonDate}`}
                       />
                     </td>
                   </tr>
@@ -368,7 +280,7 @@ export default function StudentAttendance() {
           <div />
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >‹</button>
@@ -390,7 +302,7 @@ export default function StudentAttendance() {
             )}
 
             <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >›</button>

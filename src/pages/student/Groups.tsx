@@ -2,99 +2,75 @@ import React, { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Grid, Link2, Video } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
+import { useAuth } from '../../hooks/useAuth'
+import {
+  useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
+  SHARED_MATERIALS, getStudentAttendance, getStudentGrades,
+  resolveStudentId,
+} from '../../store/academicStore'
 
 type GroupStatus = 'Aktiv'
-
-const groups = [
-  {
-    id: '1',
-    name: 'Python-A1',
-    courseName: 'Python-ve Massivler',
-    teacherName: 'Müəllimin Yavan',
-    joinedAt: '05.06.2026',
-    status: 'Aktiv' as GroupStatus,
-    attendancePercent: 90,
-    avgGrade: 65,
-  },
-  {
-    id: '2',
-    name: 'Python-A2',
-    courseName: 'Python-ve Massivler',
-    teacherName: 'Müəllimin Yavan',
-    joinedAt: '03.06.2026',
-    status: 'Aktiv' as GroupStatus,
-    attendancePercent: 75,
-    avgGrade: 68,
-  },
-]
-
 type LessonMaterial = { type: 'sanad' | 'video'; label: string }
 
-interface StudentLesson {
-  id: string;
-  groupId: string;
-  date: string;
-  topic: string;
-  teacherName: string;
-  materials: LessonMaterial[];
-}
-
-const lessons: StudentLesson[] = [
-  {
-    id: '1',
-    groupId: '1',
-    date: '04.06.2026',
-    topic: 'Döngələr ve Massivler',
-    teacherName: 'Müəllimin Yavan',
-    materials: [
-      { type: 'sanad', label: 'Sənəd' },
-      { type: 'video', label: 'Video' },
-    ],
-  },
-  {
-    id: '2',
-    groupId: '1',
-    date: '04.06.2026',
-    topic: 'Döngələr ve Massivler',
-    teacherName: 'Müəllimin Yavan',
-    materials: [
-      { type: 'sanad', label: 'Sənəd' },
-      { type: 'video', label: 'Video' },
-    ],
-  },
-  {
-    id: '3',
-    groupId: '2',
-    date: '04.06.2026',
-    topic: 'Döngələr ve Massivler ve Massivler',
-    teacherName: 'Müəllimir Saham Adı',
-    materials: [{ type: 'sanad', label: 'Sənəd' }],
-  },
-  {
-    id: '4',
-    groupId: '2',
-    date: '06.06.2026',
-    topic: 'Döngələr ve Massivler',
-    teacherName: 'Müəllimin Yavan',
-    materials: [{ type: 'video', label: 'Video' }],
-  },
-  {
-    id: '5',
-    groupId: '1',
-    date: '04.06.2026',
-    topic: 'Döngələr ve Massivler',
-    teacherName: 'Müəllimin Yavan',
-    materials: [{ type: 'sanad', label: 'Sənəd' }],
-  },
-]
-
 export default function StudentGroups() {
+  const { state } = useAcademic()
+  const { user } = useAuth()
+  const studentId = resolveStudentId(user?.id)
+  const student = SHARED_STUDENTS.find((s) => s.studentId === studentId)
+  const myGroupIds = student?.groupIds ?? []
+
   const [activeGroupId, setActiveGroupId] = useState<string>('all')
   const lessonsRef = useRef<HTMLDivElement>(null)
 
+  const groups = SHARED_GROUPS
+    .filter((g) => myGroupIds.includes(g.id))
+    .map((g) => {
+      const att = getStudentAttendance(state, studentId, g.id)
+      const gr = getStudentGrades(state, studentId, g.id)
+        .filter((x) => x.score !== null)
+        .map((x) => x.score as number)
+      const attPct = att.length
+        ? Math.round(att.filter((a) => a.status === 'present' || a.status === 'late').length / att.length * 100)
+        : 0
+      const avgGrade = gr.length
+        ? Math.round(gr.reduce((a, b) => a + b, 0) / gr.length)
+        : 0
+      const lessons = SHARED_LESSONS.filter((l) => l.groupId === g.id)
+      return {
+        id: g.id,
+        name: g.name,
+        courseName: 'Python ve Massivler',
+        teacherName: 'Əli Həsənov',
+        joinedAt: '01.06.2026',
+        status: 'Aktiv' as GroupStatus,
+        lessonCount: lessons.length,
+        attendancePercent: attPct,
+        avgGrade,
+      }
+    })
+
+  const lessons = SHARED_LESSONS
+    .filter((l) => myGroupIds.includes(l.groupId))
+    .map((l) => {
+      const group = SHARED_GROUPS.find((g) => g.id === l.groupId)
+      const mats = SHARED_MATERIALS.filter((m) => m.lessonId === l.id)
+      return {
+        id: l.id,
+        groupId: l.groupId,
+        date: l.date,
+        topic: l.topic,
+        teacherName: 'Əli Həsənov',
+        materials: mats.map((m) => ({
+          type: (m.type === 'YouTube' || m.type === 'Linklər' ? 'video' : 'sanad') as LessonMaterial['type'],
+          label: m.type === 'YouTube' ? 'Video' : 'Sənəd',
+        })),
+      }
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
+
   const filteredLessons = activeGroupId === 'all'
     ? lessons
-    : lessons.filter(lesson => lesson.groupId === activeGroupId)
+    : lessons.filter((l) => l.groupId === activeGroupId)
 
   return (
     <div className="space-y-6">
@@ -220,14 +196,14 @@ export default function StudentGroups() {
       <div ref={lessonsRef} className="rounded-neu bg-surface shadow-neu-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-text-base">
-            Mənim Dərslərim Dynamic Data Grid
+            Mənim Dərslərim
           </h2>
           {activeGroupId !== 'all' && (
             <button
               onClick={() => setActiveGroupId('all')}
               className="text-xs text-primary font-medium hover:underline bg-transparent border-0 cursor-pointer"
             >
-              Filtri sıfırla (Hamısını göstər)
+              Filteri sıfırla (Hamısını göstər)
             </button>
           )}
         </div>

@@ -33,7 +33,7 @@ export default function Grades() {
   const storedGrades = getGradesForLesson(state, selectedLessonId);
 
   useEffect(() => {
-    const students = SHARED_STUDENTS.filter((s) => s.groupId === selectedGroupId);
+    const students = SHARED_STUDENTS.filter((s) => s.groupIds.includes(selectedGroupId));
     const attMap = new Map(storedAttendance.map((e) => [e.studentId, e.status]));
     const gradeMap = new Map(storedGrades.map((e) => [e.studentId, e]));
     setRecords(students.map((s) => ({
@@ -83,7 +83,9 @@ export default function Grades() {
     }, 400);
   };
 
-  const allScores = records
+  const visibleRecords = records
+
+  const allScores = visibleRecords
     .filter((r) => r.score !== undefined && r.score !== null)
     .map((r) => r.score as number);
 
@@ -229,7 +231,7 @@ export default function Grades() {
             </tr>
           </thead>
           <tbody>
-            {records.map((record, index) => (
+            {visibleRecords.map((record, index) => (
               <tr key={record.id} className="border-b border-surface-dark/20 last:border-0">
                 <td className="border-b border-surface-dark/20 px-3 py-1.5 text-center text-xs
                                text-text-base/50 font-medium select-none">
@@ -311,7 +313,7 @@ export default function Grades() {
             <span>Ən yüksək: <strong className="text-green-600">{highest ?? '—'}</strong></span>
             <span>Ən aşağı: <strong className="text-red-500">{lowest ?? '—'}</strong></span>
             <span className="text-xs">
-              ({allScores.length} / {records.length} tələbə qiymətləndirildi)
+              ({allScores.length} / {visibleRecords.length} tələbə qiymətləndirildi)
             </span>
           </div>
         </div>

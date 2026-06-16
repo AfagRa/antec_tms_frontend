@@ -40,7 +40,7 @@ const navItems: NavItem[] = [
     key: 'attendance',
     to: ROUTES.STUDENT_ATTENDANCE,
     icon: BookOpen,
-    label: 'Davamiyyatim',
+    label: 'Davamiyyətim',
     end: true,
   },
   {

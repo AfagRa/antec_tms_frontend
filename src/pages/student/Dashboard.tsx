@@ -1,29 +1,42 @@
 import { ExternalLink } from 'lucide-react'
 import NeuStatCard from '../../components/ui/NeuStatCard'
-
-const stats = [
-  { value: 19, label: 'Qruplarımın Sayı' },
-  { value: 33, label: 'Keçirilmiş Dərslər' },
-  { value: 90, label: 'Davamiyyət Faizim (%)', accent: true },
-  { value: 78, label: 'Ortalama Qiymətim (%)', accent: true },
-]
-
-const recentGrades = [
-  { date: '03.07.2023', topic: 'Dərs mövzusu', score: 45, maxScore: 30, percent: 60 },
-  { date: '03.07.2023', topic: 'Dərs mövzusu', score: 40, maxScore: 30, percent: 95 },
-  { date: '03.07.2023', topic: 'Dərs mövzusu', score: 40, maxScore: 40, percent: 60 },
-  { date: '03.07.2023', topic: 'Dərs mövzusu', score: 55, maxScore: 40, percent: 50 },
-]
-
-const recentMaterials = [
-  { id: '1', title: 'Dərs Studiam ve Kocultımın Sayı...' },
-  { id: '2', title: 'Dərs Datatlari ve Keçirilmiş Dərslər...' },
-  { id: '3', title: 'Dərs Davamiyyat dcanim Materialları' },
-]
-
-const attendanceSummary = { present: 27, absent: 4, late: 2 }
+import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
+import type { MaterialTypeName } from '../../types'
+import { useAuth } from '../../hooks/useAuth'
+import {
+  useAcademic,
+  getStudentDashboardStats,
+  getStudentGrades,
+  getStudentAttendance,
+  getStudentMaterials,
+  resolveStudentId,
+} from '../../store/academicStore'
 
 export default function StudentDashboard() {
+  const { state } = useAcademic()
+  const { user } = useAuth()
+  const studentId = resolveStudentId(user?.id)
+
+  const stats = getStudentDashboardStats(state, studentId)
+  const rawGrades = getStudentGrades(state, studentId)
+    .sort((a, b) => b.lessonDate.localeCompare(a.lessonDate))
+    .slice(0, 5)
+  const rawMaterials = getStudentMaterials(studentId).slice(0, 3)
+  const rawAtt = getStudentAttendance(state, studentId)
+
+  const attendanceSummary = {
+    present: rawAtt.filter((a) => a.status === 'present').length,
+    absent:  rawAtt.filter((a) => a.status === 'absent_excused' || a.status === 'absent_unexcused').length,
+    late:    rawAtt.filter((a) => a.status === 'late').length,
+  }
+
+  const statCards = [
+    { value: stats.groupCount,      label: 'Qruplarımın Sayı' },
+    { value: stats.totalLessons,    label: 'Keçirilmiş Dərslər' },
+    { value: stats.attendancePct + '%', label: 'Davamiyyət Faizim (%)', accent: true },
+    { value: stats.avgGrade > 0 ? stats.avgGrade + '%' : '—', label: 'Ortalama Qiymətim (%)', accent: true },
+  ]
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-semibold text-text-base">
@@ -31,7 +44,7 @@ export default function StudentDashboard() {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-        {stats.map((stat, idx) => (
+        {statCards.map((stat, idx) => (
           <NeuStatCard
             key={idx}
             value={stat.value}
@@ -46,50 +59,56 @@ export default function StudentDashboard() {
           <h2 className="text-base font-semibold text-text-base mb-4">
             Son Qiymətlərim
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-surface-dark/20">
-                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                    Dərs tarixi
-                  </th>
-                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                    Mövzu
-                  </th>
-                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                    Bal
-                  </th>
-                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                    Maksimum bal
-                  </th>
-                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                    Faiz (%)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentGrades.map((grade, index) => (
-                  <tr key={index} className="border-b border-surface-dark/20 last:border-0">
-                    <td className="py-3 text-sm text-text-base">
-                      {grade.date}
-                    </td>
-                    <td className="py-3 text-sm text-text-base">
-                      {grade.topic}
-                    </td>
-                    <td className="py-3 text-sm text-text-base">
-                      {grade.score}
-                    </td>
-                    <td className="py-3 text-sm text-text-base">
-                      {grade.maxScore}
-                    </td>
-                    <td className="py-3 text-sm text-text-base">
-                      {grade.percent}%
-                    </td>
+          {rawGrades.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-surface-dark/20">
+                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
+                      Dərs tarixi
+                    </th>
+                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
+                      Mövzu
+                    </th>
+                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
+                      Bal
+                    </th>
+                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
+                      Maksimum bal
+                    </th>
+                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
+                      Faiz (%)
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {rawGrades.map((grade, index) => (
+                    <tr key={grade.lessonId + grade.studentId + index} className="border-b border-surface-dark/20 last:border-0">
+                      <td className="py-3 text-sm text-text-base">
+                        {grade.lessonDate}
+                      </td>
+                      <td className="py-3 text-sm text-text-base">
+                        {grade.lessonTopic}
+                      </td>
+                      <td className="py-3 text-sm text-text-base">
+                        {grade.score ?? '—'}
+                      </td>
+                      <td className="py-3 text-sm text-text-base">
+                        {grade.maxScore}
+                      </td>
+                      <td className="py-3 text-sm text-text-base">
+                        {grade.score != null ? `${Math.round((grade.score / grade.maxScore) * 100)}%` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-lms-student-muted text-center py-4">
+              Hələ qiymət daxil edilməyib
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-5">
@@ -97,21 +116,30 @@ export default function StudentDashboard() {
             <h2 className="text-base font-semibold text-text-base mb-3">
               Son Materiallar
             </h2>
-            <div className="flex flex-col">
-              {recentMaterials.map((material, index) => (
-                <div key={material.id}>
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-sm text-text-base truncate max-w-[220px]" title={material.title}>
-                      {material.title}
-                    </span>
-                    <ExternalLink size={14} className="text-primary shrink-0 cursor-pointer" />
+            {rawMaterials.length > 0 ? (
+              <div className="flex flex-col">
+                {rawMaterials.map((material, index) => (
+                  <div key={material.id}>
+                    <div className="flex items-center justify-between py-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MaterialTypeBadge type={material.type as MaterialTypeName} size="sm" />
+                        <span className="text-sm text-text-base truncate max-w-[160px]" title={material.title}>
+                          {material.title}
+                        </span>
+                      </div>
+                      <ExternalLink size={14} className="text-primary shrink-0 cursor-pointer" />
+                    </div>
+                    {index < rawMaterials.length - 1 && (
+                      <div className="bg-surface-dark/20 h-px mx-0" />
+                    )}
                   </div>
-                  {index < recentMaterials.length - 1 && (
-                    <div className="bg-surface-dark/20 h-px mx-0" />
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-lms-student-muted py-2">
+                Hələ material paylaşılmayıb
+              </p>
+            )}
           </div>
 
           <div className="rounded-neu bg-surface shadow-neu-sm p-5">
@@ -124,10 +152,10 @@ export default function StudentDashboard() {
                 İştirak
               </span>
               <span className="rounded-full px-3 py-1 text-xs font-medium shadow-neu-sm bg-red-100 text-red-600">
-                Qayıb
+                Qaib
               </span>
               <span className="rounded-full px-3 py-1 text-xs font-medium shadow-neu-sm bg-amber-100 text-amber-700">
-                Gecikma
+                Gecikmə
               </span>
             </div>
 
@@ -145,7 +173,7 @@ export default function StudentDashboard() {
                   {attendanceSummary.absent}
                 </span>
                 <span className="block text-xs text-text-base/50 mt-0.5">
-                  Qayıb
+                  Qaib
                 </span>
               </div>
               <div className="rounded-neu bg-surface-dark/30 shadow-neu-inset-sm p-3 text-center">
@@ -153,7 +181,7 @@ export default function StudentDashboard() {
                   {attendanceSummary.late}
                 </span>
                 <span className="block text-xs text-text-base/50 mt-0.5">
-                  Gecikma
+                  Gecikmə
                 </span>
               </div>
             </div>
