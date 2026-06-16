@@ -3,28 +3,33 @@ import type { JournalCell } from '../../types'
 interface SegmentOption {
   value: JournalCell['attendance']
   label: string
+  fullLabel: string
   activeClass: string
 }
 
 const OPTIONS: SegmentOption[] = [
   {
     value: 'I/E',
-    label: 'Dərsdə',
+    label: 'İE',
+    fullLabel: 'İştirak Edir',
     activeClass: 'bg-green-600 text-white border-green-600',
   },
   {
     value: 'G',
-    label: 'Gecikdi',
+    label: 'G',
+    fullLabel: 'Gecikib',
     activeClass: 'bg-amber-500 text-white border-amber-500',
   },
   {
     value: 'QÜ',
-    label: 'Q/Üzrlü',
+    label: 'QÜ',
+    fullLabel: 'Qaib Üzrlü',
     activeClass: 'bg-blue-500 text-white border-blue-500',
   },
   {
     value: 'Q',
-    label: 'Q/Üzrsüz',
+    label: 'Q',
+    fullLabel: 'Qaib Üzrsüz',
     activeClass: 'bg-red-500 text-white border-red-500',
   },
 ]
@@ -41,24 +46,27 @@ export function AttendanceSegment({
 }: Props) {
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex items-center rounded-lg border border-surface-dark/20 overflow-hidden divide-x divide-surface-dark/20 w-fit">
+      <div className="flex items-center rounded-md border border-surface-dark/20 overflow-hidden divide-x divide-surface-dark/20 w-fit">
         {OPTIONS.map((opt) => {
           const isActive = value === opt.value
           return (
             <button
               key={opt.value}
               type="button"
-              onClick={() => onChange(isActive && value !== 'I/E' ? 'I/E' : opt.value)}
-              title={opt.label}
+              onClick={() => onChange(isActive && opt.value !== 'I/E' ? 'I/E' : opt.value)}
+              title={opt.fullLabel}
               className={`
-                px-2.5 py-1 text-[11px] font-medium transition-all
-                whitespace-nowrap select-none
+                px-2 py-1 text-[11px] font-bold transition-all
+                whitespace-nowrap select-none min-w-[28px] text-center
                 ${isActive
                   ? opt.activeClass
                   : 'bg-surface text-text-base/60 hover:bg-surface-dark/20'}
               `}
             >
-              {opt.label}
+              {opt.value === 'G' && isActive && minutesLate > 0
+                ? `G[${minutesLate}]`
+                : opt.label
+              }
             </button>
           )
         })}

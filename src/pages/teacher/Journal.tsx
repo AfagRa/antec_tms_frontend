@@ -280,7 +280,7 @@ export default function TeacherJournal() {
           <div className="overflow-auto h-full w-full">
             <table
               className="border-collapse text-sm"
-              style={{ minWidth: `${48 + 180 + allLessons.length * 360 + 80}px` }}
+              style={{ minWidth: `${48 + 180 + allLessons.length * 250 + 80}px` }}
             >
               <thead>
                 <tr>
@@ -382,7 +382,7 @@ export default function TeacherJournal() {
                   <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-1" />
                   {allLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
-                      <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[140px]">
+                      <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[130px]">
                         Davamiyyət
                       </th>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[120px]">
@@ -390,7 +390,7 @@ export default function TeacherJournal() {
                       </th>
                     </React.Fragment>
                   ))}
-                  <th className="border-b border-l border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-slate-50/60 w-[140px]">
+                  <th className="border-b border-l border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-slate-50/60 w-[130px]">
                     <div>Davamiyyət</div>
                   </th>
                   <th className="border-b border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-slate-50/60 w-[120px]">
@@ -491,7 +491,7 @@ export default function TeacherJournal() {
                           <React.Fragment key={lesson.id}>
                             <td
                               className="border-b border-r border-surface-dark/20 px-2 py-1.5"
-                              style={{ minWidth: '260px' }}
+                              style={{ minWidth: '150px' }}
                             >
                               <AttendanceSegment
                                 value={cell.attendance}
@@ -532,7 +532,7 @@ export default function TeacherJournal() {
                         );
                       })}
 
-                      <td className="border-b border-l border-surface-dark/20 px-1 py-1.5 w-[140px] bg-slate-50/60">
+                      <td className="border-b border-l border-surface-dark/20 px-1 py-1.5 w-[130px] bg-slate-50/60">
                         <span className="text-gray-300 text-xs block text-center">—</span>
                       </td>
                       <td className="border-b border-surface-dark/20 px-1 py-1.5 w-[80px] bg-slate-50/60">
@@ -556,23 +556,23 @@ export default function TeacherJournal() {
       <div className="flex items-center gap-5 text-xs text-text-base/50 px-4 pb-4 flex-wrap">
         <span className="font-medium">Status rəngləri:</span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-green-600" />
-          Dərsdə
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-green-600">İE</span>
+          <span>İştirak Edir</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-amber-500" />
-          Gecikdi
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-amber-500">G</span>
+          <span>Gecikib</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-500" />
-          Qayıb (üzrlü)
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-blue-500">QÜ</span>
+          <span>Qaib (üzrlü)</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-500" />
-          Qayıb (üzrsüz)
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-red-500">Q</span>
+          <span>Qaib (üzrsüz)</span>
         </span>
         <span className="ml-2 italic text-text-base/70">
-          Hamı "Dərsdə" olaraq işarələnib. Yalnız fərqli statusları dəyişin.
+          Hamı "İE" olaraq işarələnib. Yalnız fərqli statusları dəyişin.
         </span>
       </div>
     </div>
