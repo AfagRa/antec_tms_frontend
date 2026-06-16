@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Save } from 'lucide-react';
+import { Plus, Save, Check, Pencil } from 'lucide-react';
 import type { JournalLesson, JournalCell, GradeCategory, AttendanceStatus } from '../../types';
 import {
   useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
@@ -321,27 +321,31 @@ export default function TeacherJournal() {
                           />
                           <button
                             onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: false }))}
-                            className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary text-white hover:bg-primary-dark transition-colors"
+                            title="Tamamla"
+                            className="shrink-0 p-1 rounded bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center justify-center"
                           >
-                            Done
+                            <Check size={11} strokeWidth={2.5} />
                           </button>
                         </div>
                       ) : (
                         <>
-                          <div
-                            className="text-text-base/50 font-normal text-[11px] truncate max-w-[130px] mx-auto mt-0.5 leading-tight"
-                            title={topic}
-                          >
-                            {topic.length > 16 ? topic.slice(0, 16) + '…' : topic}
-                          </div>
-                          {isExtra && (
-                            <button
-                              onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: true }))}
-                              className="mt-0.5 text-[9px] text-primary hover:text-primary-dark transition-colors"
+                          <span className="inline-flex items-center gap-1 justify-center mt-0.5">
+                            <span
+                              className="text-text-base/50 font-normal text-[11px] truncate max-w-[110px] leading-tight"
+                              title={topic}
                             >
-                              Redaktə et
-                            </button>
-                          )}
+                              {topic.length > 16 ? topic.slice(0, 16) + '…' : topic}
+                            </span>
+                            {isExtra && (
+                              <button
+                                onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: true }))}
+                                title="Redaktə et"
+                                className="p-1 rounded text-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center shrink-0"
+                              >
+                                <Pencil size={11} strokeWidth={2.5} />
+                              </button>
+                            )}
+                          </span>
                         </>
                       )}
                     </th>
