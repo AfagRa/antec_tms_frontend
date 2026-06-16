@@ -416,7 +416,7 @@ export default function TeacherJournal() {
                                      bg-green-50 text-green-700 border border-green-200
                                      hover:bg-green-100 hover:border-green-400 transition-all
                                      flex items-center justify-center gap-0.5 whitespace-nowrap"
-                          title="Bütün tələbələri 'Dərsdə' kimi işarələ"
+                          title="Bütün tələbələri 'İştirak edib' kimi işarələ"
                         >
                           <span className="text-[8px]">✔</span>
                           Hamısı dərsdə

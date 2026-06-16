@@ -39,7 +39,7 @@ export default function Reports() {
   const attTotal = attStats.total || 1;
 
   const attendanceRows = [
-    { label: 'Dərsdə',        value: attStats.present,  color: 'bg-green-500' },
+    { label: 'İştirak edib',        value: attStats.present,  color: 'bg-green-500' },
     { label: 'Gecikdi',       value: attStats.late,      color: 'bg-amber-400' },
     { label: 'Qaib (üzrlü)',  value: attStats.excused,   color: 'bg-blue-400'  },
     { label: 'Qaib (üzrsüz)', value: attStats.unexcused, color: 'bg-red-400'   },
