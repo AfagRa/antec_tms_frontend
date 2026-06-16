@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Grid, Link2, Video } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
@@ -8,6 +8,7 @@ import {
   SHARED_MATERIALS, getStudentAttendance, getStudentGrades,
   resolveStudentId,
 } from '../../store/academicStore'
+import { GRADE_CATEGORY_LABELS, GRADE_CATEGORY_STYLES } from '../../types'
 
 type GroupStatus = 'Aktiv'
 type LessonMaterial = { type: 'sanad' | 'video'; label: string }
@@ -21,6 +22,18 @@ export default function StudentGroups() {
 
   const [activeGroupId, setActiveGroupId] = useState<string>('all')
   const lessonsRef = useRef<HTMLDivElement>(null)
+
+  const allGrades = useMemo(
+    () => getStudentGrades(state, studentId),
+    [state.grades],
+  )
+  const gradeMap = useMemo(() => {
+    const map: Record<string, { score: number | null; maxScore: number; category: string }> = {}
+    allGrades.forEach((g) => {
+      map[g.lessonId] = { score: g.score, maxScore: g.maxScore, category: g.category }
+    })
+    return map
+  }, [allGrades])
 
   const groups = SHARED_GROUPS
     .filter((g) => myGroupIds.includes(g.id))
@@ -213,6 +226,8 @@ export default function StudentGroups() {
             <colgroup>
               <col style={{ width: '120px' }} />
               <col />
+              <col style={{ width: '120px' }} />
+              <col style={{ width: '100px' }} />
               <col style={{ width: '200px' }} />
               <col style={{ width: '180px' }} />
             </colgroup>
@@ -225,6 +240,12 @@ export default function StudentGroups() {
                   Mövzu
                 </th>
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
+                  Kateqoriya
+                </th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
+                  Qiymət
+                </th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
                   Müəllim
                 </th>
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
@@ -232,7 +253,7 @@ export default function StudentGroups() {
                 </th>
               </tr>
               <tr>
-                <td colSpan={4} className="p-0 pb-1">
+                <td colSpan={6} className="p-0 pb-1">
                   <div className="bg-surface-dark/20 h-px w-full" />
                 </td>
               </tr>
@@ -246,6 +267,21 @@ export default function StudentGroups() {
                     </td>
                     <td className="py-3.5 text-sm text-text-base truncate pr-2" title={lesson.topic}>
                       {lesson.topic}
+                    </td>
+                    <td className="py-3 pr-2">
+                      {gradeMap[lesson.id]?.category ? (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shadow-neu-sm ${GRADE_CATEGORY_STYLES[gradeMap[lesson.id].category as keyof typeof GRADE_CATEGORY_STYLES] || ''}`}>
+                          {GRADE_CATEGORY_LABELS[gradeMap[lesson.id].category as keyof typeof GRADE_CATEGORY_LABELS] || gradeMap[lesson.id].category}
+                        </span>
+                      ) : (
+                        <span className="text-text-base/50 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 text-sm text-text-base pr-2">
+                      {gradeMap[lesson.id]?.score !== null && gradeMap[lesson.id]?.score !== undefined
+                        ? `${gradeMap[lesson.id].score}/${gradeMap[lesson.id].maxScore}`
+                        : <span className="text-text-base/50">—</span>
+                      }
                     </td>
                     <td className="py-3.5 text-sm text-text-base truncate pr-2" title={lesson.teacherName}>
                       {lesson.teacherName}
@@ -277,7 +313,7 @@ export default function StudentGroups() {
                   </tr>
                   {index < filteredLessons.length - 1 && (
                     <tr>
-                      <td colSpan={4} className="p-0">
+                      <td colSpan={6} className="p-0">
                         <div className="bg-surface-dark/20 h-px w-full" />
                       </td>
                     </tr>
@@ -286,7 +322,7 @@ export default function StudentGroups() {
               ))}
               {filteredLessons.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-sm text-text-base/50">
+                  <td colSpan={6} className="py-6 text-center text-sm text-text-base/50">
                     Seçilmiş qrup üçün dərs tapılmadı.
                   </td>
                 </tr>

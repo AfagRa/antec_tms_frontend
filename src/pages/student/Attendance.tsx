@@ -8,7 +8,7 @@ import {
 import type { AttendanceStatus } from '../../types'
 
 const STATUS_LABEL_MAP: Record<AttendanceStatus, string> = {
-  present:          'Dərsdə',
+  present:          'İştirak edib',
   late:             'Gecikdi',
   absent_excused:   'Qaib (üzrlü)',
   absent_unexcused: 'Qaib (üzrsüz)',
@@ -16,7 +16,7 @@ const STATUS_LABEL_MAP: Record<AttendanceStatus, string> = {
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'Hamısı',    label: 'Hamısı' },
-  { value: 'Dərsdə',    label: 'Dərsdə' },
+  { value: 'İştirak edib',    label: 'İştirak edib' },
   { value: 'Qaib (üzrlü)',  label: 'Qaib (üzrlü)' },
   { value: 'Qaib (üzrsüz)', label: 'Qaib (üzrsüz)' },
   { value: 'Gecikdi',   label: 'Gecikdi' },
@@ -92,7 +92,7 @@ export default function StudentAttendance() {
   const getStatusBadge = (status: AttendanceStatus) => {
     switch (status) {
       case 'present':
-        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-green-100 text-green-700">Dərsdə</span>
+        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-green-100 text-green-700">İştirak edib</span>
       case 'absent_unexcused':
         return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-red-100 text-red-600">Qaib (üzrsüz)</span>
       case 'late':
@@ -160,7 +160,7 @@ export default function StudentAttendance() {
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5">
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
-          <span className="text-sm font-semibold text-green-600 leading-snug">Dərsdə</span>
+          <span className="text-sm font-semibold text-green-600 leading-snug">İştirak edib</span>
           <span className="text-2xl font-bold text-text-base mt-1">{summaryStats.present} dərs</span>
         </div>
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
@@ -208,7 +208,7 @@ export default function StudentAttendance() {
                   Status
                 </th>
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
-                  Gecikma dəqiqəsi
+                  Gecikmə dəqiqəsi
                 </th>
                 {/* HIDDEN: səbəb column — kept for future use */}
                 <th className="hidden pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">

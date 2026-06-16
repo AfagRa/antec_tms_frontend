@@ -219,13 +219,13 @@ export default function StudentGrades() {
                   Dərs tarixi
                 </th>
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
-                  Group Name
+                  Qrup adı
                 </th>
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Kateqoriya
                 </th>
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
-                  Lesson Topic
+                  Dərs mövzusu
                 </th>
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Bal
@@ -234,7 +234,7 @@ export default function StudentGrades() {
                   Maksimum bal
                 </th>
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
-                  Faiz (%)
+                  Faiz(%)
                 </th>
                 {/* HIDDEN: müəllim qeydi column — kept for future use */}
                 <th className="hidden pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
