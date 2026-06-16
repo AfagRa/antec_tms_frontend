@@ -1,25 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Save } from 'lucide-react';
-import type { JournalLesson, JournalCell, GradeCategory } from '../../types';
+import type { JournalLesson, JournalCell, GradeCategory, AttendanceStatus } from '../../types';
 import {
   useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
   getAttendanceForLesson, getGradesForLesson,
 } from '../../store/academicStore.tsx';
-
-const ATTENDANCE_OPTIONS: Array<{ value: JournalCell['attendance']; label: string }> = [
-  { value: null,  label: '—' },
-  { value: 'I/E', label: 'İştirak edir' },
-  { value: 'Q',   label: 'Qayıb' },
-  { value: 'QÜ',  label: 'Q/Üzrlü' },
-  { value: 'G',   label: 'Gecikdi' },
-];
-
-const ATTENDANCE_COLOR: Record<string, string> = {
-  'I/E': '#08529C',
-  Q:    '#ef4444',
-  QÜ:   '#3b82f6',
-  G:    '#d97706',
-};
+import { AttendanceSegment } from '../../components/ui/AttendanceSegment';
 
 const CATEGORY_OPTIONS: { value: GradeCategory; label: string }[] = [
   { value: 'daily',    label: 'Dərs' },
@@ -55,6 +41,30 @@ export default function TeacherJournal() {
     setLessonTopics({});
     setEditingTopics({});
   }, [selectedGroupId]);
+
+  // Auto-mark all students as present when group loads
+  useEffect(() => {
+    lessons.forEach(lesson => {
+      const existing = getAttendanceForLesson(state, lesson.id)
+      const lessonStudents = SHARED_STUDENTS.filter(s =>
+        s.groupIds.includes(selectedGroupId)
+      )
+      if (existing.length === 0 && lessonStudents.length > 0) {
+        dispatch({
+          type: 'BULK_ATTENDANCE',
+          lessonId: lesson.id,
+          entries: lessonStudents.map(s => ({
+            lessonId: lesson.id,
+            studentId: s.studentId,
+            status: 'present' as AttendanceStatus,
+            minutesLate: 0,
+            reason: '',
+            teacherNote: '',
+          }))
+        })
+      }
+    })
+  }, [selectedGroupId])
 
   const lessons = SHARED_LESSONS.filter((l) => l.groupId === selectedGroupId);
   const allLessons = [...lessons, ...extraLessons];
@@ -270,7 +280,7 @@ export default function TeacherJournal() {
           <div className="overflow-auto h-full w-full">
             <table
               className="border-collapse text-sm"
-              style={{ minWidth: `${48 + 180 + allLessons.length * 240 + 80}px` }}
+              style={{ minWidth: `${48 + 180 + allLessons.length * 360 + 80}px` }}
             >
               <thead>
                 <tr>
@@ -479,70 +489,31 @@ export default function TeacherJournal() {
                         const cell = getCell(student.studentId, lesson.id);
                         return (
                           <React.Fragment key={lesson.id}>
-                            <td className="border-b border-r border-surface-dark/20 px-1 py-1.5 w-[140px]">
-                              <div className="flex items-center gap-1">
-                                <select
-                                  value={cell.attendance ?? ''}
-                                  onChange={(e) => {
-                                    const val = (e.target.value || null) as JournalCell['attendance'];
-                                    setCell(student.studentId, lesson.id, {
-                                      attendance: val,
-                                      minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
-                                    });
-                                    dispatchCell(student.studentId, lesson.id, {
-                                      attendance: val,
-                                      minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
-                                    });
-                                  }}
-                                  className={`text-xs border border-surface-dark/20 rounded px-1 py-1 focus:ring-1 focus:ring-primary/40 focus:border-primary bg-white outline-none min-w-0 ${
-                                    cell.attendance === 'G' ? 'w-[60px] flex-none' : 'flex-1'
-                                  }`}
-                                  style={{
-                                    color: cell.attendance
-                                      ? (ATTENDANCE_COLOR[cell.attendance] ?? '#94a3b8')
-                                      : '#94a3b8',
-                                  }}
-                                >
-                                  {ATTENDANCE_OPTIONS.map((opt) => (
-                                    <option
-                                      key={opt.value ?? ''}
-                                      value={opt.value ?? ''}
-                                      style={{
-                                        color: opt.value
-                                          ? (ATTENDANCE_COLOR[opt.value] ?? '#94a3b8')
-                                          : '#94a3b8',
-                                      }}
-                                    >
-                                      {opt.label}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                {cell.attendance === 'G' && (
-                                  <div className="flex items-center gap-0.5 shrink-0">
-                                    <span className="text-xs text-text-base/50">(</span>
-                                    <input
-                                      type="number"
-                                      min={1}
-                                      max={90}
-                                      value={cell.minutesLate ?? ''}
-                                      onChange={(e) => {
-                                        const minutesLate =
-                                          e.target.value === '' ? 0 : Number(e.target.value);
-                                        setCell(student.studentId, lesson.id, { minutesLate });
-                                        dispatchCell(student.studentId, lesson.id, { minutesLate });
-                                      }}
-                                      placeholder="dəq"
-                                      className="w-[38px] text-xs border border-amber-300 rounded px-1 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50 text-amber-700"
-                                      title="Gecikdiyi dəqiqə"
-                                    />
-                                    <span className="text-xs text-text-base/50">)</span>
-                                  </div>
-                                )}
-                              </div>
+                            <td
+                              className="border-b border-r border-surface-dark/20 px-2 py-1.5"
+                              style={{ minWidth: '260px' }}
+                            >
+                              <AttendanceSegment
+                                value={cell.attendance}
+                                onChange={val => {
+                                  setCell(student.studentId, lesson.id, {
+                                    attendance: val,
+                                    minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
+                                  })
+                                  dispatchCell(student.studentId, lesson.id, {
+                                    attendance: val,
+                                    minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
+                                  })
+                                }}
+                                minutesLate={cell.minutesLate ?? 0}
+                                onMinutesChange={mins => {
+                                  setCell(student.studentId, lesson.id, { minutesLate: mins })
+                                  dispatchCell(student.studentId, lesson.id, { minutesLate: mins })
+                                }}
+                              />
                             </td>
 
-                            <td className="border-b border-r border-surface-dark/20 px-1 py-1.5 w-[80px]">
+                            <td className="border-b border-r border-surface-dark/20 px-1 py-1.5" style={{ minWidth: '90px' }}>
                               <input
                                 type="number"
                                 min={0}
@@ -582,14 +553,27 @@ export default function TeacherJournal() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-text-base/50 flex-wrap mt-3 shrink-0">
-        <span>Təlimat:</span>
-        <span className="text-primary font-bold">I/E</span><span>= İştirak edir</span>
-        <span className="text-red-500 font-bold">Q</span><span>= Qayıb</span>
-        <span className="text-blue-500 font-bold">QÜ</span><span>= Qayıb (üzrlü)</span>
-        <span className="text-amber-500 font-bold">G</span><span>= Gecikdi</span>
-        <span className="text-amber-600 font-bold">G(15)</span><span>= 15 dəqiqə gecikdi</span>
-        <span className="ml-2 italic">Bal sahələrini redaktə edin.</span>
+      <div className="flex items-center gap-5 text-xs text-text-base/50 px-4 pb-4 flex-wrap">
+        <span className="font-medium">Status rəngləri:</span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-green-600" />
+          Dərsdə
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-amber-500" />
+          Gecikdi
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-500" />
+          Qayıb (üzrlü)
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-500" />
+          Qayıb (üzrsüz)
+        </span>
+        <span className="ml-2 italic text-text-base/70">
+          Hamı "Dərsdə" olaraq işarələnib. Yalnız fərqli statusları dəyişin.
+        </span>
       </div>
     </div>
   );
