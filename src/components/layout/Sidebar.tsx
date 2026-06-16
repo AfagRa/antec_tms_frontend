@@ -20,16 +20,17 @@ interface NavItem {
   icon: LucideIcon;
   label: string;
   route: string;
+  hidden?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Dashboard',         route: ROUTES.TEACHER_DASHBOARD },
-  { icon: Users,           label: 'Mənim Qruplarım',   route: ROUTES.TEACHER_GROUPS },
-  { icon: Table2,          label: 'Jurnal',             route: ROUTES.TEACHER_JOURNAL },
-  { icon: BookOpen,        label: 'Dərs Yarat',         route: ROUTES.TEACHER_LESSON_CREATE },
-  { icon: CalendarCheck,   label: 'Davamiyyət',         route: ROUTES.TEACHER_ATTENDANCE_HOME },
-  { icon: PenLine,         label: 'Qiymətləndirmə',     route: ROUTES.TEACHER_GRADES_HOME },
-  { icon: Upload,          label: 'Material Əlavə Et', route: ROUTES.TEACHER_MATERIAL },
+  { icon: LayoutDashboard, label: 'Dashboard',         route: ROUTES.TEACHER_DASHBOARD,      hidden: false },
+  { icon: Users,           label: 'Mənim Qruplarım',   route: ROUTES.TEACHER_GROUPS,          hidden: false },
+  { icon: Table2,          label: 'Jurnal',             route: ROUTES.TEACHER_JOURNAL,         hidden: false },
+  { icon: BookOpen,        label: 'Dərs Yarat',         route: ROUTES.TEACHER_LESSON_CREATE,   hidden: true }, // managed via Journal
+  { icon: CalendarCheck,   label: 'Davamiyyət',         route: ROUTES.TEACHER_ATTENDANCE_HOME, hidden: true }, // managed via Journal
+  { icon: PenLine,         label: 'Qiymətləndirmə',     route: ROUTES.TEACHER_GRADES_HOME,     hidden: true }, // managed via Journal
+  { icon: Upload,          label: 'Material Əlavə Et', route: ROUTES.TEACHER_MATERIAL,        hidden: false },
 ];
 
 const utilityItems: NavItem[] = [
@@ -64,7 +65,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {navItems.map((item) => (
+        {navItems.filter((item) => !item.hidden).map((item) => (
           <NavLink
             key={item.route}
             to={item.route}
