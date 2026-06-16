@@ -210,10 +210,12 @@ export default function StudentAttendance() {
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Gecikma dəqiqəsi
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
+                {/* HIDDEN: səbəb column — kept for future use */}
+                <th className="hidden pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Səbəb
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
+                {/* HIDDEN: müəllim qeydi column — kept for future use */}
+                <th className="hidden pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Müəllim qeydi
                 </th>
               </tr>
@@ -242,10 +244,12 @@ export default function StudentAttendance() {
                     <td className="py-3.5 text-sm text-text-base pr-2 px-4">
                       {row.minutesLate > 0 ? `${row.minutesLate} daq` : '—'}
                     </td>
-                    <td className="py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.reason}>
+                    {/* HIDDEN: səbəb — kept for future use */}
+                    <td className="hidden py-3.5 text-sm text-text-base truncate pr-2 px-4" title={row.reason}>
                       {row.reason ? row.reason : '—'}
                     </td>
-                    <td className="py-3 pr-4">
+                    {/* HIDDEN: müəllim qeydi — kept for future use */}
+                    <td className="hidden py-3 pr-4">
                       <NoteCell
                         note={row.teacherNote}
                         meta={`Dərs: ${row.lessonTopic} | ${row.lessonDate}`}

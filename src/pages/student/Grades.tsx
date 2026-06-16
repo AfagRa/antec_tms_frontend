@@ -236,7 +236,8 @@ export default function StudentGrades() {
                 <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Faiz (%)
                 </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
+                {/* HIDDEN: müəllim qeydi column — kept for future use */}
+                <th className="hidden pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">
                   Müəllim qeydi
                 </th>
               </tr>
@@ -277,7 +278,8 @@ export default function StudentGrades() {
                     <td className={`py-3.5 text-sm pr-2 px-4 ${getFaizColorClass(row.percent)}`}>
                       {row.percent}%
                     </td>
-                    <td className="py-3 pr-4">
+                    {/* HIDDEN: müəllim qeydi — kept for future use */}
+                    <td className="hidden py-3 pr-4">
                       <NoteCell
                         note={row.teacherNote}
                         meta={`${row.lessonTopic} | ${row.lessonDate}`}
