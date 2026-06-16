@@ -220,14 +220,14 @@ export default function StudentGroups() {
       <div ref={lessonsRef} className="rounded-neu bg-surface shadow-neu-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-text-base">
-            Mənim Dərslərim Dynamic Data Grid
+            Mənim Dərslərim
           </h2>
           {activeGroupId !== 'all' && (
             <button
               onClick={() => setActiveGroupId('all')}
               className="text-xs text-primary font-medium hover:underline bg-transparent border-0 cursor-pointer"
             >
-              Filtri sıfırla (Hamısını göstər)
+              Filteri sıfırla (Hamısını göstər)
             </button>
           )}
         </div>

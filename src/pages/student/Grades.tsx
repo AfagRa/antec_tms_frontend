@@ -175,7 +175,7 @@ export default function StudentGrades() {
 
           <div className="flex flex-col">
             <label htmlFor="sort-select" className="text-xs font-semibold text-text-base/50 mb-1">
-              Sorting
+              Sıralama
             </label>
             <select
               id="sort-select"

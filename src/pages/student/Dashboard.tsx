@@ -124,10 +124,10 @@ export default function StudentDashboard() {
                 İştirak
               </span>
               <span className="rounded-full px-3 py-1 text-xs font-medium shadow-neu-sm bg-red-100 text-red-600">
-                Qayıb
+                Qaib
               </span>
               <span className="rounded-full px-3 py-1 text-xs font-medium shadow-neu-sm bg-amber-100 text-amber-700">
-                Gecikma
+                Gecikmə
               </span>
             </div>
 
@@ -145,7 +145,7 @@ export default function StudentDashboard() {
                   {attendanceSummary.absent}
                 </span>
                 <span className="block text-xs text-text-base/50 mt-0.5">
-                  Qayıb
+                  Qaib
                 </span>
               </div>
               <div className="rounded-neu bg-surface-dark/30 shadow-neu-inset-sm p-3 text-center">
@@ -153,7 +153,7 @@ export default function StudentDashboard() {
                   {attendanceSummary.late}
                 </span>
                 <span className="block text-xs text-text-base/50 mt-0.5">
-                  Gecikma
+                  Gecikmə
                 </span>
               </div>
             </div>

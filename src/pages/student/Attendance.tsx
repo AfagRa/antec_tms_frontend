@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import NoteCell from '../../components/ui/NoteCell'
 
-type AttendanceStatus = 'Dərsdə' | 'Qayıb (üzrsüz)' | 'Gecikdi' | 'Qayıb (üzrlü)'
+type AttendanceStatus = 'Dərsdə' | 'Qaib (üzrsüz)' | 'Gecikdi' | 'Qaib (üzrlü)'
 
 interface AttendanceRecord {
   id: string;
@@ -31,7 +31,7 @@ const records: AttendanceRecord[] = [
     date: '02.06.2026',
     groupName: 'Python-A1',
     topic: 'Funksiyalar va Return ifadesi',
-    statusLabel: 'Qayıb (üzrsüz)',
+    statusLabel: 'Qaib (üzrsüz)',
     minutesLate: 0,
     reason: '',
     teacherNote: 'Tapşırığı tam yerinə yetirib',
@@ -81,7 +81,7 @@ const records: AttendanceRecord[] = [
     date: '01.06.2026',
     groupName: 'Python-A1',
     topic: 'Giriş dərsi',
-    statusLabel: 'Qayıb (üzrlü)',
+    statusLabel: 'Qaib (üzrlü)',
     minutesLate: 0,
     reason: 'Xəstəlik',
     teacherNote: 'Növbəti dərsə hazırlaşsın',
@@ -100,7 +100,7 @@ const records: AttendanceRecord[] = [
 
 export default function StudentAttendance() {
   const [selectedGroup, setSelectedGroup] = useState<string>('Python-A1')
-  const [selectedStatus, setSelectedStatus] = useState<string>('Tilter')
+  const [selectedStatus, setSelectedStatus] = useState<string>('Filter')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [currentPage, setCurrentPage] = useState<number>(1)
@@ -114,10 +114,10 @@ export default function StudentAttendance() {
     return records
       .filter(r => selectedGroup === 'Bütün Qruplar' || r.groupName === selectedGroup)
       .filter(r => {
-        if (selectedStatus === 'Tilter') return true
+        if (selectedStatus === 'Filter') return true
         if (selectedStatus === 'Dərsdə') return r.statusLabel === 'Dərsdə'
-        if (selectedStatus === 'Qayıb (üzrlü)') return r.statusLabel === 'Qayıb (üzrlü)'
-        if (selectedStatus === 'Qayıb (üzrsüz)') return r.statusLabel === 'Qayıb (üzrsüz)'
+        if (selectedStatus === 'Qaib (üzrlü)') return r.statusLabel === 'Qaib (üzrlü)'
+        if (selectedStatus === 'Qaib (üzrsüz)') return r.statusLabel === 'Qaib (üzrsüz)'
         if (selectedStatus === 'Gecikdi') return r.statusLabel === 'Gecikdi'
         return true
       })
@@ -153,12 +153,12 @@ export default function StudentAttendance() {
     switch (status) {
       case 'Dərsdə':
         return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-green-100 text-green-700">Dərsdə</span>
-      case 'Qayıb (üzrsüz)':
-        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-red-100 text-red-600">Qayıb (üzrsüz)</span>
+      case 'Qaib (üzrsüz)':
+        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-red-100 text-red-600">Qaib (üzrsüz)</span>
       case 'Gecikdi':
         return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-amber-100 text-amber-700">Gecikdi</span>
-      case 'Qayıb (üzrlü)':
-        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-blue-100 text-blue-600">Qayıb (üzrlü)</span>
+      case 'Qaib (üzrlü)':
+        return <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-blue-100 text-blue-600">Qaib (üzrlü)</span>
       default:
         return null
     }
@@ -204,10 +204,10 @@ export default function StudentAttendance() {
               }}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer"
             >
-              <option value="Tilter">Tilter</option>
-              <option value="Dərsdə">Dərsdə</option>
-              <option value="Qayıb (üzrlü)">Qayıb (üzrlü)</option>
-              <option value="Qayıb (üzrsüz)">Qayıb (üzrsüz)</option>
+              <option value="Filter">Hamısı</option>
+              <option value="Dərsdə">İştirak edir</option>
+              <option value="Qaib (üzrlü)">Qaib (üzrlü)</option>
+              <option value="Qaib (üzrsüz)">Qaib (üzrsüz)</option>
               <option value="Gecikdi">Gecikdi</option>
             </select>
           </div>
@@ -238,7 +238,7 @@ export default function StudentAttendance() {
 
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-blue-500 leading-snug">
-            Qayıb (üzrlü)
+            Qaib (üzrlü)
           </span>
           <span className="text-2xl font-bold text-text-base mt-1">
             1 dərs
@@ -247,7 +247,7 @@ export default function StudentAttendance() {
 
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-red-500 leading-snug">
-            Qayıb (üzrsüz)
+            Qaib (üzrsüz)
           </span>
           <span className="text-2xl font-bold text-text-base mt-1">
             2 dərs
