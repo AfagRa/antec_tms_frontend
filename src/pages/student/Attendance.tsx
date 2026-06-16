@@ -1,12 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import NoteCell from '../../components/ui/NoteCell'
+import { useAuth } from '../../hooks/useAuth'
 import {
-  useAcademic, getStudentAttendance,
+  useAcademic, getStudentAttendance, resolveStudentId,
 } from '../../store/academicStore'
 import type { AttendanceStatus } from '../../types'
-
-const MOCK_STUDENT_ID = 's1'
 
 const STATUS_LABEL_MAP: Record<AttendanceStatus, string> = {
   present:          'Dərsdə',
@@ -25,9 +24,11 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
 
 export default function StudentAttendance() {
   const { state } = useAcademic()
+  const { user } = useAuth()
+  const studentId = resolveStudentId(user?.id)
 
   const allRecords = useMemo(
-    () => getStudentAttendance(state, MOCK_STUDENT_ID)
+    () => getStudentAttendance(state, studentId)
       .sort((a, b) => b.lessonDate.localeCompare(a.lessonDate)),
     [state.attendance],
   )

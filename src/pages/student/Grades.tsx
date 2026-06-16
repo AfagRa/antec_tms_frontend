@@ -3,17 +3,18 @@ import DateRangePicker from '../../components/ui/DateRangePicker'
 import NoteCell from '../../components/ui/NoteCell'
 import type { GradeCategory } from '../../types'
 import { GRADE_CATEGORY_LABELS, GRADE_CATEGORY_STYLES } from '../../types'
+import { useAuth } from '../../hooks/useAuth'
 import {
-  useAcademic, getStudentGrades,
+  useAcademic, getStudentGrades, resolveStudentId,
 } from '../../store/academicStore'
-
-const MOCK_STUDENT_ID = 's1'
 
 export default function StudentGrades() {
   const { state } = useAcademic()
+  const { user } = useAuth()
+  const studentId = resolveStudentId(user?.id)
 
   const allGrades = useMemo(
-    () => getStudentGrades(state, MOCK_STUDENT_ID)
+    () => getStudentGrades(state, studentId)
       .map((g) => ({ ...g, percent: Math.round((g.score ?? 0) / g.maxScore * 100) })),
     [state.grades],
   )

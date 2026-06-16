@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { useAuth } from '../../hooks/useAuth'
 import {
-  useAcademic, getStudentMaterials,
+  useAcademic, getStudentMaterials, resolveStudentId,
 } from '../../store/academicStore'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 import type { MaterialTypeName } from '../../types'
-
-const MOCK_STUDENT_ID = 's1'
 
 const typeFilterMap: Record<string, 'Fayl' | 'YouTube' | 'Google Drive' | 'Linklər' | null> = {
   'Hamısı': null,
@@ -19,7 +18,9 @@ const typeFilterMap: Record<string, 'Fayl' | 'YouTube' | 'Google Drive' | 'Linkl
 const filterOptions = ['Hamısı', 'Fayllar', 'Linklər', 'Videolar', 'Google Drive', 'YouTube']
 
 export default function StudentMaterials() {
-  const allMaterials = getStudentMaterials(MOCK_STUDENT_ID)
+  const { user } = useAuth()
+  const studentId = resolveStudentId(user?.id)
+  const allMaterials = getStudentMaterials(studentId)
 
   const groupOptions = ['Bütün Qruplar', ...Array.from(new Set(allMaterials.map((m) => m.groupName)))]
 

@@ -54,7 +54,9 @@ export default function Attendance() {
     setSaveState('idle');
   }, [selectedGroupId, selectedLessonId, state.attendance]);
 
-  const present = formRecords.filter((r) => r.status === 'present').length;
+  const visibleRecords = formRecords
+
+  const present = visibleRecords.filter((r) => r.status === 'present').length;
   const absent = formRecords.filter(
     (r) => r.status !== 'present' && r.status !== 'late',
   ).length;
@@ -175,7 +177,7 @@ export default function Attendance() {
             </tr>
           </thead>
           <tbody>
-            {formRecords.map((record, index) => (
+            {visibleRecords.map((record, index) => (
                 <tr key={record.id} className="border-b border-surface-dark/20 last:border-0">
                   <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
                   <td className="px-4 py-3 text-sm text-text-base">

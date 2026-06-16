@@ -2,19 +2,21 @@ import React, { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Grid, Link2, Video } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
+import { useAuth } from '../../hooks/useAuth'
 import {
   useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
   SHARED_MATERIALS, getStudentAttendance, getStudentGrades,
+  resolveStudentId,
 } from '../../store/academicStore'
 
 type GroupStatus = 'Aktiv'
 type LessonMaterial = { type: 'sanad' | 'video'; label: string }
 
-const MOCK_STUDENT_ID = 's1'
-
 export default function StudentGroups() {
   const { state } = useAcademic()
-  const student = SHARED_STUDENTS.find((s) => s.studentId === MOCK_STUDENT_ID)
+  const { user } = useAuth()
+  const studentId = resolveStudentId(user?.id)
+  const student = SHARED_STUDENTS.find((s) => s.studentId === studentId)
   const myGroupIds = student?.groupIds ?? []
 
   const [activeGroupId, setActiveGroupId] = useState<string>('all')
@@ -23,8 +25,8 @@ export default function StudentGroups() {
   const groups = SHARED_GROUPS
     .filter((g) => myGroupIds.includes(g.id))
     .map((g) => {
-      const att = getStudentAttendance(state, MOCK_STUDENT_ID, g.id)
-      const gr = getStudentGrades(state, MOCK_STUDENT_ID, g.id)
+      const att = getStudentAttendance(state, studentId, g.id)
+      const gr = getStudentGrades(state, studentId, g.id)
         .filter((x) => x.score !== null)
         .map((x) => x.score as number)
       const attPct = att.length

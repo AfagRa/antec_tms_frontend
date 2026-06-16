@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { User } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
-import SearchBar from './SearchBar';
+import TeacherSearchBar from '../shared/TeacherSearchBar';
 import { useAuth } from '../../hooks/useAuth';
 
 const ROLE_LABEL: Record<string, string> = { teacher: 'Müəllim', student: 'Tələbə' };
@@ -12,7 +12,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-10 flex h-[64px] items-center justify-between border-b border-surface-dark/20 bg-surface px-6">
-      <SearchBar />
+      <div className="flex-1 max-w-md">
+        <TeacherSearchBar />
+      </div>
+
       <div className="flex items-center gap-3">
         <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
           {user ? ROLE_LABEL[user.role] ?? user.role : 'Müəllim'}

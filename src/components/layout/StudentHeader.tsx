@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { Search, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
+import StudentSearchBar from '../shared/StudentSearchBar';
 import { useAuth } from '../../hooks/useAuth';
 
 const ROLE_LABEL: Record<string, string> = { teacher: 'Müəllim', student: 'Tələbə' };
@@ -11,18 +12,8 @@ export default function StudentHeader() {
 
   return (
     <header className="sticky top-0 z-10 flex h-[64px] items-center justify-between border-b border-surface-dark/20 bg-surface px-6">
-      <div className="relative w-full max-w-md">
-        <Search
-          size={16}
-          className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-text-base/40"
-          aria-hidden="true"
-        />
-        <input
-          type="search"
-          placeholder="Axtarış..."
-          className="w-full rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 pl-9 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30"
-          aria-label="Axtarış"
-        />
+      <div className="flex-1 max-w-md">
+        <StudentSearchBar />
       </div>
 
       <div className="flex items-center gap-3">

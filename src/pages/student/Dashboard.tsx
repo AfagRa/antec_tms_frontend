@@ -2,25 +2,27 @@ import { ExternalLink } from 'lucide-react'
 import NeuStatCard from '../../components/ui/NeuStatCard'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 import type { MaterialTypeName } from '../../types'
+import { useAuth } from '../../hooks/useAuth'
 import {
   useAcademic,
   getStudentDashboardStats,
   getStudentGrades,
   getStudentAttendance,
   getStudentMaterials,
+  resolveStudentId,
 } from '../../store/academicStore'
-
-const MOCK_STUDENT_ID = 's1'
 
 export default function StudentDashboard() {
   const { state } = useAcademic()
+  const { user } = useAuth()
+  const studentId = resolveStudentId(user?.id)
 
-  const stats = getStudentDashboardStats(state, MOCK_STUDENT_ID)
-  const rawGrades = getStudentGrades(state, MOCK_STUDENT_ID)
+  const stats = getStudentDashboardStats(state, studentId)
+  const rawGrades = getStudentGrades(state, studentId)
     .sort((a, b) => b.lessonDate.localeCompare(a.lessonDate))
     .slice(0, 5)
-  const rawMaterials = getStudentMaterials(MOCK_STUDENT_ID).slice(0, 3)
-  const rawAtt = getStudentAttendance(state, MOCK_STUDENT_ID)
+  const rawMaterials = getStudentMaterials(studentId).slice(0, 3)
+  const rawAtt = getStudentAttendance(state, studentId)
 
   const attendanceSummary = {
     present: rawAtt.filter((a) => a.status === 'present').length,

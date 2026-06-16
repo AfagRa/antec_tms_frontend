@@ -2,6 +2,7 @@ import { createContext, useContext, useReducer, type ReactNode } from 'react'
 import type { AttendanceStatus, GradeCategory, JournalCell } from '../types'
 
 export interface SharedStudent {
+  userId: number
   studentId: string
   studentName: string
   studentSurname: string
@@ -70,16 +71,16 @@ export const SHARED_LESSONS: SharedLesson[] = [
 ]
 
 export const SHARED_STUDENTS: SharedStudent[] = [
-  { studentId: 's1', studentName: 'Əli',    studentSurname: 'Məmmədov', groupIds: ['1', '2'] },
-  { studentId: 's2', studentName: 'Sona',   studentSurname: 'Quliyeva', groupIds: ['1'] },
-  { studentId: 's3', studentName: 'Orxan',  studentSurname: 'Rəsulov',  groupIds: ['1'] },
-  { studentId: 's4', studentName: 'Vüsal',  studentSurname: 'Qəfarov',  groupIds: ['1'] },
-  { studentId: 's5', studentName: 'Leyla',  studentSurname: 'Əliyeva',  groupIds: ['1'] },
-  { studentId: 's6', studentName: 'Murad',  studentSurname: 'Həsənov',  groupIds: ['1'] },
-  { studentId: 's7', studentName: 'Nigar',  studentSurname: 'Babayeva', groupIds: ['2'] },
-  { studentId: 's8', studentName: 'Rauf',   studentSurname: 'İsmayılov', groupIds: ['2'] },
-  { studentId: 's9', studentName: 'Könül',  studentSurname: 'Nəsirov',  groupIds: ['3'] },
-  { studentId: 's10',studentName: 'Tural',  studentSurname: 'Qədirov',  groupIds: ['3'] },
+  { userId: 3, studentId: 's1', studentName: 'Əli',    studentSurname: 'Məmmədov', groupIds: ['1', '2'] },
+  { userId: 4, studentId: 's2', studentName: 'Sona',   studentSurname: 'Quliyeva', groupIds: ['1'] },
+  { userId: 5, studentId: 's3', studentName: 'Orxan',  studentSurname: 'Rəsulov',  groupIds: ['1'] },
+  { userId: 6, studentId: 's4', studentName: 'Vüsal',  studentSurname: 'Qəfarov',  groupIds: ['1'] },
+  { userId: 7, studentId: 's5', studentName: 'Leyla',  studentSurname: 'Əliyeva',  groupIds: ['1'] },
+  { userId: 8, studentId: 's6', studentName: 'Murad',  studentSurname: 'Həsənov',  groupIds: ['1'] },
+  { userId: 9, studentId: 's7', studentName: 'Nigar',  studentSurname: 'Babayeva', groupIds: ['2'] },
+  { userId: 10,studentId: 's8', studentName: 'Rauf',   studentSurname: 'İsmayılov', groupIds: ['2'] },
+  { userId: 11,studentId: 's9', studentName: 'Könül',  studentSurname: 'Nəsirov',  groupIds: ['3'] },
+  { userId: 12,studentId: 's10',studentName: 'Tural',  studentSurname: 'Qədirov',  groupIds: ['3'] },
 ]
 
 export const SHARED_MATERIALS: SharedMaterial[] = [
@@ -180,6 +181,11 @@ export function useAcademic() {
   return ctx
 }
 
+export function resolveStudentId(userId?: number): string {
+  if (!userId) return 's1'
+  return SHARED_STUDENTS.find((s) => s.userId === userId)?.studentId ?? 's1'
+}
+
 export function getAttendanceForLesson(
   state: AcademicState, lessonId: string,
 ): AttendanceEntry[] {
@@ -232,12 +238,16 @@ export function getGroupStats(state: AcademicState, groupId: string) {
   const attPct = att.total > 0
     ? Math.round(((att.present + att.late) / att.total) * 100)
     : 0
+  const lessonIdsWithData = new Set([
+    ...state.attendance.map((e) => e.lessonId),
+    ...state.grades.map((e) => e.lessonId),
+  ])
   return {
     studentCount:     students.length,
     lessonCount:      lessons.length,
     avgAttendance:    attPct,
     avgGrade:         gr.avg,
-    completedLessons: lessons.length,
+    completedLessons: lessons.filter((l) => lessonIdsWithData.has(l.id)).length,
   }
 }
 
