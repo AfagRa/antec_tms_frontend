@@ -217,8 +217,8 @@ export type AttendanceStatus = 'present' | 'absent_excused' | 'absent_unexcused'
 
 export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
   present:          'İştirak edib',
-  absent_excused:   'Qayıb (üzrlü)',
-  absent_unexcused: 'Qayıb (üzrsüz)',
+  absent_excused:   'Qaib (üzrlü)',
+  absent_unexcused: 'Qaib (üzrsüz)',
   late:             'Gecikdi',
 }
 

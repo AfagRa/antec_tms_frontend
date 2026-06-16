@@ -41,8 +41,8 @@ export default function Reports() {
   const attendanceRows = [
     { label: 'Dərsdə',        value: attStats.present,  color: 'bg-green-500' },
     { label: 'Gecikdi',       value: attStats.late,      color: 'bg-amber-400' },
-    { label: 'Qayıb (üzrlü)',  value: attStats.excused,   color: 'bg-blue-400'  },
-    { label: 'Qayıb (üzrsüz)', value: attStats.unexcused, color: 'bg-red-400'   },
+    { label: 'Qaib (üzrlü)',  value: attStats.excused,   color: 'bg-blue-400'  },
+    { label: 'Qaib (üzrsüz)', value: attStats.unexcused, color: 'bg-red-400'   },
   ];
 
   // Grade categories from raw grades

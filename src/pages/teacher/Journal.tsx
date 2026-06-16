@@ -1,25 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Save } from 'lucide-react';
-import type { JournalLesson, JournalCell, GradeCategory } from '../../types';
+import { Plus, Save, Check, Pencil } from 'lucide-react';
+import type { JournalLesson, JournalCell, GradeCategory, AttendanceStatus } from '../../types';
 import {
   useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
   getAttendanceForLesson, getGradesForLesson,
 } from '../../store/academicStore.tsx';
-
-const ATTENDANCE_OPTIONS: Array<{ value: JournalCell['attendance']; label: string }> = [
-  { value: null,  label: '—' },
-  { value: 'I/E', label: 'İştirak edir' },
-  { value: 'Q',   label: 'Qayıb' },
-  { value: 'QÜ',  label: 'Q/Üzrlü' },
-  { value: 'G',   label: 'Gecikdi' },
-];
-
-const ATTENDANCE_COLOR: Record<string, string> = {
-  'I/E': '#08529C',
-  Q:    '#ef4444',
-  QÜ:   '#3b82f6',
-  G:    '#d97706',
-};
+import { AttendanceSegment } from '../../components/ui/AttendanceSegment';
 
 const CATEGORY_OPTIONS: { value: GradeCategory; label: string }[] = [
   { value: 'daily',    label: 'Dərs' },
@@ -55,6 +41,30 @@ export default function TeacherJournal() {
     setLessonTopics({});
     setEditingTopics({});
   }, [selectedGroupId]);
+
+  // Auto-mark all students as present when group loads
+  useEffect(() => {
+    lessons.forEach(lesson => {
+      const existing = getAttendanceForLesson(state, lesson.id)
+      const lessonStudents = SHARED_STUDENTS.filter(s =>
+        s.groupIds.includes(selectedGroupId)
+      )
+      if (existing.length === 0 && lessonStudents.length > 0) {
+        dispatch({
+          type: 'BULK_ATTENDANCE',
+          lessonId: lesson.id,
+          entries: lessonStudents.map(s => ({
+            lessonId: lesson.id,
+            studentId: s.studentId,
+            status: 'present' as AttendanceStatus,
+            minutesLate: 0,
+            reason: '',
+            teacherNote: '',
+          }))
+        })
+      }
+    })
+  }, [selectedGroupId])
 
   const lessons = SHARED_LESSONS.filter((l) => l.groupId === selectedGroupId);
   const allLessons = [...lessons, ...extraLessons];
@@ -270,7 +280,7 @@ export default function TeacherJournal() {
           <div className="overflow-auto h-full w-full">
             <table
               className="border-collapse text-sm"
-              style={{ minWidth: `${48 + 180 + allLessons.length * 240 + 80}px` }}
+              style={{ minWidth: `${48 + 180 + allLessons.length * 250 + 80}px` }}
             >
               <thead>
                 <tr>
@@ -311,27 +321,31 @@ export default function TeacherJournal() {
                           />
                           <button
                             onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: false }))}
-                            className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary text-white hover:bg-primary-dark transition-colors"
+                            title="Tamamla"
+                            className="shrink-0 p-1 rounded bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center justify-center"
                           >
-                            Done
+                            <Check size={11} strokeWidth={2.5} />
                           </button>
                         </div>
                       ) : (
                         <>
-                          <div
-                            className="text-text-base/50 font-normal text-[11px] truncate max-w-[130px] mx-auto mt-0.5 leading-tight"
-                            title={topic}
-                          >
-                            {topic.length > 16 ? topic.slice(0, 16) + '…' : topic}
-                          </div>
-                          {isExtra && (
-                            <button
-                              onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: true }))}
-                              className="mt-0.5 text-[9px] text-primary hover:text-primary-dark transition-colors"
+                          <span className="inline-flex items-center gap-1 justify-center mt-0.5">
+                            <span
+                              className="text-text-base/50 font-normal text-[11px] truncate max-w-[110px] leading-tight"
+                              title={topic}
                             >
-                              Redaktə et
-                            </button>
-                          )}
+                              {topic.length > 16 ? topic.slice(0, 16) + '…' : topic}
+                            </span>
+                            {isExtra && (
+                              <button
+                                onClick={() => setEditingTopics((prev) => ({ ...prev, [lesson.id]: true }))}
+                                title="Redaktə et"
+                                className="p-1 rounded text-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center shrink-0"
+                              >
+                                <Pencil size={11} strokeWidth={2.5} />
+                              </button>
+                            )}
+                          </span>
                         </>
                       )}
                     </th>
@@ -372,7 +386,7 @@ export default function TeacherJournal() {
                   <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-1" />
                   {allLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
-                      <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[140px]">
+                      <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[130px]">
                         Davamiyyət
                       </th>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[120px]">
@@ -380,7 +394,7 @@ export default function TeacherJournal() {
                       </th>
                     </React.Fragment>
                   ))}
-                  <th className="border-b border-l border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-slate-50/60 w-[140px]">
+                  <th className="border-b border-l border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-slate-50/60 w-[130px]">
                     <div>Davamiyyət</div>
                   </th>
                   <th className="border-b border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-slate-50/60 w-[120px]">
@@ -479,70 +493,31 @@ export default function TeacherJournal() {
                         const cell = getCell(student.studentId, lesson.id);
                         return (
                           <React.Fragment key={lesson.id}>
-                            <td className="border-b border-r border-surface-dark/20 px-1 py-1.5 w-[140px]">
-                              <div className="flex items-center gap-1">
-                                <select
-                                  value={cell.attendance ?? ''}
-                                  onChange={(e) => {
-                                    const val = (e.target.value || null) as JournalCell['attendance'];
-                                    setCell(student.studentId, lesson.id, {
-                                      attendance: val,
-                                      minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
-                                    });
-                                    dispatchCell(student.studentId, lesson.id, {
-                                      attendance: val,
-                                      minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
-                                    });
-                                  }}
-                                  className={`text-xs border border-surface-dark/20 rounded px-1 py-1 focus:ring-1 focus:ring-primary/40 focus:border-primary bg-white outline-none min-w-0 ${
-                                    cell.attendance === 'G' ? 'w-[60px] flex-none' : 'flex-1'
-                                  }`}
-                                  style={{
-                                    color: cell.attendance
-                                      ? (ATTENDANCE_COLOR[cell.attendance] ?? '#94a3b8')
-                                      : '#94a3b8',
-                                  }}
-                                >
-                                  {ATTENDANCE_OPTIONS.map((opt) => (
-                                    <option
-                                      key={opt.value ?? ''}
-                                      value={opt.value ?? ''}
-                                      style={{
-                                        color: opt.value
-                                          ? (ATTENDANCE_COLOR[opt.value] ?? '#94a3b8')
-                                          : '#94a3b8',
-                                      }}
-                                    >
-                                      {opt.label}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                {cell.attendance === 'G' && (
-                                  <div className="flex items-center gap-0.5 shrink-0">
-                                    <span className="text-xs text-text-base/50">(</span>
-                                    <input
-                                      type="number"
-                                      min={1}
-                                      max={90}
-                                      value={cell.minutesLate ?? ''}
-                                      onChange={(e) => {
-                                        const minutesLate =
-                                          e.target.value === '' ? 0 : Number(e.target.value);
-                                        setCell(student.studentId, lesson.id, { minutesLate });
-                                        dispatchCell(student.studentId, lesson.id, { minutesLate });
-                                      }}
-                                      placeholder="dəq"
-                                      className="w-[38px] text-xs border border-amber-300 rounded px-1 py-0.5 text-center focus:ring-1 focus:ring-amber-400 outline-none bg-amber-50 text-amber-700"
-                                      title="Gecikdiyi dəqiqə"
-                                    />
-                                    <span className="text-xs text-text-base/50">)</span>
-                                  </div>
-                                )}
-                              </div>
+                            <td
+                              className="border-b border-r border-surface-dark/20 px-2 py-1.5"
+                              style={{ minWidth: '150px' }}
+                            >
+                              <AttendanceSegment
+                                value={cell.attendance}
+                                onChange={val => {
+                                  setCell(student.studentId, lesson.id, {
+                                    attendance: val,
+                                    minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
+                                  })
+                                  dispatchCell(student.studentId, lesson.id, {
+                                    attendance: val,
+                                    minutesLate: val !== 'G' ? 0 : (cell.minutesLate ?? 0),
+                                  })
+                                }}
+                                minutesLate={cell.minutesLate ?? 0}
+                                onMinutesChange={mins => {
+                                  setCell(student.studentId, lesson.id, { minutesLate: mins })
+                                  dispatchCell(student.studentId, lesson.id, { minutesLate: mins })
+                                }}
+                              />
                             </td>
 
-                            <td className="border-b border-r border-surface-dark/20 px-1 py-1.5 w-[80px]">
+                            <td className="border-b border-r border-surface-dark/20 px-1 py-1.5" style={{ minWidth: '90px' }}>
                               <input
                                 type="number"
                                 min={0}
@@ -561,7 +536,7 @@ export default function TeacherJournal() {
                         );
                       })}
 
-                      <td className="border-b border-l border-surface-dark/20 px-1 py-1.5 w-[140px] bg-slate-50/60">
+                      <td className="border-b border-l border-surface-dark/20 px-1 py-1.5 w-[130px] bg-slate-50/60">
                         <span className="text-gray-300 text-xs block text-center">—</span>
                       </td>
                       <td className="border-b border-surface-dark/20 px-1 py-1.5 w-[80px] bg-slate-50/60">
@@ -582,14 +557,27 @@ export default function TeacherJournal() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-text-base/50 flex-wrap mt-3 shrink-0">
-        <span>Təlimat:</span>
-        <span className="text-primary font-bold">I/E</span><span>= İştirak edir</span>
-        <span className="text-red-500 font-bold">Q</span><span>= Qayıb</span>
-        <span className="text-blue-500 font-bold">QÜ</span><span>= Qayıb (üzrlü)</span>
-        <span className="text-amber-500 font-bold">G</span><span>= Gecikdi</span>
-        <span className="text-amber-600 font-bold">G(15)</span><span>= 15 dəqiqə gecikdi</span>
-        <span className="ml-2 italic">Bal sahələrini redaktə edin.</span>
+      <div className="flex items-center gap-5 text-xs text-text-base/50 px-4 pb-4 flex-wrap">
+        <span className="font-medium">Status rəngləri:</span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-green-600">İE</span>
+          <span>İştirak Edir</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-amber-500">G</span>
+          <span>Gecikib</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-blue-500">QÜ</span>
+          <span>Qaib (üzrlü)</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-red-500">Q</span>
+          <span>Qaib (üzrsüz)</span>
+        </span>
+        <span className="ml-2 italic text-text-base/70">
+          Hamı "İE" olaraq işarələnib. Yalnız fərqli statusları dəyişin.
+        </span>
       </div>
     </div>
   );
