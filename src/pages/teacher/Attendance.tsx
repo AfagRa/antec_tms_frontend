@@ -253,8 +253,8 @@ export default function Attendance() {
           {[
             { abbr: 'İ/E', label: 'İştirak edib',  color: 'text-primary'  },
             { abbr: 'G',   label: 'Gecikdi',        color: 'text-amber-600' },
-            { abbr: 'Q/Ü', label: 'Qayıb (üzrlü)',   color: 'text-blue-600'  },
-            { abbr: 'Q',   label: 'Qayıb (üzrsüz)',  color: 'text-red-600'   },
+            { abbr: 'Q/Ü', label: 'Qaib (üzrlü)',   color: 'text-blue-600'  },
+            { abbr: 'Q',   label: 'Qaib (üzrsüz)',  color: 'text-red-600'   },
           ].map((item) => (
             <span key={item.abbr} className="flex items-center gap-1.5 text-xs text-text-base/50">
               <span className={`font-bold text-xs ${item.color}`}>{item.abbr}</span>
@@ -266,7 +266,7 @@ export default function Attendance() {
       </div>
 
       <p className="mt-4 text-sm font-medium text-text-base/50">
-        {ATTENDANCE_STATUS_LABELS.present}: {present} | Qayıb: {absent} | {ATTENDANCE_STATUS_LABELS.late}: {late}
+        {ATTENDANCE_STATUS_LABELS.present}: {present} | Qaib: {absent} | {ATTENDANCE_STATUS_LABELS.late}: {late}
       </p>
 
       <div className="mt-6 flex items-center justify-between">
