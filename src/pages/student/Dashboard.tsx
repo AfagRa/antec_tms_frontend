@@ -1,5 +1,7 @@
 import { ExternalLink } from 'lucide-react'
 import NeuStatCard from '../../components/ui/NeuStatCard'
+import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
+import type { MaterialTypeName } from '../../types'
 import {
   useAcademic,
   getStudentDashboardStats,
@@ -117,9 +119,12 @@ export default function StudentDashboard() {
                 {rawMaterials.map((material, index) => (
                   <div key={material.id}>
                     <div className="flex items-center justify-between py-2">
-                      <span className="text-sm text-text-base truncate max-w-[220px]" title={material.title}>
-                        {material.title}
-                      </span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MaterialTypeBadge type={material.type as MaterialTypeName} size="sm" />
+                        <span className="text-sm text-text-base truncate max-w-[160px]" title={material.title}>
+                          {material.title}
+                        </span>
+                      </div>
                       <ExternalLink size={14} className="text-primary shrink-0 cursor-pointer" />
                     </div>
                     {index < rawMaterials.length - 1 && (

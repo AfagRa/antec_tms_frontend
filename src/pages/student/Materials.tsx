@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import {
   useAcademic, getStudentMaterials,
 } from '../../store/academicStore'
+import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
+import type { MaterialTypeName } from '../../types'
 
 const MOCK_STUDENT_ID = 's1'
 
@@ -138,9 +140,7 @@ export default function StudentMaterials() {
                       {row.teacherName}
                     </td>
                     <td className="py-3.5 text-sm pr-2 px-4">
-                      <span className="rounded-md bg-gray-100 text-gray-700 px-2.5 py-1 text-xs font-medium inline-block">
-                        {row.type}
-                      </span>
+                      <MaterialTypeBadge type={row.type as MaterialTypeName} />
                     </td>
                     <td className="py-3.5 text-sm text-text-base/50 pr-2 px-4">
                       {row.uploadDate}

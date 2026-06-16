@@ -243,6 +243,39 @@ export interface JournalCell {
   category?: GradeCategory
 }
 
+export const MATERIAL_TYPE_CONFIG = {
+  'Fayl': {
+    bg:       'bg-blue-100',
+    text:     'text-blue-700',
+    border:   'border-blue-200',
+    icon:     'File',
+    iconColor:'text-blue-500',
+  },
+  'YouTube': {
+    bg:       'bg-red-100',
+    text:     'text-red-700',
+    border:   'border-red-200',
+    icon:     'Youtube',
+    iconColor:'text-red-500',
+  },
+  'Google Drive': {
+    bg:       'bg-green-100',
+    text:     'text-green-700',
+    border:   'border-green-200',
+    icon:     'HardDrive',
+    iconColor:'text-green-500',
+  },
+  'Linklər': {
+    bg:       'bg-purple-100',
+    text:     'text-purple-700',
+    border:   'border-purple-200',
+    icon:     'Link2',
+    iconColor:'text-purple-500',
+  },
+} as const
+
+export type MaterialTypeName = keyof typeof MATERIAL_TYPE_CONFIG
+
 export interface GradeRecord {
   id: string
   lessonId: string
