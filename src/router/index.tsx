@@ -31,37 +31,37 @@ import StudentMaterials from "@/pages/student/Materials";
 import { ROUTES } from "@/constants/routes";
 
 function TeacherRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
+  // const { user, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-surface">
-        Yüklənir...
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex min-h-screen items-center justify-center bg-surface">
+  //       Yüklənir...
+  //     </div>
+  //   );
+  // }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  // if (!user) {
+  //   return <Navigate to="/login" replace />;
+  // }
 
   return children;
 }
 
 function StudentRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
+  // const { user, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-surface">
-        Yüklənir...
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex min-h-screen items-center justify-center bg-surface">
+  //       Yüklənir...
+  //     </div>
+  //   );
+  // }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  // if (!user) {
+  //   return <Navigate to="/login" replace />;
+  // }
 
   return children;
 }

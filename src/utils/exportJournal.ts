@@ -23,6 +23,19 @@ function gradeLabel(entry: GradeEntry | undefined): string {
   return String(entry.score)
 }
 
+function categoryLabel(entry: GradeEntry | undefined): string {
+  if (!entry?.category) return ''
+  return GRADE_CATEGORY_LABELS[entry.category as GradeCategory] ?? ''
+}
+
+function calcAvgGrade(studentId: string, lessonIds: string[], state: AcademicState): string {
+  const scores = state.grades
+    .filter(g => g.studentId === studentId && lessonIds.includes(g.lessonId) && g.score !== null)
+    .map(g => g.score as number)
+  if (scores.length === 0) return ''
+  return String(Math.round(scores.reduce((a, b) => a + b, 0) / scores.length))
+}
+
 export function exportJournalToExcel(
   groupId: string,
   state: AcademicState
@@ -33,15 +46,34 @@ export function exportJournalToExcel(
 
   if (!group || lessons.length === 0 || students.length === 0) return
 
-  const headerRow1: (string | number)[] = ['№', 'Ad Soyad']
+  const lessonIds = lessons.map(l => l.id)
+
+  const lessonCategory: Record<string, string> = {}
+  lessons.forEach(l => {
+    const grade = state.grades.find(g => g.lessonId === l.id)
+    lessonCategory[l.id] = grade?.category
+      ? (GRADE_CATEGORY_LABELS[grade.category as GradeCategory] ?? '')
+      : ''
+  })
+
+  const headerRow0: (string | number)[] = ['№', 'Ad Soyad']
+  const headerRow1: (string | number)[] = ['',  '']
   const headerRow2: (string | number)[] = ['',  '']
   const headerRow3: (string | number)[] = ['',  '']
 
   lessons.forEach(l => {
-    headerRow1.push(l.date, '')
-    headerRow2.push(l.topic, '')
+    headerRow0.push(l.date, '')
+    headerRow1.push(l.topic, '')
+    headerRow2.push(lessonCategory[l.id], '')
     headerRow3.push('Davamiyyət', 'Bal')
   })
+
+  const umumiCol = 2 + lessons.length * 2
+
+  headerRow0.push('Ümumi %')
+  headerRow1.push('')
+  headerRow2.push('')
+  headerRow3.push('')
 
   const dataRows = students.map((student, idx) => {
     const row: (string | number)[] = [
@@ -63,10 +95,11 @@ export function exportJournalToExcel(
       )
     })
 
+    row.push(calcAvgGrade(student.studentId, lessonIds, state))
     return row
   })
 
-  const wsData = [headerRow1, headerRow2, headerRow3, ...dataRows]
+  const wsData = [headerRow0, headerRow1, headerRow2, headerRow3, ...dataRows]
   const ws = XLSX.utils.aoa_to_sheet(wsData)
 
   ws['!cols'] = [
@@ -75,21 +108,36 @@ export function exportJournalToExcel(
     ...lessons.flatMap(() => [
       { wch: 16 },
       { wch: 8  },
-    ])
+    ]),
+    { wch: 12 },
   ]
 
   const merges: XLSX.Range[] = []
 
-  merges.push({ s: { r:0, c:0 }, e: { r:2, c:0 } })
-  merges.push({ s: { r:0, c:1 }, e: { r:2, c:1 } })
+  merges.push({ s: { r:0, c:0 }, e: { r:3, c:0 } })
+  merges.push({ s: { r:0, c:1 }, e: { r:3, c:1 } })
+  merges.push({ s: { r:0, c:umumiCol }, e: { r:3, c:umumiCol } })
 
   lessons.forEach((_, lessonIdx) => {
     const col = 2 + lessonIdx * 2
     merges.push({ s: { r:0, c:col }, e: { r:0, c:col+1 } })
     merges.push({ s: { r:1, c:col }, e: { r:1, c:col+1 } })
+    merges.push({ s: { r:2, c:col }, e: { r:2, c:col+1 } })
   })
 
   ws['!merges'] = merges
+
+  for (let r = 0; r <= 3; r++) {
+    for (let c = 0; c <= umumiCol; c++) {
+      const addr = XLSX.utils.encode_cell({ r, c })
+      if (ws[addr]) {
+        ws[addr].s = {
+          font: { bold: true },
+          alignment: { horizontal: 'center', vertical: 'center' },
+        }
+      }
+    }
+  }
 
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, group.name)
