@@ -2,9 +2,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, FileText, Search, Users, UsersRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { searchGlobalStudent, type GlobalSearchResult, type SearchResultType } from '../../utils/globalSearch';
+import { searchGlobalStudent, resolveStudentId, type GlobalSearchResult, type SearchResultType } from '../../utils/globalSearch';
 import { useAuth } from '../../hooks/useAuth';
-import { resolveStudentId } from '../../store/academicStore';
 
 const TYPE_ICONS: Record<SearchResultType, LucideIcon> = {
   group: UsersRound,

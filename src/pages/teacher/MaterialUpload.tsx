@@ -1,38 +1,16 @@
-import { useState, useRef, type FormEvent, type ReactNode } from 'react';
-import { Check, Upload, FileCheck, X, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import MaterialTypePicker from '../../components/ui/MaterialTypePicker';
-import { ROUTES } from '../../constants/routes';
-import {
-  DEFAULT_GROUP_ID,
-  DEFAULT_LESSON_ID,
-  MOCK_GROUPS,
-  getLessonsByGroupId,
-} from '../../data/teacherMock';
-import type { Material, MaterialType } from '../../types';
+import { useState, useRef, useEffect, type FormEvent, type ReactNode } from 'react'
+import { Check, Upload, FileCheck, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import MaterialTypePicker from '../../components/ui/MaterialTypePicker'
+import { ROUTES } from '../../constants/routes'
+import { groupsApi } from '../../api/groups'
+import { lessonsApi } from '../../api/lessons'
+import { materialsApi } from '../../api/materials'
+import { teacherPortalApi } from '../../api/teacherPortal'
+import type { Group, GroupLessonItem, CreateMaterialPayload } from '../../types'
+import Spinner from '../../components/ui/Spinner'
 
-interface MaterialFormState {
-  groupId: string;
-  lessonId: string;
-  title: string;
-  type: MaterialType;
-  resourceUrl: string;
-  description: string;
-}
-
-type FormErrors = Partial<Record<keyof MaterialFormState, string>>;
-
-interface FormFieldProps {
-  label: string;
-  required?: boolean;
-  error?: string;
-  children: ReactNode;
-}
-
-const inputClassName =
-  'w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30';
-
-function FormField({ label, required, error, children }: FormFieldProps) {
+function FormField({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) {
   return (
     <div>
       <label className="mb-1.5 block text-sm font-semibold text-text-base">
@@ -42,159 +20,139 @@ function FormField({ label, required, error, children }: FormFieldProps) {
       {children}
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
     </div>
-  );
-}
-
-function fieldClassName(hasError: boolean) {
-  return hasError ? `${inputClassName} border-red-500` : inputClassName;
-}
-
-function toMaterialPayload(formState: MaterialFormState): Material {
-  const isFile = formState.type === 'file';
-
-  return {
-    id: crypto.randomUUID(),
-    lessonId: formState.lessonId,
-    groupId: formState.groupId,
-    title: formState.title,
-    type: formState.type,
-    url: isFile ? undefined : formState.resourceUrl,
-    filePath: isFile ? formState.resourceUrl : undefined,
-    description: formState.description || undefined,
-    createdAt: new Date().toISOString(),
-  };
+  )
 }
 
 export default function MaterialUpload() {
-  const initialLessons = getLessonsByGroupId(DEFAULT_GROUP_ID);
+  const [loading, setLoading] = useState(true)
+  const [teacherId, setTeacherId] = useState<number | null>(null)
+  const [groups, setGroups] = useState<Group[]>([])
+  const [lessons, setLessons] = useState<GroupLessonItem[]>([])
 
-  const [formState, setFormState] = useState<MaterialFormState>({
-    groupId: DEFAULT_GROUP_ID,
-    lessonId: initialLessons[0]?.id ?? DEFAULT_LESSON_ID,
-    title: '',
-    type: 'file',
-    resourceUrl: '',
-    description: '',
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string>('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [groupId, setGroupId] = useState('')
+  const [lessonId, setLessonId] = useState('')
+  const [title, setTitle] = useState('')
+  const [type, setType] = useState<string>('file')
+  const [url, setUrl] = useState('')
+  const [description, setDescription] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [success, setSuccess] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const lessonsForGroup = getLessonsByGroupId(formState.groupId);
-
-  function updateField<K extends keyof MaterialFormState>(
-    field: K,
-    value: MaterialFormState[K],
-  ) {
-    setFormState((prev) => {
-      const next = { ...prev, [field]: value };
-
-      if (field === 'groupId') {
-        const groupLessons = getLessonsByGroupId(String(value));
-        next.lessonId = groupLessons[0]?.id ?? '';
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const me = await teacherPortalApi.getMe()
+        setTeacherId(me.id)
+        const res = await groupsApi.list({ teacher_id: me.id })
+        setGroups(res.data ?? [])
+        if (res.data.length > 0) {
+          setGroupId(String(res.data[0].id))
+        }
+      } catch (err) {
+        console.warn('Failed to load teacher/groups', err)
+      } finally {
+        setLoading(false)
       }
-      if (field === 'type' && value !== 'file') {
-        setSelectedFile(null);
-        setFilePreview('');
-      }
+    }
+    init()
+  }, [])
 
-      return next;
-    });
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
-    setSuccessMessage(null);
+  useEffect(() => {
+    if (!groupId) {
+      setLessons([])
+      return
+    }
+    const fetchLessons = async () => {
+      try {
+        const data = await lessonsApi.getByGroup(Number(groupId))
+        setLessons(data)
+        if (data.length > 0) {
+          setLessonId(String(data[0].id))
+        }
+      } catch {
+        setLessons([])
+      }
+    }
+    fetchLessons()
+  }, [groupId])
+
+  function validate(): boolean {
+    const e: Record<string, string> = {}
+    if (!groupId) e.groupId = 'Qrup seçilməlidir'
+    if (!lessonId) e.lessonId = 'Dərs seçilməlidir'
+    if (!title.trim()) e.title = 'Başlıq daxil edilməlidir'
+    if (type === 'file' && !selectedFile) e.file = 'Fayl seçilməyib'
+    if (type !== 'file' && !url.trim()) e.url = 'Link daxil edilməlidir'
+    setErrors(e)
+    return Object.keys(e).length === 0
   }
 
-  function validate(): FormErrors {
-    const nextErrors: FormErrors = {};
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!validate() || !teacherId) return
+    setSaving(true)
 
-    if (!formState.groupId.trim()) {
-      nextErrors.groupId = 'Qrup seçilməlidir';
-    }
-    if (!formState.lessonId.trim()) {
-      nextErrors.lessonId = 'Dərs seçilməlidir';
-    }
-    if (!formState.title.trim()) {
-      nextErrors.title = 'Materialın başlığı daxil edilməlidir';
-    }
-    if (!formState.type) {
-      nextErrors.type = 'Materialın tipi seçilməlidir';
-    }
-    if (formState.type === 'file') {
-      if (!selectedFile) {
-        nextErrors.resourceUrl = 'Fayl seçilməyib';
+    try {
+      const payload: CreateMaterialPayload = {
+        lesson_id: Number(lessonId),
+        group_id: Number(groupId),
+        teacher_id: teacherId,
+        title: title.trim(),
+        type,
+        url: type !== 'file' ? url.trim() : undefined,
+        file_path: type === 'file' ? selectedFile?.name : undefined,
+        description: description.trim() || undefined,
       }
-    } else {
-      if (!formState.resourceUrl.trim()) {
-        nextErrors.resourceUrl = 'Resurs linki daxil edilməyib';
-      }
+      await materialsApi.create(payload)
+      setSuccess(true)
+      setTitle('')
+      setUrl('')
+      setDescription('')
+      setSelectedFile(null)
+    } catch (err) {
+      console.error('Failed to create material', err)
+    } finally {
+      setSaving(false)
     }
-
-    return nextErrors;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const nextErrors = validate();
-    setErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length > 0) {
-      setSuccessMessage(null);
-      return;
-    }
-
-    const material = toMaterialPayload(formState);
-    console.log('Material upload payload:', {
-      ...material,
-      ...(formState.type === 'file'
-        ? { fileName: selectedFile?.name, fileSize: selectedFile?.size }
-        : {}),
-    });
-    // TODO: POST FormData to POST /materials when API is ready
-    setSuccessMessage('Material uğurla paylaşıldı!');
-  }
+  if (loading) return <Spinner />
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-semibold text-text-base">Yeni Material Əlavə Et</h1>
 
-      <form
-        onSubmit={handleSubmit}
-        className="mx-auto max-w-2xl rounded-neu bg-surface shadow-neu-sm p-8"
-      >
-        {successMessage && (
+      <form onSubmit={handleSubmit} className="mx-auto max-w-2xl rounded-neu bg-surface shadow-neu-sm p-8">
+        {success && (
           <div className="mb-6 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-medium text-primary">
-            {successMessage}
+            Material uğurla paylaşıldı!
           </div>
         )}
 
         <div className="space-y-5">
           <FormField label="Qrup Seçimi" required error={errors.groupId}>
             <select
-              value={formState.groupId}
-              onChange={(event) => updateField('groupId', event.target.value)}
-              className={fieldClassName(Boolean(errors.groupId))}
+              value={groupId}
+              onChange={(e) => { setGroupId(e.target.value); setLessonId('') }}
+              className="w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              {MOCK_GROUPS.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
               ))}
             </select>
           </FormField>
 
           <FormField label="Aid Olduğu Dərs" required error={errors.lessonId}>
             <select
-              value={formState.lessonId}
-              onChange={(event) => updateField('lessonId', event.target.value)}
-              className={fieldClassName(Boolean(errors.lessonId))}
+              value={lessonId}
+              onChange={(e) => setLessonId(e.target.value)}
+              className="w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              {lessonsForGroup.map((lesson) => (
-                <option key={lesson.id} value={lesson.id}>
-                  Dərslər: {lesson.topic}
-                </option>
+              {lessons.map((l) => (
+                <option key={l.id} value={l.id}>Dərs: {l.topic} ({l.lesson_date})</option>
               ))}
             </select>
           </FormField>
@@ -202,86 +160,45 @@ export default function MaterialUpload() {
           <FormField label="Materialın Başlığı" required error={errors.title}>
             <input
               type="text"
-              value={formState.title}
-              onChange={(event) => updateField('title', event.target.value)}
-              placeholder="Masalən: Dərs 05 - Massivlər və Obyektlər"
-              className={fieldClassName(Boolean(errors.title))}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Məsələn: Dərs 05 - Massivlər və Obyektlər"
+              className="w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </FormField>
 
-          <FormField label="Materialın Tipi" required error={errors.type}>
-            <MaterialTypePicker
-              value={formState.type}
-              onChange={(type) => updateField('type', type)}
-            />
+          <FormField label="Materialın Tipi">
+            <MaterialTypePicker value={type as any} onChange={(t) => setType(t)} />
           </FormField>
 
-          {formState.type === 'file' ? (
-            <FormField label="Fayl seçin" required error={errors.resourceUrl}>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.png,.jpg,.jpeg,.mp4,.mp3"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] ?? null;
-                  setSelectedFile(file);
-                  setFilePreview(file ? file.name : '');
-                  if (errors.resourceUrl) setErrors((prev) => ({ ...prev, resourceUrl: undefined }));
-                }}
-              />
-
+          {type === 'file' ? (
+            <FormField label="Fayl seçin" required error={errors.file}>
+              <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.png,.jpg,.jpeg,.mp4,.mp3" onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)} />
               {!selectedFile ? (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full border-2 border-dashed border-surface-dark/20 rounded-xl p-8 text-center hover:border-success hover:bg-success/10 transition-all cursor-pointer group"
-                >
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full border-2 border-dashed border-surface-dark/20 rounded-xl p-8 text-center hover:border-success hover:bg-success/10 transition-all cursor-pointer group">
                   <Upload size={28} className="mx-auto text-text-base/50 group-hover:text-success transition-colors mb-2" />
-                  <p className="text-sm font-medium text-text-base">
-                    Faylı buraya çəkin və ya <span className="text-success">seçin</span>
-                  </p>
-                  <p className="text-xs text-text-base/50 mt-1">
-                    PDF, Word, Excel, PPT, şəkil, video — maks. 50MB
-                  </p>
+                  <p className="text-sm font-medium text-text-base">Faylı buraya çəkin və ya <span className="text-success">seçin</span></p>
+                  <p className="text-xs text-text-base/50 mt-1">PDF, Word, Excel, PPT, şəkil, video — maks. 50MB</p>
                 </button>
               ) : (
                 <div className="rounded-neu bg-surface shadow-neu-sm flex items-center gap-3 p-3">
-                  <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
-                    <FileCheck size={20} className="text-success" />
-                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0"><FileCheck size={20} className="text-success" /></div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-text-base truncate">{selectedFile.name}</p>
-                    <p className="text-xs text-text-base/50 mt-0.5">
-                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB · {selectedFile.type || 'fayl'}
-                    </p>
+                    <p className="text-xs text-text-base/50 mt-0.5">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedFile(null); setFilePreview(''); }}
-                    className="flex-shrink-0 text-text-base/50 hover:text-red-500 transition-colors p-1"
-                    title="Faylı sil"
-                  >
-                    <X size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex-shrink-0 text-text-base/50 hover:text-success transition-colors text-xs border border-surface-dark/20 rounded-md px-2 py-1"
-                  >
-                    Dəyiş
-                  </button>
+                  <button type="button" onClick={() => setSelectedFile(null)} className="flex-shrink-0 text-text-base/50 hover:text-red-500 transition-colors p-1"><X size={16} /></button>
                 </div>
               )}
             </FormField>
           ) : (
-            <FormField label="Resurs Linki" required error={errors.resourceUrl}>
+            <FormField label="Resurs Linki" required error={errors.url}>
               <input
                 type="text"
-                value={formState.resourceUrl}
-                onChange={(event) => updateField('resourceUrl', event.target.value)}
-                placeholder="Resurs Linki *"
-                className={fieldClassName(Boolean(errors.resourceUrl))}
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </FormField>
           )}
@@ -289,29 +206,20 @@ export default function MaterialUpload() {
           <FormField label="Açıqlama / Qeyd (optional)">
             <textarea
               rows={4}
-              value={formState.description}
-              onChange={(event) => updateField('description', event.target.value)}
-              className={`${inputClassName} resize-none`}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
             />
           </FormField>
         </div>
 
         <div className="mt-8 flex items-center justify-between">
-          <Link
-            to={ROUTES.TEACHER_GROUPS}
-            className="text-sm text-text-base/50 hover:text-text-base"
-          >
-            Ləğv et / Geri
-          </Link>
-          <button
-            type="submit"
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-          >
-            Materialı Paylaş
-            <Check size={16} strokeWidth={2} />
+          <Link to={ROUTES.TEACHER_GROUPS} className="text-sm text-text-base/50 hover:text-text-base">Ləğv et / Geri</Link>
+          <button type="submit" disabled={saving} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60 cursor-pointer">
+            {saving ? 'Paylaşılır...' : 'Materialı Paylaş'} <Check size={16} />
           </button>
         </div>
       </form>
     </div>
-  );
+  )
 }
