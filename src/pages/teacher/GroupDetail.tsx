@@ -1,63 +1,59 @@
-import { useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus } from 'lucide-react';
-import { ROUTES } from '../../constants/routes';
-import {
-  MOCK_STUDENTS,
-  getGroupById,
-  getLessonsByGroupId,
-  getMaterialsByGroupId,
-} from '../../data/teacherMock';
-import { STUDENT_STATUS_CONFIG, type StudentGroupStatus } from '../../types';
-import type { GroupStatus, LessonStatus } from '../../types';
+import { useState, useEffect } from 'react'
+import { Link, useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Plus } from 'lucide-react'
+import { ROUTES } from '../../constants/routes'
+import { groupsApi } from '../../api/groups'
+import { lessonsApi } from '../../api/lessons'
+import { materialsApi } from '../../api/materials'
+import type { Group, GroupLessonItem, Material } from '../../types'
+import Spinner from '../../components/ui/Spinner'
 
-type TabId = 'students' | 'lessons' | 'materials';
+type TabId = 'students' | 'lessons' | 'materials'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'students', label: 'Tab 1 — Tələbə Siyahısı' },
   { id: 'lessons', label: 'Tab 2 — Dərslər' },
   { id: 'materials', label: 'Tab 3 — Materiallar' },
-];
-
-function groupStatusBadgeClass(status: GroupStatus) {
-  switch (status) {
-    case 'Aktiv':
-      return 'bg-primary/10 text-primary';
-    case 'Tamamlanmış':
-      return 'bg-green-100 text-green-700';
-    default:
-      return 'bg-gray-100 text-gray-600';
-  }
-}
-
-function lessonStatusBadgeClass(status: LessonStatus) {
-  return status === 'completed'
-    ? 'bg-primary/10 text-primary'
-    : 'bg-amber-100 text-amber-700';
-}
+]
 
 export default function GroupDetail() {
-  const { id = '1' } = useParams();
-  const group = getGroupById(id);
-  const [activeTab, setActiveTab] = useState<TabId>('students');
-  const [statusFilter, setStatusFilter] = useState<StudentGroupStatus | 'all'>('all');
+  const { id = '1' } = useParams()
+  const navigate = useNavigate()
+  const [group, setGroup] = useState<Group | null>(null)
+  const [lessons, setLessons] = useState<GroupLessonItem[]>([])
+  const [materials, setMaterials] = useState<Material[]>([])
+  const [activeTab, setActiveTab] = useState<TabId>('students')
+  const [loading, setLoading] = useState(true)
 
-  const filteredStudents = statusFilter === 'all'
-    ? MOCK_STUDENTS
-    : MOCK_STUDENTS.filter((s) => (s.status as StudentGroupStatus) === statusFilter);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [g, ls, ms] = await Promise.all([
+          groupsApi.get(Number(id)),
+          lessonsApi.getByGroup(Number(id)),
+          materialsApi.getByGroup(Number(id)),
+        ])
+        setGroup(g)
+        setLessons(ls)
+        setMaterials(ms)
+      } catch (err) {
+        console.warn('Failed to load group detail', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [id])
 
-  const lessons = getLessonsByGroupId(id);
-  const materials = getMaterialsByGroupId(id);
+  if (loading) return <Spinner />
 
   if (!group) {
     return (
       <div>
         <h1 className="text-2xl font-semibold text-text-base">Qrup tapılmadı</h1>
       </div>
-    );
+    )
   }
-
-  const navigate = useNavigate();
 
   return (
     <div>
@@ -84,26 +80,30 @@ export default function GroupDetail() {
           </div>
           <div>
             <p className="mb-1 text-xs text-text-base/50">Kurs adı</p>
-            <p className="font-medium text-text-base">{group.courseName}</p>
+            <p className="font-medium text-text-base">{group.course?.name ?? '—'}</p>
           </div>
           <div>
             <p className="mb-1 text-xs text-text-base/50">Başlama tarixi</p>
-            <p className="font-medium text-text-base">{group.startDate}</p>
+            <p className="font-medium text-text-base">
+              {group.start_date ? new Date(group.start_date).toLocaleDateString('az-AZ') : '—'}
+            </p>
           </div>
           <div>
             <p className="mb-1 text-xs text-text-base/50">Bitmə tarixi</p>
-            <p className="font-medium text-text-base">{group.endDate}</p>
+            <p className="font-medium text-text-base">
+              {group.end_date ? new Date(group.end_date).toLocaleDateString('az-AZ') : '—'}
+            </p>
           </div>
           <div>
             <p className="mb-1 text-xs text-text-base/50">Tələbə sayı</p>
-            <p className="font-medium text-text-base">{group.studentCount}</p>
+            <p className="font-medium text-text-base">{group.students_count}</p>
           </div>
           <div>
             <p className="mb-1 text-xs text-text-base/50">Status</p>
-            <span
-              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${groupStatusBadgeClass(group.status)}`}
-            >
-              {group.status}
+            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              group.status === 'active' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600'
+            }`}>
+              {group.status === 'active' ? 'Aktiv' : group.status}
             </span>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function GroupDetail() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`border-b-2 pb-3 text-sm font-medium transition-colors ${
+                className={`border-b-2 pb-3 text-sm font-medium transition-colors cursor-pointer ${
                   activeTab === tab.id
                     ? 'border-primary text-text-base'
                     : 'border-transparent text-text-base/50 hover:text-text-base'
@@ -139,69 +139,36 @@ export default function GroupDetail() {
         <div className="p-5">
           {activeTab === 'students' && (
             <div className="overflow-x-auto">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-text-base/50">Status:</span>
-                {(['all', 'Aktiv', 'Passiv', 'Çıxıb', 'Məzun'] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setStatusFilter(s)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
-                      statusFilter === s
-                        ? 'bg-success text-white border-success'
-                        : 'bg-white text-text-base/50 border-surface-dark/20 hover:border-success/50'
-                    }`}
-                  >
-                    {s === 'all' ? 'Hamısı' : s}
-                  </button>
-                ))}
-              </div>
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr className="border-b border-surface-dark/20 bg-surface-light">
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      #
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Ad
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Soyad
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Email
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Telefon
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Qrupa qoşulma tarixi
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Status
-                    </th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">#</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Ad</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Soyad</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStudents.map((student, index) => {
-                    const cfg = STUDENT_STATUS_CONFIG[student.status as StudentGroupStatus]
-                      ?? STUDENT_STATUS_CONFIG['Aktiv']
-                    return (
+                  {group.students && group.students.length > 0 ? (
+                    group.students.map((student, index) => (
                       <tr key={student.id} className="border-b border-surface-dark/20 last:border-0">
                         <td className="px-3 py-3 text-sm text-text-base">{index + 1}</td>
                         <td className="px-3 py-3 text-sm text-text-base">{student.name}</td>
                         <td className="px-3 py-3 text-sm text-text-base">{student.surname}</td>
-                        <td className="px-3 py-3 text-sm text-text-base">{student.email}</td>
-                        <td className="px-3 py-3 text-sm text-text-base">{student.phone}</td>
-                        <td className="px-3 py-3 text-sm text-text-base">{student.joinedAt}</td>
                         <td className="px-3 py-3">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cfg.bg} ${cfg.text}`}
-                          >
-                            {cfg.label}
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                            {student.status === 'active' ? 'Aktiv' : student.status}
                           </span>
                         </td>
                       </tr>
-                    )})}
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="px-3 py-6 text-center text-sm text-text-base/50">
+                        Bu qrupda tələbə yoxdur.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -212,21 +179,11 @@ export default function GroupDetail() {
               <table className="w-full min-w-[700px]">
                 <thead>
                   <tr className="border-b border-surface-dark/20 bg-surface-light">
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      #
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Tarix
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Mövzu
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Status
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Əməliyyatlar
-                    </th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">#</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Tarix</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Mövzu</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Status</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Əməliyyatlar</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -240,25 +197,27 @@ export default function GroupDetail() {
                     lessons.map((lesson, index) => (
                       <tr key={lesson.id} className="border-b border-surface-dark/20 last:border-0">
                         <td className="px-3 py-3 text-sm text-text-base">{index + 1}</td>
-                        <td className="px-3 py-3 text-sm text-text-base">{lesson.lessonDate}</td>
+                        <td className="px-3 py-3 text-sm text-text-base">
+                          {new Date(lesson.lesson_date).toLocaleDateString('az-AZ')}
+                        </td>
                         <td className="px-3 py-3 text-sm text-text-base">{lesson.topic}</td>
                         <td className="px-3 py-3">
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${lessonStatusBadgeClass(lesson.status)}`}
-                          >
-                            {lesson.status === 'draft' ? 'Draft' : 'Tamamlanmış'}
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                            lesson.status === 'completed' ? 'bg-primary/10 text-primary' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {lesson.status === 'completed' ? 'Tamamlanmış' : 'Draft'}
                           </span>
                         </td>
                         <td className="px-3 py-3">
                           <div className="flex gap-3">
                             <Link
-                              to={ROUTES.TEACHER_ATTENDANCE(lesson.id)}
+                              to={ROUTES.TEACHER_ATTENDANCE(String(lesson.id))}
                               className="text-sm font-medium text-primary hover:underline"
                             >
                               Davamiyyət
                             </Link>
                             <Link
-                              to={ROUTES.TEACHER_GRADES(lesson.id)}
+                              to={ROUTES.TEACHER_GRADES(String(lesson.id))}
                               className="text-sm font-medium text-primary hover:underline"
                             >
                               Qiymət
@@ -278,27 +237,16 @@ export default function GroupDetail() {
               <table className="w-full min-w-[600px]">
                 <thead>
                   <tr className="border-b border-surface-dark/20 bg-surface-light">
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      #
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Başlıq
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Tip
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Tarix
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">
-                      Əməliyyatlar
-                    </th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">#</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Başlıq</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Tip</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Tarix</th>
                   </tr>
                 </thead>
                 <tbody>
                   {materials.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-3 py-6 text-center text-sm text-text-base/50">
+                      <td colSpan={4} className="px-3 py-6 text-center text-sm text-text-base/50">
                         Material tapılmadı.
                       </td>
                     </tr>
@@ -308,16 +256,10 @@ export default function GroupDetail() {
                         <td className="px-3 py-3 text-sm text-text-base">{index + 1}</td>
                         <td className="px-3 py-3 text-sm text-text-base">{material.title}</td>
                         <td className="px-3 py-3 text-sm capitalize text-text-base/50">
-                          {material.type.replace('_', ' ')}
+                          {material.type?.replace('_', ' ')}
                         </td>
-                        <td className="px-3 py-3 text-sm text-text-base">{material.createdAt}</td>
-                        <td className="px-3 py-3">
-                          <Link
-                            to={ROUTES.TEACHER_MATERIAL}
-                            className="text-sm font-medium text-primary hover:underline"
-                          >
-                            Bax
-                          </Link>
+                        <td className="px-3 py-3 text-sm text-text-base">
+                          {new Date(material.created_at).toLocaleDateString('az-AZ')}
                         </td>
                       </tr>
                     ))
@@ -337,5 +279,5 @@ export default function GroupDetail() {
         </div>
       </div>
     </div>
-  );
+  )
 }

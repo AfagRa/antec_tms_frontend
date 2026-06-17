@@ -161,10 +161,246 @@ export interface Grade {
 
 export interface Material {
   id: number
+  lesson_id: number
+  group_id: number
+  teacher_id: number
   title: string
-  url: string
-  type: 'pdf' | 'video' | 'link'
+  type: string
+  url?: string
+  file_path?: string
+  description?: string
   created_at: string
+}
+
+export interface CreateMaterialPayload {
+  lesson_id: number
+  group_id: number
+  teacher_id: number
+  title: string
+  type: string
+  url?: string
+  file_path?: string
+  description?: string
+}
+
+export interface TeacherDashboardResponse {
+  total_groups: number
+  total_students: number
+  upcoming_lessons: number
+  recent_materials: number
+  pending_grades: number
+  recent_groups: TeacherGroupItem[]
+  recent_lessons: TeacherLessonItem[]
+}
+
+export interface TeacherGroupItem {
+  id: number
+  name: string | null
+  student_count: number
+}
+
+export interface TeacherLessonItem {
+  id: number
+  group_name: string | null
+  lesson_date: string
+  topic: string
+  status: string
+}
+
+export interface MyDashboardResponse {
+  group: MyGroupInfo | null
+  recent_lessons: MyRecentLesson[]
+  recent_grades: MyRecentGrade[]
+  attendance_summary: MyAttendanceSummary
+}
+
+export interface MyGroupInfo {
+  id: number
+  name: string
+  status: string
+}
+
+export interface MyRecentLesson {
+  id: number
+  topic: string
+  lesson_date: string
+  material_count: number
+}
+
+export interface MyRecentGrade {
+  id: number
+  lesson_topic: string
+  score: number
+  max_score: number
+}
+
+export interface MyAttendanceSummary {
+  total: number
+  present: number
+  absent: number
+  late: number
+}
+
+export interface MyLessonItem {
+  id: number
+  topic: string
+  note: string | null
+  lesson_date: string
+  group_name: string
+  materials: MyMaterialRef[]
+}
+
+export interface MyMaterialRef {
+  id: number
+  title: string
+  description: string | null
+  type: string
+  file_path: string | null
+}
+
+export interface MyAttendanceItem {
+  id: number
+  lesson_date: string
+  lesson_topic: string
+  status: string
+  minutes_late: number | null
+  reason: string | null
+}
+
+export interface MyGradeItem {
+  id: number
+  lesson_topic: string
+  lesson_date: string
+  score: number
+  max_score: number
+  teacher_note: string | null
+}
+
+export interface MyMaterialDetail {
+  id: number
+  title: string
+  description: string | null
+  type: string
+  file_path: string | null
+  lesson_topic: string
+  lesson_date: string
+}
+
+export interface MyProfileResponse {
+  id: number
+  name: string
+  surname: string
+  email: string
+  phone: string | null
+  birth_date: string | null
+  note: string | null
+  status: string
+}
+
+export interface TeacherDetailResponse {
+  id: number
+  user_id: number
+  name: string
+  surname: string
+  email: string
+  phone: string | null
+  specialization: string | null
+  bio: string | null
+  status: string
+  groups: { id: number; name: string }[]
+}
+
+export interface CreateLessonPayload {
+  group_id: number
+  teacher_id: number
+  lesson_date: string
+  topic: string
+  note?: string
+  status: string
+}
+
+export interface GroupLessonItem {
+  id: number
+  lesson_date: string
+  topic: string
+  status: string
+  attendance_count: number
+  grade_count: number
+}
+
+export interface LessonAttendanceItem {
+  id: number
+  student_id: number
+  student_name: string | null
+  status: string
+  minutes_late: number | null
+  reason: string | null
+}
+
+export interface LessonGradeItem {
+  id: number
+  student_id: number
+  student_name: string | null
+  score: number
+  max_score: number
+}
+
+export interface CreateAttendancePayload {
+  student_id: number
+  status: string
+  minutes_late?: number | null
+  reason?: string | null
+  teacher_note?: string | null
+}
+
+export interface CreateGradePayload {
+  student_id: number
+  score: number
+  max_score: number
+  teacher_note?: string | null
+}
+
+export interface AttendanceReportResult {
+  total_lessons: number
+  total_records: number
+  present: number
+  absent: number
+  late: number
+  excused: number
+  attendance_percentage: number
+  details: AttendanceReportDetail[]
+}
+
+export interface AttendanceReportDetail {
+  student_id: number
+  student_name: string | null
+  present: number
+  absent: number
+  late: number
+  excused: number
+  attendance_percentage: number
+}
+
+export interface GradesReportResult {
+  total_records: number
+  average_score: number
+  average_max_score: number
+  overall_percentage: number
+  details: GradesReportDetail[]
+}
+
+export interface GradesReportDetail {
+  student_id: number
+  student_name: string | null
+  total_score: number
+  total_max_score: number
+  percentage: number
+  grade_count: number
+}
+
+export interface ChangePasswordPayload {
+  current_password: string
+  new_password: string
 }
 
 export interface ApiError {

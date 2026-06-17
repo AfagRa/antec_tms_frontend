@@ -1,111 +1,106 @@
-import React, { useState, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Grid, Link2, Video } from 'lucide-react'
+import { Grid } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
-import { useAuth } from '../../hooks/useAuth'
-import {
-  useAcademic, SHARED_GROUPS, SHARED_LESSONS, SHARED_STUDENTS,
-  SHARED_MATERIALS, getStudentAttendance, getStudentGrades,
-  resolveStudentId,
-} from '../../store/academicStore'
-import { GRADE_CATEGORY_LABELS, GRADE_CATEGORY_STYLES } from '../../types'
+import { studentPortalApi } from '../../api/studentPortal'
+import type { MyLessonItem, MyGradeItem } from '../../types'
+import Spinner from '../../components/ui/Spinner'
 
-type GroupStatus = 'Aktiv'
-type LessonMaterial = { type: 'sanad' | 'video'; label: string }
+interface GroupInfo {
+  id: number
+  name: string
+  lessonCount: number
+  avgGrade: number
+}
 
 export default function StudentGroups() {
-  const { state } = useAcademic()
-  const { user } = useAuth()
-  const studentId = resolveStudentId(user?.id)
-  const student = SHARED_STUDENTS.find((s) => s.studentId === studentId)
-  const myGroupIds = student?.groupIds ?? []
+  const [lessons, setLessons] = useState<MyLessonItem[]>([])
+  const [grades, setGrades] = useState<MyGradeItem[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const [activeGroupId, setActiveGroupId] = useState<string>('all')
-  const lessonsRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [l, g] = await Promise.all([
+          studentPortalApi.getLessons(),
+          studentPortalApi.getGrades(),
+        ])
+        setLessons(l)
+        setGrades(g)
+      } catch (err) {
+        console.warn('Failed to load groups data', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
 
-  const allGrades = useMemo(
-    () => getStudentGrades(state, studentId),
-    [state.grades],
+  const groups = useMemo(() => {
+    const groupMap = new Map<string, GroupInfo>()
+    lessons.forEach((l) => {
+      const key = l.group_name
+      if (!groupMap.has(key)) {
+        groupMap.set(key, { id: 0, name: key, lessonCount: 0, avgGrade: 0 })
+      }
+      groupMap.get(key)!.lessonCount++
+    })
+
+    const gradeMap = new Map<string, number[]>()
+    grades.forEach((g) => {
+      const key = g.lesson_topic
+      if (!gradeMap.has(key)) gradeMap.set(key, [])
+      gradeMap.get(key)!.push(g.score)
+    })
+
+    return Array.from(groupMap.values()).map((g) => {
+      const allScores: number[] = []
+      lessons
+        .filter((l) => l.group_name === g.name)
+        .forEach((l) => {
+          const gr = grades.find((x) => x.lesson_topic === l.topic)
+          if (gr) allScores.push(gr.score)
+        })
+      return {
+        ...g,
+        avgGrade: allScores.length
+          ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
+          : 0,
+      }
+    })
+  }, [lessons, grades])
+
+  const groupNames = groups.map((g) => g.name)
+
+  const sortedLessons = useMemo(
+    () => [...lessons].sort((a, b) => new Date(b.lesson_date).getTime() - new Date(a.lesson_date).getTime()),
+    [lessons],
   )
-  const gradeMap = useMemo(() => {
-    const map: Record<string, { score: number | null; maxScore: number; category: string }> = {}
-    allGrades.forEach((g) => {
-      map[g.lessonId] = { score: g.score, maxScore: g.maxScore, category: g.category }
-    })
-    return map
-  }, [allGrades])
 
-  const groups = SHARED_GROUPS
-    .filter((g) => myGroupIds.includes(g.id))
-    .map((g) => {
-      const att = getStudentAttendance(state, studentId, g.id)
-      const gr = getStudentGrades(state, studentId, g.id)
-        .filter((x) => x.score !== null)
-        .map((x) => x.score as number)
-      const attPct = att.length
-        ? Math.round(att.filter((a) => a.status === 'present' || a.status === 'late').length / att.length * 100)
-        : 0
-      const avgGrade = gr.length
-        ? Math.round(gr.reduce((a, b) => a + b, 0) / gr.length)
-        : 0
-      const lessons = SHARED_LESSONS.filter((l) => l.groupId === g.id)
-      return {
-        id: g.id,
-        name: g.name,
-        courseName: 'Python ve Massivler',
-        teacherName: 'Əli Həsənov',
-        joinedAt: '01.06.2026',
-        status: 'Aktiv' as GroupStatus,
-        lessonCount: lessons.length,
-        attendancePercent: attPct,
-        avgGrade,
-      }
-    })
+  const gradeByTopic = useMemo(() => {
+    const m = new Map<string, MyGradeItem>()
+    grades.forEach((g) => m.set(g.lesson_topic, g))
+    return m
+  }, [grades])
 
-  const lessons = SHARED_LESSONS
-    .filter((l) => myGroupIds.includes(l.groupId))
-    .map((l) => {
-      const group = SHARED_GROUPS.find((g) => g.id === l.groupId)
-      const mats = SHARED_MATERIALS.filter((m) => m.lessonId === l.id)
-      return {
-        id: l.id,
-        groupId: l.groupId,
-        date: l.date,
-        topic: l.topic,
-        teacherName: 'Əli Həsənov',
-        materials: mats.map((m) => ({
-          type: (m.type === 'YouTube' || m.type === 'Linklər' ? 'video' : 'sanad') as LessonMaterial['type'],
-          label: m.type === 'YouTube' ? 'Video' : 'Sənəd',
-        })),
-      }
-    })
-    .sort((a, b) => b.date.localeCompare(a.date))
-
-  const filteredLessons = activeGroupId === 'all'
-    ? lessons
-    : lessons.filter((l) => l.groupId === activeGroupId)
+  if (loading) return <Spinner />
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-text-base">
-        Mənim Qruplarım və Kurslarım
-      </h1>
+      <h1 className="text-2xl font-semibold text-text-base">Mənim Qruplarım və Kurslarım</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5">
         <div className="mb-4">
           <div className="inline-flex items-center gap-2 rounded-neu bg-surface-dark/30 shadow-neu-inset-sm px-4 py-2 text-sm font-medium">
             <Grid size={16} className="text-primary" />
-            <span className="text-text-base">Ümumi Aktiv Qruplarım: {groups.length}</span>
+            <span className="text-text-base">Ümumi Qruplarım: {groups.length}</span>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
-              <col style={{ width: '120px' }} />
               <col style={{ width: '160px' }} />
-              <col style={{ width: '150px' }} />
-              <col style={{ width: '120px' }} />
               <col style={{ width: '80px' }} />
               <col style={{ width: '120px' }} />
               <col style={{ width: '100px' }} />
@@ -113,219 +108,76 @@ export default function StudentGroups() {
             </colgroup>
             <thead>
               <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Qrup adı
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Kurs adı
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Müəllimin adı
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Qrupa qoşulma tarixi
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Status
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Davamiyyət faizi (%)
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Ortalama bal (%)
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                </th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Qrup adı</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Dərs sayı</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Ortalama bal (%)</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Status</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50" />
               </tr>
-              <tr>
-                <td colSpan={8} className="p-0 pb-1">
-                  <div className="bg-surface-dark/20 h-px w-full" />
-                </td>
-              </tr>
+              <tr><td colSpan={5} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>
             <tbody>
               {groups.map((group, index) => (
-                <React.Fragment key={group.id}>
-                  <tr>
-                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={group.name}>
-                      {group.name}
-                    </td>
-                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={group.courseName}>
-                      {group.courseName}
-                    </td>
-                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={group.teacherName}>
-                      {group.teacherName}
-                    </td>
-                    <td className="py-3.5 text-sm text-text-base pr-2">
-                      {group.joinedAt}
-                    </td>
-                    <td className="py-3.5 text-sm">
-                      <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-primary/10 text-primary">
-                        {group.status}
-                      </span>
-                    </td>
-                    <td className="py-3.5 text-sm text-text-base pr-2">
-                      {group.attendancePercent}%
-                    </td>
-                    <td className="py-3.5 text-sm text-text-base pr-2">
-                      {group.avgGrade}%
-                    </td>
-                    <td className="py-3.5 text-sm">
-                      <div className="flex gap-4 items-center">
-                        <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            setActiveGroupId(group.id)
-                            lessonsRef.current?.scrollIntoView({ behavior: 'smooth' })
-                          }}
-                          className="text-primary text-sm font-medium hover:underline cursor-pointer"
-                        >
-                          Dərslərimə Bax
-                        </a>
-                        <Link
-                          to={`${ROUTES.STUDENT_MATERIALS}?group=${group.id}`}
-                          className="text-primary text-sm font-medium hover:underline"
-                        >
-                          Materiallarıma Bax
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  {index < groups.length - 1 && (
-                    <tr>
-                      <td colSpan={8} className="p-0">
-                        <div className="bg-surface-dark/20 h-px w-full" />
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
+                <tr key={group.name}>
+                  <td className="py-3.5 text-sm text-text-base truncate pr-2">{group.name}</td>
+                  <td className="py-3.5 text-sm text-text-base pr-2">{group.lessonCount}</td>
+                  <td className="py-3.5 text-sm text-text-base pr-2">{group.avgGrade}%</td>
+                  <td className="py-3.5 text-sm">
+                    <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-primary/10 text-primary">Aktiv</span>
+                  </td>
+                  <td className="py-3.5 text-sm">
+                    <Link to={`${ROUTES.STUDENT_MATERIALS}?group=${group.name}`} className="text-primary text-sm font-medium hover:underline">
+                      Materiallara Bax
+                    </Link>
+                  </td>
+                </tr>
               ))}
+              {groups.length === 0 && (
+                <tr><td colSpan={5} className="py-6 text-center text-sm text-text-base/50">Heç bir qrup tapılmadı</td></tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div ref={lessonsRef} className="rounded-neu bg-surface shadow-neu-sm p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-text-base">
-            Mənim Dərslərim
-          </h2>
-          {activeGroupId !== 'all' && (
-            <button
-              onClick={() => setActiveGroupId('all')}
-              className="text-xs text-primary font-medium hover:underline bg-transparent border-0 cursor-pointer"
-            >
-              Filteri sıfırla (Hamısını göstər)
-            </button>
-          )}
-        </div>
-
+      <div className="rounded-neu bg-surface shadow-neu-sm p-5">
+        <h2 className="text-base font-semibold text-text-base mb-4">Mənim Dərslərim</h2>
         <div className="overflow-x-auto">
           <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
               <col style={{ width: '120px' }} />
               <col />
-              <col style={{ width: '120px' }} />
               <col style={{ width: '100px' }} />
-              <col style={{ width: '200px' }} />
-              <col style={{ width: '180px' }} />
+              <col style={{ width: '100px' }} />
             </colgroup>
             <thead>
               <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Dərs tarixi
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Mövzu
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Kateqoriya
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Qiymət
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Müəllim
-                </th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                  Materiallar
-                </th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Dərs tarixi</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Mövzu</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Qrup</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Materiallar</th>
               </tr>
-              <tr>
-                <td colSpan={6} className="p-0 pb-1">
-                  <div className="bg-surface-dark/20 h-px w-full" />
-                </td>
-              </tr>
+              <tr><td colSpan={4} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>
             <tbody>
-              {filteredLessons.map((lesson, index) => (
-                <React.Fragment key={lesson.id}>
-                  <tr>
-                    <td className="py-3.5 text-sm text-text-base pr-2">
-                      {lesson.date}
-                    </td>
-                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={lesson.topic}>
-                      {lesson.topic}
-                    </td>
-                    <td className="py-3 pr-2">
-                      {gradeMap[lesson.id]?.category ? (
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shadow-neu-sm ${GRADE_CATEGORY_STYLES[gradeMap[lesson.id].category as keyof typeof GRADE_CATEGORY_STYLES] || ''}`}>
-                          {GRADE_CATEGORY_LABELS[gradeMap[lesson.id].category as keyof typeof GRADE_CATEGORY_LABELS] || gradeMap[lesson.id].category}
-                        </span>
-                      ) : (
-                        <span className="text-text-base/50 text-xs">—</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 text-sm text-text-base pr-2">
-                      {gradeMap[lesson.id]?.score !== null && gradeMap[lesson.id]?.score !== undefined
-                        ? `${gradeMap[lesson.id].score}/${gradeMap[lesson.id].maxScore}`
+              {sortedLessons.map((lesson, index) => {
+                const grade = gradeByTopic.get(lesson.topic)
+                return (
+                  <tr key={lesson.id || index}>
+                    <td className="py-3.5 text-sm text-text-base pr-2">{new Date(lesson.lesson_date).toLocaleDateString('az-AZ')}</td>
+                    <td className="py-3.5 text-sm text-text-base truncate pr-2">{lesson.topic}</td>
+                    <td className="py-3.5 text-sm text-text-base pr-2">{lesson.group_name}</td>
+                    <td className="py-3.5 text-sm">
+                      {lesson.materials.length > 0
+                        ? `${lesson.materials.length} material`
                         : <span className="text-text-base/50">—</span>
                       }
                     </td>
-                    <td className="py-3.5 text-sm text-text-base truncate pr-2" title={lesson.teacherName}>
-                      {lesson.teacherName}
-                    </td>
-                    <td className="py-3.5 text-sm">
-                      {lesson.materials && lesson.materials.length > 0 ? (
-                        <div className="flex flex-wrap gap-3">
-                          {lesson.materials.map((mat, mIdx) => {
-                            const isSanad = mat.type === 'sanad'
-                            const Icon = isSanad ? Link2 : Video
-                            const colorClass = isSanad ? 'text-primary' : 'text-red-500'
-                            return (
-                              <a
-                                key={mIdx}
-                                href="#"
-                                onClick={(e) => e.preventDefault()}
-                                className={`inline-flex items-center gap-1 text-sm font-medium hover:underline ${colorClass}`}
-                              >
-                                <Icon size={12} />
-                                <span>{mat.label}</span>
-                              </a>
-                            )
-                          })}
-                        </div>
-                      ) : (
-                        <span className="text-text-base/50">—</span>
-                      )}
-                    </td>
                   </tr>
-                  {index < filteredLessons.length - 1 && (
-                    <tr>
-                      <td colSpan={6} className="p-0">
-                        <div className="bg-surface-dark/20 h-px w-full" />
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
-              {filteredLessons.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-6 text-center text-sm text-text-base/50">
-                    Seçilmiş qrup üçün dərs tapılmadı.
-                  </td>
-                </tr>
+                )
+              })}
+              {sortedLessons.length === 0 && (
+                <tr><td colSpan={4} className="py-6 text-center text-sm text-text-base/50">Dərs tapılmadı.</td></tr>
               )}
             </tbody>
           </table>
