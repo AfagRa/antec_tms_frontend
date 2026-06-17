@@ -1,99 +1,107 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ROUTES } from '../constants/routes';
-import {
-  DEFAULT_GROUP_ID,
-  MOCK_GROUPS,
-  getLessonsByGroupId,
-} from '../data/teacherMock';
-import type { LessonStatus } from '../types';
-
-interface LessonFormState {
-  groupId: string;
-  lessonDate: string;
-  topic: string;
-  note: string;
-}
-
-const inputClassName =
-  'w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30';
+import { useState, useEffect, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ROUTES } from '../constants/routes'
+import { groupsApi } from '../api/groups'
+import { lessonsApi } from '../api/lessons'
+import { teacherPortalApi } from '../api/teacherPortal'
+import type { Group, CreateLessonPayload } from '../types'
+import Spinner from '../components/ui/Spinner'
 
 export default function LessonCreate() {
-  const navigate = useNavigate();
-  const [formState, setFormState] = useState<LessonFormState>({
-    groupId: DEFAULT_GROUP_ID,
-    lessonDate: '07.05.2023',
-    topic: '',
-    note: '',
-  });
-  const [savedAs, setSavedAs] = useState<LessonStatus | null>(null);
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
+  const [teacherId, setTeacherId] = useState<number | null>(null)
+  const [groups, setGroups] = useState<Group[]>([])
+  const [groupId, setGroupId] = useState('')
+  const [topic, setTopic] = useState('')
+  const [note, setNote] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [groupLessons, setGroupLessons] = useState<{ id: number; lesson_date: string; topic: string }[]>([])
 
-  const selectedGroup = MOCK_GROUPS.find((group) => group.id === formState.groupId);
-  const groupLessons = getLessonsByGroupId(formState.groupId);
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const me = await teacherPortalApi.getMe()
+        setTeacherId(me.id)
+        const res = await groupsApi.list({ teacher_id: me.id })
+        const grps = res.data ?? []
+        setGroups(grps)
+        if (grps.length > 0) {
+          setGroupId(String(grps[0].id))
+        }
+      } catch (err) {
+        console.warn('Failed to load teacher/groups', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    init()
+  }, [])
 
-  function handleSaveDraft(event: FormEvent) {
-    event.preventDefault();
-    console.log({ ...formState, status: 'draft' as LessonStatus });
-    setSavedAs('draft');
+  useEffect(() => {
+    if (!groupId) return
+    const load = async () => {
+      try {
+        const data = await lessonsApi.getByGroup(Number(groupId))
+        setGroupLessons(data)
+      } catch {
+        setGroupLessons([])
+      }
+    }
+    load()
+  }, [groupId])
+
+  const handleComplete = async () => {
+    if (!teacherId || !groupId || !topic.trim()) {
+      alert('Zəhmət olmasa qrup və mövzu seçin.')
+      return
+    }
+    setSaving(true)
+    try {
+      const payload: CreateLessonPayload = {
+        group_id: Number(groupId),
+        teacher_id: teacherId,
+        lesson_date: new Date().toISOString(),
+        topic: topic.trim(),
+        note: note.trim() || undefined,
+        status: 'scheduled',
+      }
+      await lessonsApi.create(payload)
+      // Navigate to groups page since we don't know the new lesson ID
+      navigate(ROUTES.TEACHER_GROUPS)
+    } catch (err) {
+      console.error('Failed to create lesson', err)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  function handleComplete() {
-    console.log({ ...formState, status: 'completed' as LessonStatus });
-    setSavedAs('completed');
-    navigate(ROUTES.TEACHER_ATTENDANCE('1'));
-  }
+  if (loading) return <Spinner />
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-semibold text-text-base">Jurnal / Dərs Yarat</h1>
 
-      <form className="mx-auto max-w-2xl rounded-neu bg-surface shadow-neu-sm p-8">
-        {savedAs && (
-          <div className="mb-6 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-medium text-primary">
-            {savedAs === 'draft'
-              ? 'Dərs qeydi draft kimi saxlanıldı.'
-              : 'Dərs tamamlandı — davamiyyətə keçə bilərsiniz.'}
-          </div>
-        )}
-
+      <div className="mx-auto max-w-2xl rounded-neu bg-surface shadow-neu-sm p-8">
         <div className="space-y-5">
           <div>
             <label className="mb-1.5 block text-sm font-semibold text-text-base">
               Qrup Seçimi<span className="ml-0.5 text-red-500">*</span>
             </label>
             <select
-              value={formState.groupId}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, groupId: event.target.value }))
-              }
-              className={inputClassName}
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+              className="w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              {MOCK_GROUPS.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
               ))}
             </select>
-            {selectedGroup && (
+            {groupId && (
               <p className="mt-1 text-xs text-text-base/50">
-                Kurs: {selectedGroup.courseName} · Tələbə sayı: {selectedGroup.studentCount}
+                Tələbə sayı: {groups.find((g) => String(g.id) === groupId)?.students_count ?? '—'}
               </p>
             )}
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold text-text-base">
-              Dərs Tarixi<span className="ml-0.5 text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formState.lessonDate}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, lessonDate: event.target.value }))
-              }
-              placeholder="DD.MM.YYYY"
-              className={inputClassName}
-            />
           </div>
 
           <div>
@@ -102,12 +110,10 @@ export default function LessonCreate() {
             </label>
             <input
               type="text"
-              value={formState.topic}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, topic: event.target.value }))
-              }
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
               placeholder="Dərs mövzusunu daxil edin"
-              className={inputClassName}
+              className="w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
 
@@ -117,12 +123,10 @@ export default function LessonCreate() {
             </label>
             <textarea
               rows={5}
-              value={formState.note}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, note: event.target.value }))
-              }
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
               placeholder="Dərs haqqında əlavə qeydlər..."
-              className={`${inputClassName} resize-none`}
+              className="w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
             />
           </div>
 
@@ -130,10 +134,8 @@ export default function LessonCreate() {
             <div className="rounded-lg border border-surface-dark/20 bg-surface-light p-4">
               <p className="mb-2 text-sm font-semibold text-text-base">Son dərslər</p>
               <ul className="space-y-1 text-sm text-text-base/50">
-                {groupLessons.slice(0, 3).map((lesson) => (
-                  <li key={lesson.id}>
-                    {lesson.lessonDate} — {lesson.topic}
-                  </li>
+                {groupLessons.slice(0, 5).map((l) => (
+                  <li key={l.id}>{l.lesson_date} — {l.topic}</li>
                 ))}
               </ul>
             </div>
@@ -141,30 +143,19 @@ export default function LessonCreate() {
         </div>
 
         <div className="mt-8 flex items-center justify-between">
-          <Link
-            to={ROUTES.TEACHER_GROUPS}
-            className="text-sm text-text-base/50 hover:text-text-base"
-          >
+          <Link to={ROUTES.TEACHER_GROUPS} className="text-sm text-text-base/50 hover:text-text-base">
             Ləğv et / Geri
           </Link>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={handleSaveDraft}
-              className="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
-            >
-              Saxla — Draft Kimi
-            </button>
-            <button
-              type="button"
-              onClick={handleComplete}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-            >
-              Tamamla və Davamiyyəti Daxil Et
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleComplete}
+            disabled={saving}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
+          >
+            {saving ? 'Yaradılır...' : 'Dərsi Yarat və Davamiyyətə Keç'}
+          </button>
         </div>
-      </form>
+      </div>
     </div>
-  );
+  )
 }
