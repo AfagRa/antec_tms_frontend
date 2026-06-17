@@ -366,13 +366,6 @@ export default function TeacherJournal() {
         <span className="flex items-center gap-1.5"><span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-blue-500">QÜ</span> Qaib (üzrlü)</span>
         <span className="flex items-center gap-1.5"><span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-red-500">Q</span> Qaib (üzrsüz)</span>
       </div>
-
-      {exportToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-white shadow-neu-lg px-4 py-3 text-sm text-red-600 border border-red-200 rounded-lg flex items-center gap-2">
-          <AlertCircle size={15} />
-          {exportToast}
-        </div>
-      )}
     </div>
   )
 }
