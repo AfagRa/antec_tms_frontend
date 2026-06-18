@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Save } from 'lucide-react'
+import { Save, Download } from 'lucide-react'
 import { teacherPortalApi } from '../../api/teacherPortal'
 import { groupsApi } from '../../api/groups'
 import { lessonsApi } from '../../api/lessons'
@@ -7,12 +7,12 @@ import type { Group, GroupStudent, GroupLessonItem, LessonAttendanceItem, Lesson
 import type { JournalCell } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 import { AttendanceSegment } from '../../components/ui/AttendanceSegment'
+import { exportJournalToExcel } from '../../utils/exportJournal'
 
 const CATEGORY_OPTIONS = [
-  { value: 'daily', label: 'Dərs' },
-  { value: 'homework', label: 'Ev tapşırığı' },
-  { value: 'module', label: 'Modul' },
-  { value: 'project', label: 'Layihə' },
+  { value: 'ders', label: 'Dərs' },
+  { value: 'lab.', label: 'Lab.' },
+  { value: 'modul', label: 'Modul' },
   { value: 'final', label: 'Final' },
 ]
 
@@ -35,6 +35,7 @@ export default function TeacherJournal() {
   const [columnCategories, setColumnCategories] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string>('ders')
   const [toast, setToast] = useState<'idle' | 'done'>('idle')
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export default function TeacherJournal() {
         setMatrix(newMatrix)
 
         const cats: Record<number, string> = {}
-        lessonList.forEach((l) => { cats[l.id] = 'daily' })
+        lessonList.forEach((l) => { cats[l.id] = 'ders' })
         setColumnCategories(cats)
       } catch (err) {
         console.warn('Failed to load journal data', err)
@@ -210,6 +211,8 @@ export default function TeacherJournal() {
     }
   }
 
+  const visibleLessons = lessons.filter(l => (columnCategories[l.id] ?? 'ders') === selectedCategory)
+
   if (loading) return <Spinner />
 
   return (
@@ -217,21 +220,46 @@ export default function TeacherJournal() {
       <div className="shrink-0">
         <h1 className="text-2xl font-semibold text-text-base mb-4">Jurnal</h1>
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <label className="text-sm text-text-base/50 mr-2">Qrup seçin:</label>
-            <select
-              value={selectedGroupId ?? ''}
-              onChange={(e) => setSelectedGroupId(Number(e.target.value))}
-              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base focus:ring-2 focus:ring-primary/30 outline-none"
-            >
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center">
+              <label className="text-sm text-text-base/50 mr-2">Qrup seçin:</label>
+              <select
+                value={selectedGroupId ?? ''}
+                onChange={(e) => setSelectedGroupId(Number(e.target.value))}
+                className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base focus:ring-2 focus:ring-primary/30 outline-none"
+              >
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center">
+              <label className="text-sm text-text-base/50 mr-2">Kategoriya:</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base focus:ring-2 focus:ring-primary/30 outline-none"
+              >
+                {CATEGORY_OPTIONS.map((cat) => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <span className="rounded-neu-sm bg-surface shadow-neu-sm px-3 py-1.5 text-sm text-text-base">{students.length} tələbə</span>
-            <span className="rounded-neu-sm bg-surface shadow-neu-sm px-3 py-1.5 text-sm text-text-base">{lessons.length} dərs</span>
+            <span className="rounded-neu-sm bg-surface shadow-neu-sm px-3 py-1.5 text-sm text-text-base">{visibleLessons.length} dərs</span>
+            <button
+              onClick={() => {
+                const grp = groups.find(g => g.id === selectedGroupId)
+                if (!grp) return
+                exportJournalToExcel(grp.name, students, lessons, matrix, columnCategories, selectedCategory)
+              }}
+              className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <Download size={15} />
+              Excel Export
+            </button>
             <button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-60 transition-all cursor-pointer">
               <Save size={15} />
               {saving ? 'Saxlanılır...' : 'Yadda Saxla'}
@@ -244,12 +272,12 @@ export default function TeacherJournal() {
       <div className="flex-1 min-h-0 overflow-hidden">
         <div className="rounded-neu bg-surface shadow-neu-sm p-0 h-full overflow-hidden">
           <div className="overflow-auto h-full w-full">
-            <table className="border-collapse text-sm" style={{ minWidth: `${48 + 180 + lessons.length * 270 + 80}px` }}>
+            <table className="border-collapse text-sm" style={{ minWidth: `${48 + 180 + visibleLessons.length * 270 + 80}px` }}>
               <thead>
                 <tr>
                   <th className="sticky left-0 z-20 bg-white border-b border-r border-surface-dark/20 px-2 py-3 text-center text-xs font-medium text-text-base/50 uppercase tracking-wide w-[48px]">№</th>
                   <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-3 text-left font-medium text-text-base/50 text-xs uppercase tracking-wide min-w-[180px]">Tələbənin adı</th>
-                  {lessons.map((lesson) => (
+                  {visibleLessons.map((lesson) => (
                     <th key={lesson.id} colSpan={2} className="border-b border-r border-surface-dark/20 px-2 py-2 text-center font-medium text-text-base text-xs min-w-[140px]">
                       <div className="font-semibold">{lesson.lesson_date}</div>
                       <span className="text-text-base/50 font-normal text-[11px] truncate max-w-[110px] block leading-tight mt-0.5">{lesson.topic}</span>
@@ -260,7 +288,7 @@ export default function TeacherJournal() {
                 <tr>
                   <th className="sticky left-0 z-20 bg-white border-b border-r border-surface-dark/20 w-[48px]" />
                   <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-1" />
-                  {lessons.map((lesson) => (
+                  {visibleLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[150px]">Davamiyyət</th>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[120px]">Qiymət</th>
@@ -271,7 +299,7 @@ export default function TeacherJournal() {
                 <tr>
                   <th className="sticky left-0 z-20 bg-white border-b border-r border-surface-dark/20 w-[48px]" />
                   <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-1" />
-                  {lessons.map((lesson) => (
+                  {visibleLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center">
                         <button
@@ -283,7 +311,7 @@ export default function TeacherJournal() {
                       </th>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center">
                         <select
-                          value={columnCategories[lesson.id] ?? 'daily'}
+                          value={columnCategories[lesson.id] ?? 'ders'}
                           onChange={(e) => setColumnCategories((prev) => ({ ...prev, [lesson.id]: e.target.value }))}
                           className="w-[90px] text-center text-xs border border-surface-dark/20 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-white text-text-base/50"
                         >
@@ -299,7 +327,7 @@ export default function TeacherJournal() {
               </thead>
               <tbody>
                 {students.map((student, index) => {
-                  const grades = lessons
+                  const grades = visibleLessons
                     .map((l) => getCell(student.id, l.id).grade)
                     .filter((g): g is number => g !== null)
                   const avg = grades.length > 0
@@ -315,7 +343,7 @@ export default function TeacherJournal() {
                     <tr key={student.id} className="hover:bg-slate-50 transition-colors">
                       <td className="sticky left-0 z-10 bg-white border-b border-r border-surface-dark/20 px-2 py-2 text-center text-xs font-medium text-text-base/50 w-[48px] select-none">{index + 1}</td>
                       <td className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-2 font-medium text-text-base whitespace-nowrap">{student.name} {student.surname}</td>
-                      {lessons.map((lesson) => {
+                      {visibleLessons.map((lesson) => {
                         const cell = getCell(student.id, lesson.id)
                         return (
                           <React.Fragment key={lesson.id}>
@@ -341,7 +369,8 @@ export default function TeacherJournal() {
                                   setCell(student.id, lesson.id, { grade })
                                 }}
                                 placeholder="Bal"
-                                className="w-[60px] mx-auto block text-center text-xs border border-surface-dark/20 rounded px-1 py-1 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-white text-text-base"
+                                disabled={selectedCategory === 'ders'}
+                                className={`w-[60px] mx-auto block text-center text-xs border border-surface-dark/20 rounded px-1 py-1 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-white ${selectedCategory === 'ders' ? 'opacity-40 cursor-not-allowed' : 'text-text-base'}`}
                               />
                             </td>
                           </React.Fragment>
