@@ -476,6 +476,8 @@ export interface JournalCell {
   category?: GradeCategory
 }
 
+export type MaterialType = 'file' | 'link' | 'youtube' | 'google_drive'
+
 export const MATERIAL_TYPE_CONFIG = {
   'Fayl': {
     bg:       'bg-blue-100',

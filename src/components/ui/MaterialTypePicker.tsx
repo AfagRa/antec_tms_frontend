@@ -1,4 +1,4 @@
-import { CloudUpload, File, Link, Play, Video } from 'lucide-react';
+import { CloudUpload, File, Link, Youtube } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { MaterialType } from '../../types';
 
@@ -10,9 +10,8 @@ interface MaterialTypePickerProps {
 const MATERIAL_TYPES: { value: MaterialType; label: string; icon: LucideIcon }[] = [
   { value: 'file', label: 'Fayl', icon: File },
   { value: 'link', label: 'Link', icon: Link },
-  { value: 'video_link', label: 'Video Link', icon: Video },
   { value: 'google_drive', label: 'Google Drive', icon: CloudUpload },
-  { value: 'youtube', label: 'YouTube', icon: Play },
+  { value: 'youtube', label: 'YouTube', icon: Youtube },
 ];
 
 export default function MaterialTypePicker({ value, onChange }: MaterialTypePickerProps) {
