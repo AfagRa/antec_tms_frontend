@@ -322,7 +322,7 @@ export default function TeacherJournal() {
                   {visibleLessons.map((lesson) => (
                     <th key={lesson.id} colSpan={2} className="border-b border-r border-surface-dark/20 px-2 py-2 text-center font-medium text-text-base text-xs min-w-[140px]">
                       <div className="font-semibold">{formatDate(lesson.lesson_date)}</div>
-                      <span className="text-text-base/50 font-normal text-[11px] truncate max-w-[110px] block leading-tight mt-0.5">{lesson.topic}</span>
+                      <span className="text-text-base/50 font-normal text-[11px] truncate max-w-[110px] block text-center leading-tight mt-0.5">{lesson.topic}</span>
                     </th>
                   ))}
                   <th className="border-b border-r border-surface-dark/20 px-2 py-2 text-center align-top min-w-[120px]">
@@ -434,8 +434,8 @@ export default function TeacherJournal() {
                   const labAvg = labG.length > 0 ? labG.reduce((a, b) => a + b, 0) / labG.length : null
                   const modAvg = modG.length > 0 ? modG.reduce((a, b) => a + b, 0) / modG.length : null
                   const finalG = finG.length > 0 ? finG[finG.length - 1] : null
-                  const avg = finalG !== null && (labAvg !== null || modAvg !== null)
-                    ? Math.round(((labAvg ?? 0) * 0.5 + (modAvg ?? 0) * 0.5) * 0.6 + finalG * 0.4)
+                  const avg = (labG.length > 0 || modG.length > 0 || finG.length > 0)
+                    ? Math.round(((labAvg ?? 0) * 0.5 + (modAvg ?? 0) * 0.5) * 0.6 + (finalG ?? 0) * 0.4)
                     : null
                   const avgColor = avg === null
                     ? 'text-gray-300'

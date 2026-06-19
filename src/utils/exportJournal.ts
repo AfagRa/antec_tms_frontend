@@ -37,8 +37,8 @@ function calcWeightedAvg(
   const labAvg = labG.length > 0 ? labG.reduce((a, b) => a + b, 0) / labG.length : null
   const modAvg = modG.length > 0 ? modG.reduce((a, b) => a + b, 0) / modG.length : null
   const finalG = finG.length > 0 ? finG[finG.length - 1] : null
-  const avg = finalG !== null && (labAvg !== null || modAvg !== null)
-    ? Math.round(((labAvg ?? 0) * 0.5 + (modAvg ?? 0) * 0.5) * 0.6 + finalG * 0.4)
+  const avg = (labG.length > 0 || modG.length > 0 || finG.length > 0)
+    ? Math.round(((labAvg ?? 0) * 0.5 + (modAvg ?? 0) * 0.5) * 0.6 + (finalG ?? 0) * 0.4)
     : null
   return avg !== null ? String(avg) : ''
 }
