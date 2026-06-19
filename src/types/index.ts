@@ -417,22 +417,22 @@ export interface DashboardStats {
 
 export type GradeCategory =
   | 'ders'
-  | 'lab.'
+  | 'lab'
   | 'modul'
   | 'final'
 
 export const GRADE_CATEGORY_LABELS: Record<GradeCategory, string> = {
-  'ders': 'Dərs',
-  'lab.': 'Lab.',
-  'modul': 'Modul',
-  'final': 'Final',
+  ders:  'Dərs',
+  lab:   'Lab',
+  modul: 'Modul',
+  final: 'Final',
 }
 
 export const GRADE_CATEGORY_STYLES: Record<GradeCategory, string> = {
-  'ders':  'bg-blue-100 text-blue-700',
-  'lab.':  'bg-green-100 text-green-700',
-  'modul': 'bg-purple-100 text-purple-700',
-  'final': 'bg-red-100 text-red-700',
+  ders:  'bg-blue-100 text-blue-700',
+  lab:   'bg-green-100 text-green-700',
+  modul: 'bg-purple-100 text-purple-700',
+  final: 'bg-red-100 text-red-700',
 }
 
 export type StudentGroupStatus = 'Aktiv' | 'Passiv' | 'Çıxıb' | 'Məzun'
@@ -475,6 +475,8 @@ export interface JournalCell {
   maxGrade?: number
   category?: GradeCategory
 }
+
+export type MaterialType = 'file' | 'link' | 'youtube' | 'google_drive'
 
 export const MATERIAL_TYPE_CONFIG = {
   'Fayl': {

@@ -7,7 +7,7 @@ import { groupsApi } from '../../api/groups'
 import { lessonsApi } from '../../api/lessons'
 import { materialsApi } from '../../api/materials'
 import { teacherPortalApi } from '../../api/teacherPortal'
-import type { Group, GroupLessonItem, CreateMaterialPayload } from '../../types'
+import type { Group, GroupLessonItem, CreateMaterialPayload, MaterialType } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 function FormField({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) {
@@ -152,7 +152,7 @@ export default function MaterialUpload() {
               className="w-full rounded-md border border-surface-dark/20 px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
               {lessons.map((l) => (
-                <option key={l.id} value={l.id}>Dərs: {l.topic} ({l.lesson_date})</option>
+                <option key={l.id} value={l.id}>Dərs: {l.topic} ({new Date(l.lesson_date).toLocaleDateString('en-GB')})</option>
               ))}
             </select>
           </FormField>
@@ -168,7 +168,7 @@ export default function MaterialUpload() {
           </FormField>
 
           <FormField label="Materialın Tipi">
-            <MaterialTypePicker value={type as any} onChange={(t) => setType(t)} />
+            <MaterialTypePicker value={type as MaterialType} onChange={(t) => setType(t)} />
           </FormField>
 
           {type === 'file' ? (

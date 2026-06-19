@@ -292,13 +292,16 @@ export default function Grades() {
 
       <div className="mt-4">
         <button
-          onClick={() => selectedLessonId
-            ? navigate(ROUTES.TEACHER_ATTENDANCE(String(selectedLessonId)))
-            : navigate(ROUTES.TEACHER_GROUPS)
-          }
+          onClick={() => {
+            if (selectedGroupId) {
+              navigate(`${ROUTES.TEACHER_GROUP(String(selectedGroupId))}?tab=lessons`)
+            } else {
+              navigate(ROUTES.TEACHER_GROUPS)
+            }
+          }}
           className="text-sm text-text-base/50 hover:text-text-base flex items-center gap-1.5 transition-colors"
         >
-          <ArrowLeft size={15} /> Davamiyyətə Qayıt
+          <ArrowLeft size={15} /> Qrup Detaylarına Qayıt
         </button>
       </div>
     </div>

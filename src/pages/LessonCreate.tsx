@@ -135,7 +135,7 @@ export default function LessonCreate() {
               <p className="mb-2 text-sm font-semibold text-text-base">Son dərslər</p>
               <ul className="space-y-1 text-sm text-text-base/50">
                 {groupLessons.slice(0, 5).map((l) => (
-                  <li key={l.id}>{l.lesson_date} — {l.topic}</li>
+                  <li key={l.id}>{new Date(l.lesson_date).toLocaleDateString('az-AZ')} — {l.topic}</li>
                 ))}
               </ul>
             </div>

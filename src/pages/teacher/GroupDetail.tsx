@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
 import { groupsApi } from '../../api/groups'
@@ -22,7 +22,9 @@ export default function GroupDetail() {
   const [group, setGroup] = useState<Group | null>(null)
   const [lessons, setLessons] = useState<GroupLessonItem[]>([])
   const [materials, setMaterials] = useState<Material[]>([])
-  const [activeTab, setActiveTab] = useState<TabId>('students')
+  const [searchParams] = useSearchParams()
+  const initialTab = searchParams.get('tab') === 'lessons' ? 'lessons' : 'students'
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -127,9 +129,10 @@ export default function GroupDetail() {
               </button>
             ))}
           </div>
+          {/* HIDDEN: lesson creation moved to Journal page */}
           <Link
             to={ROUTES.TEACHER_LESSON_CREATE}
-            className="mb-3 flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
+            className="hidden"
           >
             <Plus size={16} strokeWidth={1.5} />
             Yeni Dərs Yarat

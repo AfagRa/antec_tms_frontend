@@ -20,12 +20,27 @@ function attCodeToLabel(attStatus: string | null, minutesLate: number): string {
   }
 }
 
-function calcAvg(studentId: number, visibleLessonIds: number[], matrix: Record<number, Record<number, CellData>>): string {
-  const scores = visibleLessonIds
-    .map(lid => matrix[studentId]?.[lid]?.grade)
-    .filter((g): g is number => g !== null)
-  if (scores.length === 0) return ''
-  return String(Math.round(scores.reduce((a, b) => a + b, 0) / scores.length))
+function calcWeightedAvg(
+  studentId: number,
+  allLessons: GroupLessonItem[],
+  matrix: Record<number, Record<number, CellData>>,
+  columnCategories: Record<number, string>,
+): string {
+  const catGrades = (cat: string): number[] =>
+    allLessons
+      .filter(l => (columnCategories[l.id] ?? 'ders') === cat)
+      .map(l => matrix[studentId]?.[l.id]?.grade)
+      .filter((g): g is number => g !== null)
+  const labG = catGrades('lab')
+  const modG = catGrades('modul')
+  const finG = catGrades('final')
+  const labAvg = labG.length > 0 ? labG.reduce((a, b) => a + b, 0) / labG.length : null
+  const modAvg = modG.length > 0 ? modG.reduce((a, b) => a + b, 0) / modG.length : null
+  const finalG = finG.length > 0 ? finG[finG.length - 1] : null
+  const avg = (labG.length > 0 || modG.length > 0 || finG.length > 0)
+    ? Math.round(((labAvg ?? 0) * 0.5 + (modAvg ?? 0) * 0.5) * 0.6 + (finalG ?? 0) * 0.4)
+    : null
+  return avg !== null ? String(avg) : ''
 }
 
 export function exportJournalToExcel(
@@ -36,10 +51,10 @@ export function exportJournalToExcel(
   columnCategories: Record<number, string>,
   selectedCategory: string,
 ): void {
-  const lessons = allLessons.filter(l => (columnCategories[l.id] ?? 'ders') === selectedCategory)
+  const lessons = selectedCategory === 'all'
+    ? allLessons
+    : allLessons.filter(l => (columnCategories[l.id] ?? 'ders') === selectedCategory)
   if (lessons.length === 0 || students.length === 0) return
-
-  const visibleLessonIds = lessons.map(l => l.id)
 
   const headerRow0: (string | number)[] = ['№', 'Ad Soyad']
   const headerRow1: (string | number)[] = ['',  '']
@@ -73,7 +88,7 @@ export function exportJournalToExcel(
         cell?.grade !== null && cell?.grade !== undefined ? String(cell.grade) : '',
       )
     })
-    row.push(calcAvg(student.id, visibleLessonIds, matrix))
+    row.push(calcWeightedAvg(student.id, allLessons, matrix, columnCategories))
     return row
   })
 

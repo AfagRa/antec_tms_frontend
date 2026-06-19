@@ -4,7 +4,7 @@ export const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5014/a
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
   paramsSerializer: {
     serialize: (params) => {
       const converted: Record<string, string> = {}
