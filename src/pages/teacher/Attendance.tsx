@@ -206,7 +206,7 @@ export default function Attendance() {
 
       <div className="mt-6 flex items-center justify-between">
         <Link
-          to={lessonInfo ? ROUTES.TEACHER_GROUP(String(lessonInfo.groupId)) : ROUTES.TEACHER_GROUPS}
+          to={lessonInfo ? `${ROUTES.TEACHER_GROUP(String(lessonInfo.groupId))}?tab=lessons` : ROUTES.TEACHER_GROUPS}
           className="text-sm text-text-base/50 hover:text-text-base"
         >
           ← Dərslərə Qayıt
