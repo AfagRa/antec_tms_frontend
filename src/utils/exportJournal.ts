@@ -36,7 +36,9 @@ export function exportJournalToExcel(
   columnCategories: Record<number, string>,
   selectedCategory: string,
 ): void {
-  const lessons = allLessons.filter(l => (columnCategories[l.id] ?? 'ders') === selectedCategory)
+  const lessons = selectedCategory === 'all'
+    ? allLessons
+    : allLessons.filter(l => (columnCategories[l.id] ?? 'ders') === selectedCategory)
   if (lessons.length === 0 || students.length === 0) return
 
   const visibleLessonIds = lessons.map(l => l.id)

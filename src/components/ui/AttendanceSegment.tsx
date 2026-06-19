@@ -77,14 +77,22 @@ export function AttendanceSegment({
           <input
             type="number"
             min={1}
-            max={90}
+            max={180}
+            step={1}
             value={minutesLate || ''}
             onChange={e =>
               onMinutesChange?.(
-                e.target.value === '' ? 0 : Number(e.target.value)
+                e.target.value === '' ? 0 : Math.min(180, Math.max(1, Number(e.target.value)))
               )
             }
+            onBlur={() => {
+              if (minutesLate > 0) {
+                const clamped = Math.min(180, Math.max(1, minutesLate))
+                if (clamped !== minutesLate) onMinutesChange?.(clamped)
+              }
+            }}
             placeholder="dəq"
+            autoComplete="off"
             className="w-[52px] text-xs border border-amber-300 rounded-md
                        px-1.5 py-0.5 text-center bg-amber-50
                        focus:ring-1 focus:ring-amber-400 outline-none"

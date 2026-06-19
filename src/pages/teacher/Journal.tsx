@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Save, Download } from 'lucide-react'
+import { Save, Download, Plus } from 'lucide-react'
 import { teacherPortalApi } from '../../api/teacherPortal'
 import { groupsApi } from '../../api/groups'
 import { lessonsApi } from '../../api/lessons'
-import type { Group, GroupStudent, GroupLessonItem, LessonAttendanceItem, LessonGradeItem, CreateAttendancePayload, CreateGradePayload } from '../../types'
+import type { Group, GroupStudent, GroupLessonItem, LessonAttendanceItem, LessonGradeItem, CreateAttendancePayload, CreateGradePayload, GradeCategory } from '../../types'
 import type { JournalCell } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 import { AttendanceSegment } from '../../components/ui/AttendanceSegment'
@@ -11,7 +11,7 @@ import { exportJournalToExcel } from '../../utils/exportJournal'
 
 const CATEGORY_OPTIONS = [
   { value: 'ders', label: 'Dərs' },
-  { value: 'lab.', label: 'Lab.' },
+  { value: 'lab', label: 'Lab' },
   { value: 'modul', label: 'Modul' },
   { value: 'final', label: 'Final' },
 ]
@@ -35,13 +35,19 @@ export default function TeacherJournal() {
   const [columnCategories, setColumnCategories] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<string>('ders')
+  const [teacherId, setTeacherId] = useState<number | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<GradeCategory | 'all'>('all')
   const [toast, setToast] = useState<'idle' | 'done'>('idle')
+  const [showAddLesson, setShowAddLesson] = useState(false)
+  const [newLessonDate, setNewLessonDate] = useState('')
+  const [newLessonTopic, setNewLessonTopic] = useState('')
+  const [addingLesson, setAddingLesson] = useState(false)
 
   useEffect(() => {
     const init = async () => {
       try {
         const me = await teacherPortalApi.getMe()
+        setTeacherId(me.id)
         const res = await groupsApi.list({ teacher_id: me.id })
         const grps = res.data ?? []
         setGroups(grps)
@@ -211,7 +217,42 @@ export default function TeacherJournal() {
     }
   }
 
-  const visibleLessons = lessons.filter(l => (columnCategories[l.id] ?? 'ders') === selectedCategory)
+  const formatDate = (iso: string): string => {
+    if (!iso) return ''
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return iso
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const yyyy = d.getFullYear()
+    return `${dd}/${mm}/${yyyy}`
+  }
+
+  const handleAddNewLesson = async () => {
+    if (!newLessonDate || !newLessonTopic.trim() || !selectedGroupId || !teacherId) return
+    setAddingLesson(true)
+    try {
+      await lessonsApi.create({
+        group_id: selectedGroupId,
+        teacher_id: teacherId,
+        lesson_date: new Date(newLessonDate).toISOString(),
+        topic: newLessonTopic.trim(),
+        status: 'scheduled',
+      })
+      setShowAddLesson(false)
+      setNewLessonDate('')
+      setNewLessonTopic('')
+      const lessonList = await lessonsApi.getByGroup(selectedGroupId)
+      setLessons(lessonList)
+    } catch (err) {
+      console.error('Dərs əlavə edilə bilmədi:', err)
+    } finally {
+      setAddingLesson(false)
+    }
+  }
+
+  const visibleLessons = selectedCategory === 'all'
+    ? lessons
+    : lessons.filter(l => (columnCategories[l.id] ?? 'ders') === selectedCategory)
 
   if (loading) return <Spinner />
 
@@ -237,9 +278,10 @@ export default function TeacherJournal() {
               <label className="text-sm text-text-base/50 mr-2">Kategoriya:</label>
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => setSelectedCategory(e.target.value as GradeCategory | 'all')}
                 className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base focus:ring-2 focus:ring-primary/30 outline-none"
               >
+                <option value="all">Hamısı</option>
                 {CATEGORY_OPTIONS.map((cat) => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
@@ -279,10 +321,62 @@ export default function TeacherJournal() {
                   <th className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-3 text-left font-medium text-text-base/50 text-xs uppercase tracking-wide min-w-[180px]">Tələbənin adı</th>
                   {visibleLessons.map((lesson) => (
                     <th key={lesson.id} colSpan={2} className="border-b border-r border-surface-dark/20 px-2 py-2 text-center font-medium text-text-base text-xs min-w-[140px]">
-                      <div className="font-semibold">{lesson.lesson_date}</div>
+                      <div className="font-semibold">{formatDate(lesson.lesson_date)}</div>
                       <span className="text-text-base/50 font-normal text-[11px] truncate max-w-[110px] block leading-tight mt-0.5">{lesson.topic}</span>
                     </th>
                   ))}
+                  <th className="border-b border-r border-surface-dark/20 px-2 py-2 text-center align-top min-w-[120px]">
+                    {!showAddLesson ? (
+                      <button
+                        onClick={() => setShowAddLesson(true)}
+                        className="flex items-center gap-1 mx-auto text-[11px] font-medium px-2 py-1 rounded-md border border-dashed border-primary text-primary hover:bg-primary/5 transition-colors"
+                        title="Yeni dərs əlavə et"
+                      >
+                        <Plus size={12} />
+                        Yeni Dərs
+                      </button>
+                    ) : (
+                      <div className="flex flex-col gap-1 text-left">
+                        <input
+                          type="date"
+                          value={newLessonDate}
+                          onChange={e => setNewLessonDate(e.target.value)}
+                          max={new Date().toISOString().split('T')[0]}
+                          min="2020-01-01"
+                          autoComplete="off"
+                          className="w-full text-[11px] border border-surface-dark/20 rounded px-1 py-0.5 focus:border-primary outline-none bg-white [color-scheme:light]"
+                        />
+                        <input
+                          type="text"
+                          value={newLessonTopic}
+                          onChange={e => setNewLessonTopic(e.target.value)}
+                          placeholder="Mövzu..."
+                          maxLength={200}
+                          autoComplete="off"
+                          className="w-full text-[11px] border border-surface-dark/20 rounded px-1 py-0.5 focus:border-primary outline-none"
+                        />
+                        <div className="flex gap-1 mt-0.5">
+                          <button
+                            onClick={handleAddNewLesson}
+                            disabled={!newLessonDate || !newLessonTopic.trim() || addingLesson}
+                            className="flex-1 text-[10px] py-0.5 rounded bg-primary text-white disabled:opacity-40 hover:bg-primary/90 transition-colors"
+                          >
+                            {addingLesson ? '...' : 'Əlavə et'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowAddLesson(false)
+                              setNewLessonDate('')
+                              setNewLessonTopic('')
+                            }}
+                            className="flex-1 text-[10px] py-0.5 rounded border border-surface-dark/20 text-text-base/50 hover:bg-surface-dark/10 transition-colors"
+                          >
+                            Ləğv et
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </th>
                   <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-3 text-center font-semibold text-slate-700 text-xs uppercase tracking-wide min-w-[80px]">Ümumi %</th>
                 </tr>
                 <tr>
@@ -294,6 +388,7 @@ export default function TeacherJournal() {
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-gray-50 w-[120px]">Qiymət</th>
                     </React.Fragment>
                   ))}
+                  <th className="border-b border-r border-surface-dark/20 bg-gray-50" />
                   <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1" />
                 </tr>
                 <tr>
@@ -322,6 +417,7 @@ export default function TeacherJournal() {
                       </th>
                     </React.Fragment>
                   ))}
+                  <th className="border-b border-r border-surface-dark/20" />
                   <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1" />
                 </tr>
               </thead>
@@ -345,6 +441,8 @@ export default function TeacherJournal() {
                       <td className="sticky left-[48px] z-30 bg-white border-b border-r-2 border-surface-dark/20 px-4 py-2 font-medium text-text-base whitespace-nowrap">{student.name} {student.surname}</td>
                       {visibleLessons.map((lesson) => {
                         const cell = getCell(student.id, lesson.id)
+                        const colCategory = columnCategories[lesson.id] ?? 'ders'
+                        const categoryAllowsGrade = colCategory !== 'ders'
                         return (
                           <React.Fragment key={lesson.id}>
                             <td className="border-b border-r border-surface-dark/20 px-2 py-1.5" style={{ minWidth: '150px' }}>
@@ -363,14 +461,27 @@ export default function TeacherJournal() {
                                 type="number"
                                 min={0}
                                 max={100}
+                                step={1}
                                 value={cell.grade ?? ''}
                                 onChange={(e) => {
-                                  const grade = e.target.value === '' ? null : Number(e.target.value)
-                                  setCell(student.id, lesson.id, { grade })
+                                  let val = e.target.value === '' ? null : Number(e.target.value)
+                                  if (val !== null) {
+                                    val = Math.min(100, Math.max(0, val))
+                                  }
+                                  setCell(student.id, lesson.id, { grade: val })
                                 }}
-                                placeholder="Bal"
-                                disabled={selectedCategory === 'ders'}
-                                className={`w-[60px] mx-auto block text-center text-xs border border-surface-dark/20 rounded px-1 py-1 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-white ${selectedCategory === 'ders' ? 'opacity-40 cursor-not-allowed' : 'text-text-base'}`}
+                                onBlur={() => {
+                                  if (cell.grade !== null) {
+                                    const clamped = Math.min(100, Math.max(0, cell.grade))
+                                    if (clamped !== cell.grade) {
+                                      setCell(student.id, lesson.id, { grade: clamped })
+                                    }
+                                  }
+                                }}
+                                placeholder={categoryAllowsGrade ? 'Bal' : 'Dərs'}
+                                disabled={!categoryAllowsGrade}
+                                autoComplete="off"
+                                className={`w-[60px] mx-auto block text-center text-xs border border-surface-dark/20 rounded px-1 py-1 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-white ${!categoryAllowsGrade ? 'opacity-40 cursor-not-allowed' : 'text-text-base'}`}
                               />
                             </td>
                           </React.Fragment>
