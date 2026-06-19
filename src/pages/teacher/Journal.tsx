@@ -423,11 +423,19 @@ export default function TeacherJournal() {
               </thead>
               <tbody>
                 {students.map((student, index) => {
-                  const grades = visibleLessons
-                    .map((l) => getCell(student.id, l.id).grade)
-                    .filter((g): g is number => g !== null)
-                  const avg = grades.length > 0
-                    ? Math.round(grades.reduce((a, b) => a + b, 0) / grades.length)
+                  const catGrades = (cat: string): number[] =>
+                    lessons
+                      .filter(l => (columnCategories[l.id] ?? 'ders') === cat)
+                      .map(l => getCell(student.id, l.id).grade)
+                      .filter((g): g is number => g !== null)
+                  const labG = catGrades('lab')
+                  const modG = catGrades('modul')
+                  const finG = catGrades('final')
+                  const labAvg = labG.length > 0 ? labG.reduce((a, b) => a + b, 0) / labG.length : null
+                  const modAvg = modG.length > 0 ? modG.reduce((a, b) => a + b, 0) / modG.length : null
+                  const finalG = finG.length > 0 ? finG[finG.length - 1] : null
+                  const avg = finalG !== null && (labAvg !== null || modAvg !== null)
+                    ? Math.round(((labAvg ?? 0) * 0.5 + (modAvg ?? 0) * 0.5) * 0.6 + finalG * 0.4)
                     : null
                   const avgColor = avg === null
                     ? 'text-gray-300'
