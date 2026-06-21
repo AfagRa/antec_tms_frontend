@@ -1,6 +1,11 @@
 export type UserRole = 'admin' | 'teacher' | 'student'
 export type UserStatus = 'active' | 'inactive'
 
+export const STATUS_LABELS: Record<string, string> = {
+  active:   'Aktiv',
+  inactive: 'Passiv',
+}
+
 export interface User {
   id: number
   name: string

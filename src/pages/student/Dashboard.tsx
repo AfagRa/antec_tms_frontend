@@ -4,6 +4,7 @@ import NeuStatCard from '../../components/ui/NeuStatCard'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 import { studentPortalApi } from '../../api/studentPortal'
 import type { MyDashboardResponse, MyRecentGrade, MyRecentLesson } from '../../types'
+import { STATUS_LABELS } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 export default function StudentDashboard() {
@@ -43,7 +44,7 @@ export default function StudentDashboard() {
           <p className="text-sm text-text-base">
             <span className="font-medium">Qrup:</span> {data.group.name}
             <span className="mx-3 text-text-base/50">|</span>
-            <span className="text-xs text-text-base/50">Status: {data.group.status}</span>
+            <span className="text-xs text-text-base/50">Status: {STATUS_LABELS[data.group.status] ?? data.group.status}</span>
           </p>
         </div>
       )}

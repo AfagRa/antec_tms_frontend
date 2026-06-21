@@ -6,6 +6,7 @@ import { groupsApi } from '../../api/groups'
 import { lessonsApi } from '../../api/lessons'
 import { materialsApi } from '../../api/materials'
 import type { Group, GroupLessonItem, Material } from '../../types'
+import { STATUS_LABELS } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 type TabId = 'students' | 'lessons' | 'materials'
@@ -105,7 +106,7 @@ export default function GroupDetail() {
             <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
               group.status === 'active' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600'
             }`}>
-              {group.status === 'active' ? 'Aktiv' : group.status}
+              {STATUS_LABELS[group.status] ?? group.status}
             </span>
           </div>
         </div>
@@ -160,7 +161,7 @@ export default function GroupDetail() {
                         <td className="px-3 py-3 text-sm text-text-base">{student.surname}</td>
                         <td className="px-3 py-3">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                            {student.status === 'active' ? 'Aktiv' : student.status}
+                            {STATUS_LABELS[student.status] ?? student.status}
                           </span>
                         </td>
                       </tr>
