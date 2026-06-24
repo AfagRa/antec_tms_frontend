@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { studentPortalApi } from '../../api/studentPortal'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 import type { MyMaterialDetail } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 export default function StudentMaterials() {
+  const [searchParams] = useSearchParams()
+  const topicFilter = searchParams.get('topic')
   const [materials, setMaterials] = useState<MyMaterialDetail[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedType, setSelectedType] = useState('Hamısı')
@@ -29,6 +32,7 @@ export default function StudentMaterials() {
 
   const filtered = materials
     .filter((m) => selectedType === 'Hamısı' || m.type === selectedType)
+    .filter((m) => !topicFilter || m.lesson_topic === topicFilter)
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
   const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)

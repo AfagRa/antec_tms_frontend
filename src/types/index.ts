@@ -235,6 +235,7 @@ export interface MyRecentLesson {
 export interface MyRecentGrade {
   id: number
   lesson_topic: string
+  lesson_date?: string
   score: number
   max_score: number
 }

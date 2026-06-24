@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
-import { ExternalLink } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import NeuStatCard from '../../components/ui/NeuStatCard'
-import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 import { studentPortalApi } from '../../api/studentPortal'
 import type { MyDashboardResponse, MyRecentGrade, MyRecentLesson } from '../../types'
 import { STATUS_LABELS } from '../../types'
+import { ROUTES } from '../../constants/routes'
 import Spinner from '../../components/ui/Spinner'
 
 export default function StudentDashboard() {
+  const navigate = useNavigate()
   const [data, setData] = useState<MyDashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -73,7 +74,7 @@ export default function StudentDashboard() {
                 <tbody>
                   {data.recent_grades.map((g, i) => (
                     <tr key={g.id || i} className="border-b border-surface-dark/20 last:border-0">
-                      <td className="py-3 text-sm text-text-base">{new Date(g.lesson_date).toLocaleDateString('az-AZ')}</td>
+                      <td className="py-3 text-sm text-text-base">{g.lesson_date ? new Date(g.lesson_date).toLocaleDateString('az-AZ') : '—'}</td>
                       <td className="py-3 text-sm text-text-base">{g.lesson_topic}</td>
                       <td className="py-3 text-sm text-text-base">{g.score}</td>
                       <td className="py-3 text-sm text-text-base">{g.max_score}</td>
@@ -99,7 +100,14 @@ export default function StudentDashboard() {
                       <span className="text-sm text-text-base truncate block">{l.topic}</span>
                       <span className="text-xs text-text-base/50">{new Date(l.lesson_date).toLocaleDateString('az-AZ')}</span>
                     </div>
-                    {l.material_count > 0 && <span className="text-xs text-primary">{l.material_count} material</span>}
+                    {l.material_count > 0 && (
+              <button
+                onClick={() => navigate(`${ROUTES.STUDENT_MATERIALS}?topic=${encodeURIComponent(l.topic)}`)}
+                className="text-xs text-primary hover:underline cursor-pointer"
+              >
+                {l.material_count} material
+              </button>
+            )}
                   </div>
                 ))}
               </div>
@@ -111,17 +119,17 @@ export default function StudentDashboard() {
           <div className="rounded-neu bg-surface shadow-neu-sm p-5">
             <h2 className="text-base font-semibold text-text-base mb-3">Davamiyyət Xülasəsi</h2>
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-neu bg-surface-dark/30 shadow-neu-inset-sm p-3 text-center">
-                <span className="block text-lg font-bold text-text-base">{data.attendance_summary.present}</span>
-                <span className="block text-xs text-text-base/50 mt-0.5">İştirak</span>
+              <div className="rounded-neu bg-success/10 shadow-neu-inset-sm p-3 text-center">
+                <span className="block text-lg font-bold text-success">{data.attendance_summary.present}</span>
+                <span className="block text-xs text-success/70 mt-0.5">İştirak</span>
               </div>
-              <div className="rounded-neu bg-surface-dark/30 shadow-neu-inset-sm p-3 text-center">
-                <span className="block text-lg font-bold text-text-base">{data.attendance_summary.absent + data.attendance_summary.late}</span>
-                <span className="block text-xs text-text-base/50 mt-0.5">Qaib/Gec</span>
+              <div className="rounded-neu bg-warning/10 shadow-neu-inset-sm p-3 text-center">
+                <span className="block text-lg font-bold text-warning">{data.attendance_summary.late}</span>
+                <span className="block text-xs text-warning/70 mt-0.5">Gecikmiş</span>
               </div>
-              <div className="rounded-neu bg-surface-dark/30 shadow-neu-inset-sm p-3 text-center">
-                <span className="block text-lg font-bold text-text-base">{data.attendance_summary.total}</span>
-                <span className="block text-xs text-text-base/50 mt-0.5">Ümumi</span>
+              <div className="rounded-neu bg-danger/10 shadow-neu-inset-sm p-3 text-center">
+                <span className="block text-lg font-bold text-danger">{data.attendance_summary.absent}</span>
+                <span className="block text-xs text-danger/70 mt-0.5">Qaib</span>
               </div>
             </div>
           </div>
