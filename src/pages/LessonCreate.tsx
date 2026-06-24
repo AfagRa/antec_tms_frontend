@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROUTES } from '../constants/routes'
 import { groupsApi } from '../api/groups'
@@ -16,6 +16,7 @@ export default function LessonCreate() {
   const [topic, setTopic] = useState('')
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const [groupLessons, setGroupLessons] = useState<{ id: number; lesson_date: string; topic: string }[]>([])
 
   useEffect(() => {
@@ -29,8 +30,8 @@ export default function LessonCreate() {
         if (grps.length > 0) {
           setGroupId(String(grps[0].id))
         }
-      } catch (err) {
-        console.warn('Failed to load teacher/groups', err)
+      } catch {
+        setError('Müəllim və qrup məlumatları yüklənə bilmədi')
       } finally {
         setLoading(false)
       }
@@ -52,8 +53,9 @@ export default function LessonCreate() {
   }, [groupId])
 
   const handleComplete = async () => {
+    setError('')
     if (!teacherId || !groupId || !topic.trim()) {
-      alert('Zəhmət olmasa qrup və mövzu seçin.')
+      setError('Zəhmət olmasa qrup və mövzu seçin.')
       return
     }
     setSaving(true)
@@ -66,11 +68,10 @@ export default function LessonCreate() {
         note: note.trim() || undefined,
         status: 'scheduled',
       }
-      await lessonsApi.create(payload)
-      // Navigate to groups page since we don't know the new lesson ID
-      navigate(ROUTES.TEACHER_GROUPS)
-    } catch (err) {
-      console.error('Failed to create lesson', err)
+      const created = await lessonsApi.create(payload)
+      navigate(ROUTES.TEACHER_ATTENDANCE(String(created.id)))
+    } catch {
+      setError('Dərs yaradıla bilmədi. Yenidən cəhd edin.')
     } finally {
       setSaving(false)
     }
@@ -83,6 +84,11 @@ export default function LessonCreate() {
       <h1 className="mb-6 text-2xl font-semibold text-text-base">Jurnal / Dərs Yarat</h1>
 
       <div className="mx-auto max-w-2xl rounded-neu bg-surface shadow-neu-sm p-8">
+        {error && (
+          <div role="alert" className="mb-6 rounded-lg bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
+            {error}
+          </div>
+        )}
         <div className="space-y-5">
           <div>
             <label className="mb-1.5 block text-sm font-semibold text-text-base">

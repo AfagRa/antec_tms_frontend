@@ -237,10 +237,22 @@ export default function GroupDetailPage() {
       {activeTab === 'attendance' && (
         <Table
           columns={[
-            { key: 'student', header: 'Tələbə', render: (record: AttendanceRecord) => record.student.full_name },
-            { key: 'lesson', header: 'Tarix', render: (record: AttendanceRecord) => <span className="font-mono text-xs">{new Date(record.lesson.date).toLocaleDateString('az-AZ')}</span> },
-            { key: 'topic', header: 'Mövzu', render: (record: AttendanceRecord) => record.lesson.topic },
-            { key: 'present', header: 'Davamiyyət', render: (record: AttendanceRecord) => <Badge status={record.present ? 'active' : 'inactive'} label={record.present ? 'İştirak etdi' : 'Gəlmədi'} /> },
+            { key: 'student', header: 'Tələbə', render: (record: AttendanceRecord) => `${record.studentName} ${record.studentSurname}` },
+            { key: 'lesson', header: 'Tarix', render: (record: AttendanceRecord) => <span className="font-mono text-xs">{record.lessonId}</span> },
+            {
+              key: 'status',
+              header: 'Davamiyyət',
+              render: (record: AttendanceRecord) => {
+                const config: Record<string, { status: string; label: string }> = {
+                  present: { status: 'active', label: 'İştirak etdi' },
+                  late: { status: 'scheduled', label: 'Gecikdi' },
+                  absent_excused: { status: 'inactive', label: 'Qaib (üzrlü)' },
+                  absent_unexcused: { status: 'cancelled', label: 'Qaib (üzrsüz)' },
+                }
+                const c = config[record.status] ?? { status: 'inactive', label: 'Bilinmir' }
+                return <Badge status={c.status as any} label={c.label} />
+              },
+            },
           ]}
           data={attendance}
           loading={tabLoading}
@@ -259,6 +271,7 @@ export default function GroupDetailPage() {
               key: 'percent',
               header: '%',
               render: (grade: Grade) => {
+                if (grade.max_score === 0) return <span className="text-text-base/40">—</span>
                 const percent = Math.round((grade.score / grade.max_score) * 100)
                 const className = percent >= 70 ? 'text-success' : percent >= 50 ? 'text-warning' : 'text-danger'
                 return <span className={`font-bold ${className}`}>{percent}%</span>

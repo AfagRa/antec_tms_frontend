@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { coursesApi } from '@/api/courses'
 import type { Course, CoursePayload } from '@/types'
@@ -42,7 +42,7 @@ export default function CoursesPage() {
 
   useEffect(() => {
     fetchItems()
-  }, [])
+  }, [search])
 
   const filtered = useMemo(
     () => items.filter((item) => item.name.toLowerCase().includes(search.toLowerCase())),
@@ -115,12 +115,22 @@ export default function CoursesPage() {
       </div>
 
       <div className="max-w-sm">
-        <Input
-          placeholder="Kurs adına görə axtar..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          leftIcon={<Search size={15} />}
-        />
+        <div className="relative">
+          <Input
+            placeholder="Kurs adına görə axtar..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            leftIcon={<Search size={15} />}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-base/40 hover:text-text-base transition-colors"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       <Table

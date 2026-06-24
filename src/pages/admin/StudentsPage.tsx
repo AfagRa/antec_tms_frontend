@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { studentsApi } from '@/api/students'
 import { groupsApi } from '@/api/groups'
 import type { Group, Student, StudentPayload } from '@/types'
@@ -40,6 +40,7 @@ export default function StudentsPage() {
   const [groupTarget, setGroupTarget] = useState<Student | null>(null)
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
   const [assigning, setAssigning] = useState(false)
+  const [changePassword, setChangePassword] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -71,10 +72,12 @@ export default function StudentsPage() {
 
   const openEdit = (student: Student) => {
     setEditing(student)
+    setChangePassword(false)
     setForm({
       name: student.name,
       surname: student.surname,
       email: student.email,
+      password: '',
       phone: student.phone ?? '',
       birth_date: student.birth_date ?? '',
       note: student.note ?? '',
@@ -99,8 +102,8 @@ export default function StudentsPage() {
     setSaving(true)
     try {
       if (editing) {
-        const { password, ...payload } = form
-        const updated = await studentsApi.update(editing.id, payload)
+        const { password: pw, ...payload } = form
+        const updated = await studentsApi.update(editing.id, changePassword && pw ? { ...payload, password: pw } : payload)
         setItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
         addToast('Tələbə yeniləndi', 'success')
       } else {
@@ -165,12 +168,22 @@ export default function StudentsPage() {
       </div>
 
       <div className="max-w-sm">
-        <Input
-          placeholder="Ad / email ilə axtar..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          leftIcon={<Search size={15} />}
-        />
+        <div className="relative">
+          <Input
+            placeholder="Ad / email ilə axtar..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            leftIcon={<Search size={15} />}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-base/40 hover:text-text-base transition-colors"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       <Table
@@ -210,7 +223,19 @@ export default function StudentsPage() {
           <Input label="Ad" value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
           <Input label="Soyad" value={form.surname} onChange={(event) => setForm((prev) => ({ ...prev, surname: event.target.value }))} />
           <Input label="Email" type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} />
-          {!editing && <Input label="Şifrə" type="password" value={form.password ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} />}
+          {!editing ? (
+            <Input label="Şifrə" type="password" value={form.password ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} />
+          ) : (
+            <div className="md:col-span-2">
+              <label className="flex items-center gap-2 text-sm text-text-base/70 cursor-pointer">
+                <input type="checkbox" checked={changePassword} onChange={(e) => setChangePassword(e.target.checked)} className="rounded" />
+                Şifrəni dəyiş
+              </label>
+              {changePassword && (
+                <Input label="Yeni şifrə" type="password" value={form.password ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} className="mt-2" />
+              )}
+            </div>
+          )}
           <Input label="Telefon" value={form.phone ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} />
           <Input label="Doğum tarixi" type="date" value={form.birth_date ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, birth_date: event.target.value }))} />
           <div className="md:col-span-2">
