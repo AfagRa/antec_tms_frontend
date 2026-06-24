@@ -1,4 +1,6 @@
-import type { InputHTMLAttributes, ReactNode } from 'react'
+import { useState, type InputHTMLAttributes, type ReactNode } from 'react'
+
+let inputCounter = 0
 
 interface Props extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -7,7 +9,8 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export default function Input({ label, error, leftIcon, className = '', id, ...rest }: Props) {
-  const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
+  const [suffix] = useState(() => ++inputCounter)
+  const inputId = id ?? (label ? `${label?.toLowerCase().replace(/\s+/g, '-')}-${suffix}` : `input-${suffix}`)
 
   return (
     <div className="flex flex-col gap-1.5">

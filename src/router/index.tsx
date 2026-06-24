@@ -45,6 +45,10 @@ function TeacherRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
+  if (user.role !== "teacher") {
+    return <Navigate to={`/${user.role}/dashboard`} replace />;
+  }
+
   return children;
 }
 
@@ -61,6 +65,10 @@ function StudentRoute({ children }: { children: ReactNode }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== "student") {
+    return <Navigate to={`/${user.role}/dashboard`} replace />;
   }
 
   return children;

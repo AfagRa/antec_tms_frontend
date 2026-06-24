@@ -56,7 +56,7 @@ export default function LoginPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-neu-lg bg-primary shadow-neu-sm">
             <span className="text-2xl font-bold text-white">N</span>
           </div>
-          <h1 className="text-xl font-bold tracking-wide text-text-base">Admin Panel</h1>
+          <h1 className="text-xl font-bold tracking-wide text-text-base">Tədris Platforması</h1>
           <p className="mt-1 text-sm text-text-base/50">Sistemə daxil olun</p>
         </div>
 
