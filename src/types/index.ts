@@ -268,6 +268,7 @@ export interface MyAttendanceItem {
   id: number
   lesson_date: string
   lesson_topic: string
+  group_name?: string
   status: string
   minutes_late: number | null
   reason: string | null
