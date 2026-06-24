@@ -40,10 +40,18 @@ export default function StudentDashboard() {
 
   // TODO: API response missing group_id/group_name on recent_grades,
   // recent_lessons — cannot filter by group until backend adds this field
+
+  const attPct = data.attendance_summary.total > 0
+    ? Math.round(
+        ((data.attendance_summary.present + data.attendance_summary.late)
+          / data.attendance_summary.total) * 100
+      )
+    : 0
+
   const statCards = [
     { value: grpList.length, label: 'Qruplar' },
     { value: data.recent_lessons.length, label: 'Son Dərslər' },
-    { value: `${data.attendance_summary.present}/${data.attendance_summary.total}`, label: 'Davamiyyət', accent: true },
+    { value: `${attPct}%`, label: 'Davamiyyət', accent: true },
     { value: data.recent_grades.length > 0 ? `${Math.round(data.recent_grades.reduce((a, g) => a + g.score / g.max_score, 0) / data.recent_grades.length * 100)}%` : '—', label: 'Ortalama (%)', accent: true },
   ]
 
@@ -145,22 +153,27 @@ export default function StudentDashboard() {
           </div>
 
           <div className="rounded-neu bg-surface shadow-neu-sm p-5">
-            <h2 className="text-base font-semibold text-text-base mb-3">Davamiyyət Xülasəsi</h2>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-neu bg-success/10 shadow-neu-inset-sm p-3 text-center">
-                <span className="block text-lg font-bold text-success">{data.attendance_summary.present}</span>
-                <span className="block text-xs text-success/70 mt-0.5">İştirak</span>
+            <h2 className="text-sm font-semibold text-text-base mb-3">Davamiyyət Xülasəsi</h2>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg bg-emerald-50 px-3 py-3 shadow-neu-sm">
+                <span className="block text-xl font-bold text-emerald-700">
+                  {data.attendance_summary.present + data.attendance_summary.late}
+                </span>
+                <span className="block text-xs text-emerald-600/70 mt-0.5">İştirak</span>
               </div>
-              <div className="rounded-neu bg-warning/10 shadow-neu-inset-sm p-3 text-center">
-                <span className="block text-lg font-bold text-warning">{data.attendance_summary.late}</span>
-                <span className="block text-xs text-warning/70 mt-0.5">Gecikmiş</span>
+              <div className="rounded-lg bg-red-50 px-3 py-3 shadow-neu-sm">
+                <span className="block text-xl font-bold text-red-600">
+                  {data.attendance_summary.absent}
+                </span>
+                <span className="block text-xs text-red-500/70 mt-0.5">Qaib</span>
               </div>
-              <div className="rounded-neu bg-danger/10 shadow-neu-inset-sm p-3 text-center">
-                <span className="block text-lg font-bold text-danger">{data.attendance_summary.absent}</span>
-                <span className="block text-xs text-danger/70 mt-0.5">Qaib</span>
+              <div className="rounded-lg bg-surface-dark/20 px-3 py-3 shadow-neu-sm">
+                <span className="block text-xl font-bold text-text-base">
+                  {data.attendance_summary.total}
+                </span>
+                <span className="block text-xs text-text-base/50 mt-0.5">Ümumi</span>
               </div>
             </div>
-            <p className="text-[11px] text-text-base/40 mt-1">Bütün qruplar üzrə xülasə</p>
           </div>
         </div>
       </div>
