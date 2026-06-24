@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { coursesApi } from '@/api/courses'
 import { groupsApi } from '@/api/groups'
@@ -58,7 +58,7 @@ export default function GroupsPage() {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [search])
 
   const filtered = useMemo(
     () => groups.filter((group) => group.name.toLowerCase().includes(search.toLowerCase())),
@@ -88,6 +88,11 @@ export default function GroupsPage() {
     event.preventDefault()
     if (!form.name.trim() || !form.course_id || !form.teacher_id || !form.start_date) {
       addToast('Zəhmət olmasa bütün məcburi sahələri doldurun', 'warning')
+      return
+    }
+
+    if (form.end_date && form.start_date > form.end_date) {
+      addToast('Bitmə tarixi başlama tarixindən əvvəl ola bilməz', 'warning')
       return
     }
 
@@ -140,12 +145,22 @@ export default function GroupsPage() {
       </div>
 
       <div className="max-w-sm">
-        <Input
-          placeholder="Qrup adına görə axtar..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          leftIcon={<Search size={15} />}
-        />
+        <div className="relative">
+          <Input
+            placeholder="Qrup adına görə axtar..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            leftIcon={<Search size={15} />}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-base/40 hover:text-text-base transition-colors"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       <Table
@@ -199,7 +214,7 @@ export default function GroupsPage() {
           <div className="md:col-span-2">
             <Select label="Status" value={form.status} onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as GroupPayload['status'] }))}>
               <option value="active">Aktiv</option>
-              <option value="inactive">Passiv</option>
+              <option value="inactive">Qeyri-aktiv</option>
             </Select>
           </div>
           <div className="md:col-span-2 flex justify-end gap-3 pt-2">

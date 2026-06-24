@@ -31,8 +31,9 @@ export const lessonsApi = {
     )
     return data.data ?? data
   },
-  create: async (payload: CreateLessonPayload): Promise<void> => {
-    await apiClient.post('/lessons', payload)
+  create: async (payload: CreateLessonPayload): Promise<{ id: number }> => {
+    const { data } = await apiClient.post<{ data: { id: number } }>('/lessons', payload)
+    return data.data ?? data
   },
   getAttendances: async (lessonId: number): Promise<LessonAttendanceItem[]> => {
     const { data } = await apiClient.get<{ data: LessonAttendanceItem[] }>(

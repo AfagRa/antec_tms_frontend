@@ -5,7 +5,7 @@ import { ROUTES } from '../constants/routes'
 import { groupsApi } from '../api/groups'
 import { lessonsApi } from '../api/lessons'
 import { teacherPortalApi } from '../api/teacherPortal'
-import type { Group, GroupStudent, GroupLessonItem, LessonAttendanceItem, LessonGradeItem, CreateGradePayload } from '../types'
+import type { Group, GroupStudent, GroupLessonItem, CreateGradePayload } from '../types'
 import Spinner from '../components/ui/Spinner'
 
 interface GradeRecord {
@@ -32,6 +32,7 @@ export default function Grades() {
   const [records, setRecords] = useState<GradeRecord[]>([])
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [currentLesson, setCurrentLesson] = useState<{ topic: string; date: string } | null>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const init = async () => {
@@ -43,8 +44,8 @@ export default function Grades() {
         if (res.data.length > 0 && !selectedLessonId) {
           setSelectedGroupId(res.data[0].id)
         }
-      } catch (err) {
-        console.warn('Failed to initialize', err)
+      } catch {
+        setError('Məlumatlar yüklənə bilmədi')
       } finally {
         setLoading(false)
       }
@@ -62,6 +63,7 @@ export default function Grades() {
           setSelectedLessonId(data[0].id)
         }
       } catch {
+        setError('Dərslər yüklənə bilmədi')
         setLessons([])
       }
     }
@@ -107,8 +109,8 @@ export default function Grades() {
             existingGradeId: gradeMap.get(s.id)?.id,
           })),
         )
-      } catch (err) {
-        console.warn('Failed to load grades data', err)
+      } catch {
+        setError('Qiymət məlumatları yüklənə bilmədi')
       } finally {
         setLoading(false)
       }
@@ -136,8 +138,8 @@ export default function Grades() {
       )
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 3000)
-    } catch (err) {
-      console.error('Failed to save grades', err)
+    } catch {
+      setError('Qiymətlər saxlanıla bilmədi')
       setSaveStatus('idle')
     }
   }
@@ -157,6 +159,12 @@ export default function Grades() {
   return (
     <div>
       <h1 className="mb-4 text-2xl font-semibold text-text-base">Qiymət Daxil Et</h1>
+
+      {error && (
+        <div role="alert" className="mb-4 rounded-lg bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
+          {error}
+        </div>
+      )}
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-4 mb-4">
         <div className="grid grid-cols-3 gap-4 items-end">

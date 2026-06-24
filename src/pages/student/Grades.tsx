@@ -11,6 +11,7 @@ export default function StudentGrades() {
   const [endDate, setEndDate] = useState('')
   const [sorting, setSorting] = useState('Ən yeni')
   const [currentPage, setCurrentPage] = useState(1)
+  const [error, setError] = useState('')
   const ITEMS_PER_PAGE = 10
 
   useEffect(() => {
@@ -18,8 +19,8 @@ export default function StudentGrades() {
       try {
         const data = await studentPortalApi.getGrades()
         setGrades(data)
-      } catch (err) {
-        console.warn('Failed to load grades', err)
+      } catch {
+        setError('Qiymətlər yüklənə bilmədi')
       } finally {
         setLoading(false)
       }
@@ -79,6 +80,12 @@ export default function StudentGrades() {
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-semibold text-text-base">Qiymət Jurnalı</h1>
+
+      {error && (
+        <div role="alert" className="rounded-lg bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
+          {error}
+        </div>
+      )}
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -140,7 +147,7 @@ export default function StudentGrades() {
             </thead>
             <tbody>
               {paginated.map((row, index) => {
-                const pct = Math.round((row.score / row.max_score) * 100)
+                const pct = row.max_score === 0 ? 0 : Math.round((row.score / row.max_score) * 100)
                 return (
                   <tr key={row.id || index}>
                     <td className="py-3.5 text-sm text-text-base px-4">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
@@ -173,7 +180,7 @@ export default function StudentGrades() {
             <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">›</button>
           </div>
-          <span className="text-xs text-text-base/50">Nəticə {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} ({filtered.length})</span>
+          <span className="text-xs text-text-base/50">{filtered.length > 0 ? `Nəticə ${(currentPage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} (${filtered.length})` : 'Nəticə yoxdur'}</span>
         </div>
       </div>
     </div>

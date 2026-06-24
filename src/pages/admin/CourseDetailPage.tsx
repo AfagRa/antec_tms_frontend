@@ -49,6 +49,7 @@ export default function CourseDetailPage() {
         setCourseNotFound(false)
       } catch {
         setCourseNotFound(true)
+        addToast('Kurs məlumatları yüklənmədi', 'error')
       } finally {
         setLoading(false)
       }
