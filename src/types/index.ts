@@ -278,6 +278,8 @@ export interface MyGradeItem {
   id: number
   lesson_topic: string
   lesson_date: string
+  group_name?: string
+  category?: GradeCategory
   score: number
   max_score: number
   teacher_note: string | null

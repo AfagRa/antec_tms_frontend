@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import { studentPortalApi } from '../../api/studentPortal'
-import type { MyGradeItem } from '../../types'
+import type { MyGradeItem, GradeCategory } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 export default function StudentGrades() {
   const [grades, setGrades] = useState<MyGradeItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedGroup, setSelectedGroup] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [sorting, setSorting] = useState('Ən yeni')
@@ -28,7 +29,18 @@ export default function StudentGrades() {
     load()
   }, [])
 
-  useEffect(() => { setCurrentPage(1) }, [startDate, endDate, sorting])
+  const groupOptions = useMemo(
+    () => Array.from(new Set(grades.map(g => g.group_name).filter(Boolean))),
+    [grades],
+  )
+
+  useEffect(() => {
+    if (groupOptions.length > 0 && !selectedGroup) {
+      setSelectedGroup(groupOptions[0])
+    }
+  }, [groupOptions, selectedGroup])
+
+  useEffect(() => { setCurrentPage(1) }, [selectedGroup, startDate, endDate, sorting])
 
   const scores = grades.filter((g) => g.score !== null).map((g) => g.score)
   const stats = {
@@ -38,9 +50,30 @@ export default function StudentGrades() {
     lowest: scores.length ? Math.min(...scores) : 0,
   }
 
+  const groupGrades = useMemo(
+    () => grades.filter(g => g.group_name === selectedGroup),
+    [grades, selectedGroup],
+  )
+
+  const categoryAvg = (cat: GradeCategory): number | null => {
+    const items = groupGrades.filter(g => g.category === cat)
+    if (items.length === 0) return null
+    const pct = items.map(g => (g.score / g.max_score) * 100)
+    return pct.reduce((a, b) => a + b, 0) / pct.length
+  }
+
+  const yekunQiymet = useMemo(() => {
+    const labAvg   = categoryAvg('lab')
+    const modulAvg = categoryAvg('modul')
+    const finalAvg = categoryAvg('final')
+    if (labAvg === null || modulAvg === null || finalAvg === null) return null
+    return Math.round((0.5 * labAvg + 0.5 * modulAvg) * 0.6 + finalAvg * 0.4)
+  }, [groupGrades])
+
   const filtered = useMemo(() => {
     return grades
       .filter((r) => {
+        if (selectedGroup && r.group_name !== selectedGroup) return false
         const d = new Date(r.lesson_date)
         if (startDate && d < new Date(startDate)) return false
         if (endDate && d > new Date(endDate)) return false
@@ -90,13 +123,20 @@ export default function StudentGrades() {
       <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div className="flex flex-col">
+            <label className="text-xs font-semibold text-text-base/50 mb-1">Qrup</label>
+            <select value={selectedGroup} onChange={e => setSelectedGroup(e.target.value)}
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-fit min-w-[120px]">
+              {groupOptions.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col">
             <span className="text-xs font-semibold text-text-base/50 mb-1">Tarix aralığı</span>
             <DateRangePicker startDate={startDate} endDate={endDate} onStartChange={setStartDate} onEndChange={setEndDate} />
           </div>
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-text-base/50 mb-1">Sıralama</label>
             <select value={sorting} onChange={(e) => setSorting(e.target.value)}
-              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer">
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-fit min-w-[140px]">
               <option value="Ən yeni">Ən yeni</option>
               <option value="Ən köhnə">Ən köhnə</option>
               <option value="Ən yüksək bal">Ən yüksək bal</option>
@@ -112,8 +152,15 @@ export default function StudentGrades() {
           <span className="text-2xl font-bold text-text-base">{stats.count} dərs</span>
         </div>
         <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
-          <span className="text-xs text-text-base/50 mb-1">Ortalama Faiz (%)</span>
-          <span className="text-2xl font-bold text-text-base">{stats.avg}%</span>
+          <span className="text-xs text-text-base/50 mb-1">Yekun Qiymət</span>
+          <span className="text-2xl font-bold text-text-base">
+            {yekunQiymet !== null ? `${yekunQiymet}%` : '—'}
+          </span>
+          {yekunQiymet === null && (
+            <span className="text-[10px] text-text-base/40 mt-0.5">
+              Lab/Modul/Final qiymətləri tam deyil
+            </span>
+          )}
         </div>
         <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
           <span className="text-xs text-text-base/50 mb-1">Ən Yüksək Bal</span>
@@ -137,11 +184,11 @@ export default function StudentGrades() {
             </colgroup>
             <thead>
               <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Dərs tarixi</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Mövzu</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Bal</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Maksimum</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Faiz(%)</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Dərs tarixi</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Mövzu</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Bal</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Maksimum</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Faiz(%)</th>
               </tr>
               <tr><td colSpan={5} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>
@@ -150,16 +197,16 @@ export default function StudentGrades() {
                 const pct = row.max_score === 0 ? 0 : Math.round((row.score / row.max_score) * 100)
                 return (
                   <tr key={row.id || index}>
-                    <td className="py-3.5 text-sm text-text-base px-4">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
-                    <td className="py-3.5 text-sm text-text-base truncate px-4">{row.lesson_topic}</td>
-                    <td className="py-3.5 text-sm text-text-base px-4">{row.score}</td>
-                    <td className="py-3.5 text-sm text-text-base px-4">{row.max_score}</td>
-                    <td className={`py-3.5 text-sm px-4 ${getFaizColorClass(pct)}`}>{pct}%</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
+                  <td className="py-3.5 text-sm text-text-base truncate px-3">{row.lesson_topic}</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">{row.score}</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">{row.max_score}</td>
+                  <td className={`py-3.5 text-sm px-3 ${getFaizColorClass(pct)}`}>{pct}%</td>
                   </tr>
                 )
               })}
               {paginated.length === 0 && (
-                <tr><td colSpan={5} className="py-6 text-center text-sm text-text-base/50 px-4">Məlumat tapılmadı.</td></tr>
+                <tr><td colSpan={5} className="py-6 text-center text-sm text-text-base/50 px-3">Məlumat tapılmadı.</td></tr>
               )}
             </tbody>
           </table>
