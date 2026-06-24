@@ -8,6 +8,7 @@ interface Props {
   title?: string
   message?: string
   loading?: boolean
+  confirmLabel?: string
 }
 
 export default function ConfirmDialog({
@@ -17,6 +18,7 @@ export default function ConfirmDialog({
   title = 'Əminsinizmi?',
   message = 'Bu əməliyyat geri alına bilməz.',
   loading = false,
+  confirmLabel = 'Sil',
 }: Props) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
@@ -26,7 +28,7 @@ export default function ConfirmDialog({
           Ləğv et
         </Button>
         <Button variant="danger" onClick={onConfirm} loading={loading}>
-          Sil
+          {confirmLabel}
         </Button>
       </div>
     </Modal>

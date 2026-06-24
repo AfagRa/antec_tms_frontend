@@ -174,7 +174,7 @@ export default function CoursesPage() {
           <Textarea label="Təsvir" value={form.description ?? ''} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} />
           <Select label="Status" value={form.status} onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as CoursePayload['status'] }))}>
             <option value="active">Aktiv</option>
-            <option value="inactive">Passiv</option>
+            <option value="inactive">Qeyri-aktiv</option>
           </Select>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="secondary" type="button" onClick={() => setOpen(false)}>

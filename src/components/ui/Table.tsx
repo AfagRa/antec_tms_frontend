@@ -14,6 +14,7 @@ interface Props<T> {
   loading?: boolean
   emptyMessage?: string
   rowKey: (row: T) => string | number
+  rowClassName?: (row: T) => string | undefined
 }
 
 export default function Table<T>({
@@ -22,6 +23,7 @@ export default function Table<T>({
   loading,
   emptyMessage = 'Məlumat tapılmadı',
   rowKey,
+  rowClassName,
 }: Props<T>) {
   return (
     <div className="overflow-x-auto rounded-neu-lg shadow-neu">
@@ -56,7 +58,7 @@ export default function Table<T>({
             </tr>
           ) : (
             data.map((row, index) => (
-              <tr key={rowKey(row)} className="border-t border-surface-dark/20 transition-colors hover:bg-surface-dark/10">
+              <tr key={rowKey(row)} className={`border-t border-surface-dark/20 transition-colors hover:bg-surface-dark/10 ${rowClassName?.(row) ?? ''}`}>
                 {columns.map((column) => (
                   <td key={column.key} className={`px-4 py-3 ${column.className ?? ''}`}>
                     {column.render ? column.render(row, index) : String((row as Record<string, unknown>)[column.key] ?? '—')}
