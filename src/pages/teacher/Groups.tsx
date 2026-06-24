@@ -5,6 +5,7 @@ import { groupsApi } from '../../api/groups'
 import { teacherPortalApi } from '../../api/teacherPortal'
 import { lessonsApi } from '../../api/lessons'
 import type { Group } from '../../types'
+import { STATUS_LABELS } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 export default function Groups() {
@@ -87,7 +88,7 @@ export default function Groups() {
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       group.status === 'active' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600'
                     }`}>
-                      {group.status === 'active' ? 'Aktiv' : group.status}
+                      {STATUS_LABELS[group.status] ?? group.status}
                     </span>
                   </td>
                   <td className="px-3 py-3">

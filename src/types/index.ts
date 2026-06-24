@@ -1,6 +1,11 @@
 export type UserRole = 'admin' | 'teacher' | 'student'
 export type UserStatus = 'active' | 'inactive'
 
+export const STATUS_LABELS: Record<string, string> = {
+  active:   'Aktiv',
+  inactive: 'Passiv',
+}
+
 export interface User {
   id: number
   name: string
@@ -230,6 +235,7 @@ export interface MyRecentLesson {
 export interface MyRecentGrade {
   id: number
   lesson_topic: string
+  lesson_date?: string
   score: number
   max_score: number
 }
@@ -262,6 +268,7 @@ export interface MyAttendanceItem {
   id: number
   lesson_date: string
   lesson_topic: string
+  group_name?: string
   status: string
   minutes_late: number | null
   reason: string | null
@@ -271,6 +278,8 @@ export interface MyGradeItem {
   id: number
   lesson_topic: string
   lesson_date: string
+  group_name?: string
+  category?: GradeCategory
   score: number
   max_score: number
   teacher_note: string | null

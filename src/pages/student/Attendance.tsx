@@ -16,6 +16,7 @@ const STATUS_OPTIONS = ['Hamısı', 'İştirak edib', 'Qaib (üzrlü)', 'Qaib (�
 export default function StudentAttendance() {
   const [records, setRecords] = useState<MyAttendanceItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedGroup, setSelectedGroup] = useState('Hamısı')
   const [selectedStatus, setSelectedStatus] = useState('Hamısı')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -36,7 +37,12 @@ export default function StudentAttendance() {
     load()
   }, [])
 
-  useEffect(() => { setCurrentPage(1) }, [selectedStatus, startDate, endDate])
+  const groupOptions = useMemo(
+    () => ['Hamısı', ...Array.from(new Set(records.map(r => r.group_name).filter(Boolean)))],
+    [records],
+  )
+
+  useEffect(() => { setCurrentPage(1) }, [selectedGroup, selectedStatus, startDate, endDate])
 
   const summaryStats = useMemo(() => {
     const present = records.filter((a) => a.status === 'present').length
@@ -50,13 +56,14 @@ export default function StudentAttendance() {
 
   const filtered = useMemo(() => {
     return records.filter((r) => {
+      if (selectedGroup !== 'Hamısı' && r.group_name !== selectedGroup) return false
       if (selectedStatus !== 'Hamısı' && STATUS_LABELS[r.status] !== selectedStatus) return false
       const d = new Date(r.lesson_date)
       if (startDate && d < new Date(startDate)) return false
       if (endDate && d > new Date(endDate)) return false
       return true
     })
-  }, [records, selectedStatus, startDate, endDate])
+  }, [records, selectedGroup, selectedStatus, startDate, endDate])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)
@@ -90,15 +97,22 @@ export default function StudentAttendance() {
       <h1 className="text-2xl font-semibold text-text-base">Davamiyyət Jurnalı</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="flex flex-col">
-            <label className="text-xs font-semibold text-text-base/50 mb-1">Status</label>
-            <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}
-              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer">
-              {STATUS_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+            <label className="text-xs font-semibold text-text-base/50 mb-1">Qrup</label>
+            <select value={selectedGroup} onChange={e => setSelectedGroup(e.target.value)}
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-fit min-w-[120px]">
+              {groupOptions.map(g => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
           <div className="flex flex-col">
+            <label className="text-xs font-semibold text-text-base/50 mb-1">Status</label>
+            <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-fit min-w-[110px]">
+              {STATUS_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col md:col-span-2">
             <span className="text-xs font-semibold text-text-base/50 mb-1">Tarix</span>
             <DateRangePicker startDate={startDate} endDate={endDate} onStartChange={setStartDate} onEndChange={setEndDate} />
           </div>
@@ -139,24 +153,24 @@ export default function StudentAttendance() {
             </colgroup>
             <thead>
               <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Dərs tarixi</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Mövzu</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Status</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Gecikmə</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Dərs tarixi</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Mövzu</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Status</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Gecikmə</th>
               </tr>
               <tr><td colSpan={4} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>
             <tbody>
               {paginated.map((row, index) => (
                 <tr key={row.id || index}>
-                  <td className="py-3.5 text-sm text-text-base px-4">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
-                  <td className="py-3.5 text-sm text-text-base truncate px-4">{row.lesson_topic}</td>
-                  <td className="py-3.5 px-4">{getStatusBadge(row.status)}</td>
-                  <td className="py-3.5 text-sm text-text-base px-4">{row.minutes_late ? `${row.minutes_late} dəq` : '—'}</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
+                  <td className="py-3.5 text-sm text-text-base truncate px-3">{row.lesson_topic}</td>
+                  <td className="py-3.5 px-3">{getStatusBadge(row.status)}</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">{row.minutes_late ? `${row.minutes_late} dəq` : '—'}</td>
                 </tr>
               ))}
               {paginated.length === 0 && (
-                <tr><td colSpan={4} className="py-6 text-center text-sm text-text-base/50 px-4">Məlumat tapılmadı.</td></tr>
+                <tr><td colSpan={4} className="py-6 text-center text-sm text-text-base/50 px-3">Məlumat tapılmadı.</td></tr>
               )}
             </tbody>
           </table>
