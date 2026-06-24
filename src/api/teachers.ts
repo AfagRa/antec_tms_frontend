@@ -21,4 +21,7 @@ export const teachersApi = {
   remove: async (id: number): Promise<void> => {
     await apiClient.delete(`/teachers/${id}`)
   },
+  hardRemove: async (id: number): Promise<void> => {
+    await apiClient.delete(`/teachers/${id}/hard`)
+  },
 }

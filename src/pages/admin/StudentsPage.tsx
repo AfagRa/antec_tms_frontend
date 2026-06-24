@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { Pencil, Plus, Search, Trash2, UserX, X } from 'lucide-react'
 import { studentsApi } from '@/api/students'
 import { groupsApi } from '@/api/groups'
 import type { Group, Student, StudentPayload } from '@/types'
@@ -36,6 +36,8 @@ export default function StudentsPage() {
   const [saving, setSaving] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [hardDeleteTarget, setHardDeleteTarget] = useState<Student | null>(null)
+  const [hardDeleting, setHardDeleting] = useState(false)
   const [groupModalOpen, setGroupModalOpen] = useState(false)
   const [groupTarget, setGroupTarget] = useState<Student | null>(null)
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
@@ -124,13 +126,28 @@ export default function StudentsPage() {
     setDeleting(true)
     try {
       await studentsApi.remove(deleteTarget.id)
-      setItems((prev) => prev.filter((item) => item.id !== deleteTarget.id))
-      addToast('Tələbə silindi', 'success')
+      setItems((prev) => prev.map((item) => item.id === deleteTarget.id ? { ...item, status: 'inactive' } : item))
+      addToast('Tələbə deaktiv edildi', 'success')
       setDeleteTarget(null)
+    } catch {
+      addToast('Tələbə deaktiv edilə bilmədi', 'error')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleHardDelete = async () => {
+    if (!hardDeleteTarget) return
+    setHardDeleting(true)
+    try {
+      await studentsApi.hardRemove(hardDeleteTarget.id)
+      setItems((prev) => prev.filter((item) => item.id !== hardDeleteTarget.id))
+      addToast('Tələbə tamamilə silindi', 'success')
+      setHardDeleteTarget(null)
     } catch {
       addToast('Tələbə silinə bilmədi', 'error')
     } finally {
-      setDeleting(false)
+      setHardDeleting(false)
     }
   }
 
@@ -189,10 +206,10 @@ export default function StudentsPage() {
       <Table
         columns={[
           { key: 'idx', header: '#', render: (_: Student, index) => index + 1 },
-          { key: 'name', header: 'Ad Soyad', render: (student: Student) => <span className="font-bold">{student.full_name ?? `${student.name} ${student.surname}`}</span> },
-          { key: 'email', header: 'Email', render: (student: Student) => <span className="text-text-base/60">{student.email}</span> },
-          { key: 'phone', header: 'Telefon', render: (student: Student) => <span className="text-text-base/60">{student.phone || '—'}</span> },
-          { key: 'group', header: 'Qrup', render: (student: Student) => <span className="text-text-base/60">{student.groups?.map((group) => group.name).join(', ') || '—'}</span> },
+          { key: 'name', header: 'Ad Soyad', render: (student: Student) => <span className={`font-bold ${student.status === 'inactive' ? 'text-text-base/40' : ''}`}>{student.full_name ?? `${student.name} ${student.surname}`}</span> },
+          { key: 'email', header: 'Email', render: (student: Student) => <span className={`text-text-base/60 ${student.status === 'inactive' ? 'text-text-base/30' : ''}`}>{student.email}</span> },
+          { key: 'phone', header: 'Telefon', render: (student: Student) => <span className={`text-text-base/60 ${student.status === 'inactive' ? 'text-text-base/30' : ''}`}>{student.phone || '—'}</span> },
+          { key: 'group', header: 'Qrup', render: (student: Student) => <span className={`text-text-base/60 ${student.status === 'inactive' ? 'text-text-base/30' : ''}`}>{student.groups?.map((group) => group.name).join(', ') || '—'}</span> },
           { key: 'status', header: 'Status', render: (student: Student) => <Badge status={student.status} /> },
           {
             key: 'actions',
@@ -205,7 +222,16 @@ export default function StudentsPage() {
                 <Button variant="secondary" size="sm" onClick={() => openEdit(student)} aria-label="Redaktə et">
                   <Pencil size={13} />
                 </Button>
-                <Button variant="danger" size="sm" onClick={() => setDeleteTarget(student)} aria-label="Sil">
+                {student.status === 'active' ? (
+                  <Button variant="secondary" size="sm" onClick={() => setDeleteTarget(student)} aria-label="Deaktiv et">
+                    <UserX size={13} />
+                  </Button>
+                ) : (
+                  <Button variant="secondary" size="sm" onClick={async () => { try { await studentsApi.update(student.id, { status: 'active' }); setItems((prev) => prev.map((item) => item.id === student.id ? { ...item, status: 'active' } : item)); addToast('Tələbə aktiv edildi', 'success'); } catch { addToast('Tələbə aktiv edilə bilmədi', 'error'); } }} aria-label="Aktiv et">
+                    <UserX size={13} />
+                  </Button>
+                )}
+                <Button variant="danger" size="sm" onClick={() => setHardDeleteTarget(student)} aria-label="Sil">
                   <Trash2 size={13} />
                 </Button>
               </div>
@@ -215,6 +241,7 @@ export default function StudentsPage() {
         data={filtered}
         loading={loading}
         rowKey={(student) => student.id}
+        rowClassName={(student) => student.status === 'inactive' ? 'opacity-50' : ''}
         emptyMessage="Tələbə tapılmadı"
       />
 
@@ -244,7 +271,7 @@ export default function StudentsPage() {
           <div className="md:col-span-2">
             <Select label="Status" value={form.status} onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as StudentPayload['status'] }))}>
               <option value="active">Aktiv</option>
-              <option value="inactive">Passiv</option>
+              <option value="inactive">Qeyri-aktiv</option>
             </Select>
           </div>
           <div className="md:col-span-2 flex justify-end gap-3 pt-2">
@@ -283,7 +310,17 @@ export default function StudentsPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         loading={deleting}
-        message={`"${deleteTarget?.full_name ?? `${deleteTarget?.name} ${deleteTarget?.surname}`}" tələbəsi silinəcək.`}
+        message={`"${deleteTarget?.full_name ?? `${deleteTarget?.name} ${deleteTarget?.surname}`}" tələbəsi deaktiv edilsin?`}
+        confirmLabel="Deaktiv et"
+      />
+
+      <ConfirmDialog
+        isOpen={!!hardDeleteTarget}
+        onClose={() => setHardDeleteTarget(null)}
+        onConfirm={handleHardDelete}
+        loading={hardDeleting}
+        message={`"${hardDeleteTarget?.full_name ?? `${hardDeleteTarget?.name} ${hardDeleteTarget?.surname}`}" tələbəsi tamamilə silinsin? Bütün məlumatları itiriləcək.`}
+        confirmLabel="Sil"
       />
     </div>
   )

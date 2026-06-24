@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { Pencil, Plus, Search, Trash2, UserX, X } from 'lucide-react'
 import { teachersApi } from '@/api/teachers'
 import type { Teacher, TeacherPayload } from '@/types'
 import Button from '@/components/ui/Button'
@@ -34,6 +34,8 @@ export default function TeachersPage() {
   const [saving, setSaving] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Teacher | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [hardDeleteTarget, setHardDeleteTarget] = useState<Teacher | null>(null)
+  const [hardDeleting, setHardDeleting] = useState(false)
   const [changePassword, setChangePassword] = useState(false)
 
   const load = async () => {
@@ -111,13 +113,28 @@ export default function TeachersPage() {
     setDeleting(true)
     try {
       await teachersApi.remove(deleteTarget.id)
-      setItems((prev) => prev.filter((item) => item.id !== deleteTarget.id))
-      addToast('Müəllim silindi', 'success')
+      setItems((prev) => prev.map((item) => item.id === deleteTarget.id ? { ...item, status: 'inactive' } : item))
+      addToast('Müəllim deaktiv edildi', 'success')
       setDeleteTarget(null)
+    } catch {
+      addToast('Müəllim deaktiv edilə bilmədi', 'error')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleHardDelete = async () => {
+    if (!hardDeleteTarget) return
+    setHardDeleting(true)
+    try {
+      await teachersApi.hardRemove(hardDeleteTarget.id)
+      setItems((prev) => prev.filter((item) => item.id !== hardDeleteTarget.id))
+      addToast('Müəllim tamamilə silindi', 'success')
+      setHardDeleteTarget(null)
     } catch {
       addToast('Müəllim silinə bilmədi', 'error')
     } finally {
-      setDeleting(false)
+      setHardDeleting(false)
     }
   }
 
@@ -155,10 +172,10 @@ export default function TeachersPage() {
       <Table
         columns={[
           { key: 'idx', header: '#', render: (_: Teacher, index) => index + 1 },
-          { key: 'name', header: 'Ad Soyad', render: (teacher: Teacher) => <span className="font-bold">{teacher.full_name ?? `${teacher.name} ${teacher.surname}`}</span> },
-          { key: 'email', header: 'Email', render: (teacher: Teacher) => <span className="text-text-base/60">{teacher.email}</span> },
-          { key: 'phone', header: 'Telefon', render: (teacher: Teacher) => <span className="text-text-base/60">{teacher.phone || '—'}</span> },
-          { key: 'specialization', header: 'İxtisas', render: (teacher: Teacher) => <span className="text-text-base/60">{teacher.specialization || '—'}</span> },
+          { key: 'name', header: 'Ad Soyad', render: (teacher: Teacher) => <span className={`font-bold ${teacher.status === 'inactive' ? 'text-text-base/40' : ''}`}>{teacher.full_name ?? `${teacher.name} ${teacher.surname}`}</span> },
+          { key: 'email', header: 'Email', render: (teacher: Teacher) => <span className={`text-text-base/60 ${teacher.status === 'inactive' ? 'text-text-base/30' : ''}`}>{teacher.email}</span> },
+          { key: 'phone', header: 'Telefon', render: (teacher: Teacher) => <span className={`text-text-base/60 ${teacher.status === 'inactive' ? 'text-text-base/30' : ''}`}>{teacher.phone || '—'}</span> },
+          { key: 'specialization', header: 'İxtisas', render: (teacher: Teacher) => <span className={`text-text-base/60 ${teacher.status === 'inactive' ? 'text-text-base/30' : ''}`}>{teacher.specialization || '—'}</span> },
           { key: 'status', header: 'Status', render: (teacher: Teacher) => <Badge status={teacher.status} /> },
           {
             key: 'actions',
@@ -168,7 +185,16 @@ export default function TeachersPage() {
                 <Button variant="secondary" size="sm" onClick={() => openEdit(teacher)} aria-label="Redaktə et">
                   <Pencil size={13} />
                 </Button>
-                <Button variant="danger" size="sm" onClick={() => setDeleteTarget(teacher)} aria-label="Sil">
+                {teacher.status === 'active' ? (
+                  <Button variant="secondary" size="sm" onClick={() => setDeleteTarget(teacher)} aria-label="Deaktiv et">
+                    <UserX size={13} />
+                  </Button>
+                ) : (
+                  <Button variant="secondary" size="sm" onClick={async () => { try { await teachersApi.update(teacher.id, { status: 'active' }); setItems((prev) => prev.map((item) => item.id === teacher.id ? { ...item, status: 'active' } : item)); addToast('Müəllim aktiv edildi', 'success'); } catch { addToast('Müəllim aktiv edilə bilmədi', 'error'); } }} aria-label="Aktiv et">
+                    <UserX size={13} />
+                  </Button>
+                )}
+                <Button variant="danger" size="sm" onClick={() => setHardDeleteTarget(teacher)} aria-label="Sil">
                   <Trash2 size={13} />
                 </Button>
               </div>
@@ -178,6 +204,7 @@ export default function TeachersPage() {
         data={filtered}
         loading={loading}
         rowKey={(teacher) => teacher.id}
+        rowClassName={(teacher) => teacher.status === 'inactive' ? 'opacity-50' : ''}
         emptyMessage="Müəllim tapılmadı"
       />
 
@@ -207,7 +234,7 @@ export default function TeachersPage() {
           <div className="md:col-span-2">
             <Select label="Status" value={form.status} onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as TeacherPayload['status'] }))}>
               <option value="active">Aktiv</option>
-              <option value="inactive">Passiv</option>
+              <option value="inactive">Qeyri-aktiv</option>
             </Select>
           </div>
           <div className="md:col-span-2 flex justify-end gap-3 pt-2">
@@ -226,7 +253,17 @@ export default function TeachersPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         loading={deleting}
-        message={`"${deleteTarget?.name} ${deleteTarget?.surname}" müəllimi silinəcək.`}
+        message={`"${deleteTarget?.name} ${deleteTarget?.surname}" müəllimi deaktiv edilsin?`}
+        confirmLabel="Deaktiv et"
+      />
+
+      <ConfirmDialog
+        isOpen={!!hardDeleteTarget}
+        onClose={() => setHardDeleteTarget(null)}
+        onConfirm={handleHardDelete}
+        loading={hardDeleting}
+        message={`"${hardDeleteTarget?.name} ${hardDeleteTarget?.surname}" müəllimi tamamilə silinsin? Bütün məlumatları itiriləcək.`}
+        confirmLabel="Sil"
       />
     </div>
   )

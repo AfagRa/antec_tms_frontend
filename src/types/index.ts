@@ -441,7 +441,7 @@ export const STUDENT_STATUS_CONFIG: Record<StudentGroupStatus, {
   label: string; bg: string; text: string
 }> = {
   Aktiv:  { label: 'Aktiv',  bg: 'bg-green-100',  text: 'text-green-700'  },
-  Passiv: { label: 'Passiv', bg: 'bg-gray-100',   text: 'text-gray-600'   },
+  Passiv: { label: 'Qeyri-aktiv', bg: 'bg-gray-100',   text: 'text-gray-600'   },
   Çıxıb:  { label: 'Çıxıb',  bg: 'bg-red-100',    text: 'text-red-600'    },
   Məzun:  { label: 'Məzun',  bg: 'bg-purple-100', text: 'text-purple-700' },
 }

@@ -214,7 +214,7 @@ export default function GroupsPage() {
           <div className="md:col-span-2">
             <Select label="Status" value={form.status} onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as GroupPayload['status'] }))}>
               <option value="active">Aktiv</option>
-              <option value="inactive">Passiv</option>
+              <option value="inactive">Qeyri-aktiv</option>
             </Select>
           </div>
           <div className="md:col-span-2 flex justify-end gap-3 pt-2">
