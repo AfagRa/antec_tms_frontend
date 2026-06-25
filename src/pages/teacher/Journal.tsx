@@ -71,7 +71,8 @@ export default function TeacherJournal() {
           lessonsApi.getByGroup(selectedGroupId),
         ])
         setStudents(group.students ?? [])
-        setLessons(lessonList)
+        const sorted = [...lessonList].sort((a, b) => new Date(a.lesson_date).getTime() - new Date(b.lesson_date).getTime())
+        setLessons(sorted)
 
         const attsByLesson = await Promise.all(
           lessonList.map((l) =>
@@ -242,7 +243,7 @@ export default function TeacherJournal() {
       setNewLessonDate('')
       setNewLessonTopic('')
       const lessonList = await lessonsApi.getByGroup(selectedGroupId)
-      setLessons(lessonList)
+      setLessons([...lessonList].sort((a, b) => new Date(a.lesson_date).getTime() - new Date(b.lesson_date).getTime()))
     } catch (err) {
       console.error('Dərs əlavə edilə bilmədi:', err)
     } finally {
@@ -314,11 +315,13 @@ export default function TeacherJournal() {
       <div className="flex-1 min-h-0 overflow-hidden">
         <div className="rounded-neu bg-surface shadow-neu-sm p-0 h-full overflow-hidden">
           <div className="overflow-auto h-full w-full">
-            <table className="border-collapse text-sm" style={{ minWidth: `${48 + 180 + visibleLessons.length * 270 + 80}px` }}>
+            <table className="border-collapse text-sm" style={{ minWidth: `${48 + 180 + visibleLessons.length * 270 + 120 + 80}px` }}>
               <thead>
                 <tr>
-                  <th className="sticky left-0 z-20 bg-surface border-b border-r border-surface-dark/20 px-2 py-3 text-center text-xs font-medium text-text-base/50 uppercase tracking-wide w-[48px]">№</th>
-                  <th className="sticky left-[48px] z-30 bg-surface border-b border-r-2 border-surface-dark/20 px-4 py-3 text-left font-medium text-text-base/50 text-xs uppercase tracking-wide min-w-[180px]">Tələbənin adı</th>
+                  <th colSpan={2} className="sticky left-0 z-30 bg-white border-b border-r-2 border-surface-dark/20 text-xs font-medium text-text-base/50 uppercase tracking-wide min-w-[228px]">
+                    <span className="inline-block w-[48px] text-center py-3 align-middle shrink-0">№</span>
+                    <span className="inline-block px-4 py-3 align-middle">Tələbənin adı</span>
+                  </th>
                   {visibleLessons.map((lesson) => (
                     <th key={lesson.id} colSpan={2} className="border-b border-r border-surface-dark/20 px-2 py-2 text-center font-medium text-text-base text-xs min-w-[140px]">
                       <div className="font-semibold">{formatDate(lesson.lesson_date)}</div>
@@ -377,11 +380,10 @@ export default function TeacherJournal() {
                       </div>
                     )}
                   </th>
-                  <th className="sticky right-0 z-20 bg-surface-dark/10 border-b border-l border-surface-dark/20 px-3 py-3 text-center font-semibold text-text-base text-xs uppercase tracking-wide min-w-[80px]">Ümumi %</th>
+                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-3 text-center font-semibold text-slate-700 text-xs uppercase tracking-wide min-w-[80px]">Ümumi %</th>
                 </tr>
                 <tr>
-                  <th className="sticky left-0 z-20 bg-surface border-b border-r border-surface-dark/20 w-[48px]" />
-                  <th className="sticky left-[48px] z-30 bg-surface border-b border-r-2 border-surface-dark/20 px-4 py-1" />
+                  <th colSpan={2} className="sticky left-0 z-30 bg-white border-b border-r-2 border-surface-dark/20 py-1 min-w-[228px]" />
                   {visibleLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-surface-dark/5 w-[150px]">Davamiyyət</th>
@@ -389,11 +391,10 @@ export default function TeacherJournal() {
                     </React.Fragment>
                   ))}
                   <th className="border-b border-r border-surface-dark/20 bg-surface-dark/5" />
-                  <th className="sticky right-0 z-20 bg-surface-dark/10 border-b border-l border-surface-dark/20 px-3 py-1" />
+                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1" />
                 </tr>
                 <tr>
-                  <th className="sticky left-0 z-20 bg-surface border-b border-r border-surface-dark/20 w-[48px]" />
-                  <th className="sticky left-[48px] z-30 bg-surface border-b border-r-2 border-surface-dark/20 px-4 py-1" />
+                  <th colSpan={2} className="sticky left-0 z-30 bg-white border-b border-r-2 border-surface-dark/20 py-1" />
                   {visibleLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center">
@@ -418,7 +419,7 @@ export default function TeacherJournal() {
                     </React.Fragment>
                   ))}
                   <th className="border-b border-r border-surface-dark/20" />
-                  <th className="sticky right-0 z-20 bg-surface-dark/10 border-b border-l border-surface-dark/20 px-3 py-1" />
+                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1" />
                 </tr>
               </thead>
               <tbody>
@@ -438,15 +439,17 @@ export default function TeacherJournal() {
                     ? Math.round(((labAvg ?? 0) * 0.5 + (modAvg ?? 0) * 0.5) * 0.6 + (finalG ?? 0) * 0.4)
                     : null
                   const avgColor = avg === null
-                    ? 'text-gray-300'
-                    : avg >= 80 ? 'text-primary font-semibold'
+                    ? 'text-slate-300'
+                    : avg >= 80 ? 'text-emerald-600 font-semibold'
                     : avg >= 60 ? 'text-amber-600 font-semibold'
                     : 'text-red-500 font-semibold'
 
                   return (
                     <tr key={student.id} className="hover:bg-surface-dark/5 transition-colors">
-                      <td className="sticky left-0 z-10 bg-surface border-b border-r border-surface-dark/20 px-2 py-2 text-center text-xs font-medium text-text-base/50 w-[48px] select-none">{index + 1}</td>
-                      <td className="sticky left-[48px] z-30 bg-surface border-b border-r-2 border-surface-dark/20 px-4 py-2 font-medium text-text-base whitespace-nowrap">{student.name} {student.surname}</td>
+                      <td colSpan={2} className="sticky left-0 z-10 bg-white border-b border-r-2 border-surface-dark/20 min-w-[228px]">
+                        <span className="inline-block w-[48px] text-center py-2 text-xs font-medium text-text-base/50 align-middle select-none">{index + 1}</span>
+                        <span className="inline-block px-4 py-2 font-medium text-text-base align-middle whitespace-nowrap">{student.name} {student.surname}</span>
+                      </td>
                       {visibleLessons.map((lesson) => {
                         const cell = getCell(student.id, lesson.id)
                         const colCategory = columnCategories[lesson.id] ?? 'ders'
@@ -495,8 +498,9 @@ export default function TeacherJournal() {
                           </React.Fragment>
                         )
                       })}
-                      <td className={`sticky right-0 z-10 bg-surface-dark/10 border-b border-l border-surface-dark/20 px-3 py-2 text-center font-semibold text-sm ${avgColor}`}>
-                        {avg !== null ? `${avg}%` : '—'}
+                      <td className="border-b border-r border-surface-dark/20" />
+                      <td className={`sticky right-0 z-10 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-2 text-center font-semibold text-sm ${avgColor}`}>
+                        {avg !== null ? `${avg}%` : '-'}
                       </td>
                     </tr>
                   )
@@ -507,7 +511,7 @@ export default function TeacherJournal() {
         </div>
       </div>
 
-      <div className="flex items-center gap-5 text-xs text-text-base/50 px-4 pb-4 flex-wrap">
+      <div className="flex items-center gap-5 text-xs text-text-base/50 px-4 pb-4 pt-4 flex-wrap">
         <span className="font-medium">Status rəngləri:</span>
         <span className="flex items-center gap-1.5"><span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-green-600">İE</span> İştirak Edir</span>
         <span className="flex items-center gap-1.5"><span className="inline-flex items-center justify-center w-5 h-5 rounded-sm text-[10px] font-bold text-white bg-amber-500">G</span> Gecikib</span>
