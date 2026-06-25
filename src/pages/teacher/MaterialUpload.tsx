@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type FormEvent, type ReactNode } from 'react'
-import { Check, Upload, FileCheck, X } from 'lucide-react'
+import { Check, Upload, FileCheck, X, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import MaterialTypePicker from '../../components/ui/MaterialTypePicker'
 import { ROUTES } from '../../constants/routes'
@@ -114,6 +114,10 @@ export default function MaterialUpload() {
       setSelectedFile(null)
     } catch (err) {
       console.error('Failed to create material', err)
+      setErrors(prev => ({
+        ...prev,
+        submit: 'Material əlavə edilə bilmədi. Yenidən cəhd edin.',
+      }))
     } finally {
       setSaving(false)
     }
@@ -212,6 +216,13 @@ export default function MaterialUpload() {
             />
           </FormField>
         </div>
+
+        {errors.submit && (
+          <p className="mt-3 flex items-center gap-1 text-sm text-red-500">
+            <AlertCircle size={14} />
+            {errors.submit}
+          </p>
+        )}
 
         <div className="mt-8 flex items-center justify-between">
           <Link to={ROUTES.TEACHER_GROUPS} className="text-sm text-text-base/50 hover:text-text-base">Ləğv et / Geri</Link>
