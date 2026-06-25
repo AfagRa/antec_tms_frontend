@@ -4,7 +4,9 @@ import { ArrowLeft, UserPlus, UserMinus } from 'lucide-react'
 import { groupsApi } from '@/api/groups'
 import { studentsApi } from '@/api/students'
 import { lessonsApi } from '@/api/lessons'
-import type { AttendanceRecord, Grade, Group, GroupStudent, Lesson, Material, Student } from '@/types'
+import { materialsApi } from '@/api/materials'
+import { reportsApi, type AttendanceReportDetail, type GradesReportDetail } from '@/api/reports'
+import type { Group, GroupLessonItem, GroupStudent, Material, Student } from '@/types'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
@@ -12,7 +14,6 @@ import Input from '@/components/ui/Input'
 import Modal from '@/components/ui/Modal'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import Spinner from '@/components/ui/Spinner'
-import Table from '@/components/ui/Table'
 import { useToast } from '@/hooks/useToast'
 
 type Tab = 'students' | 'lessons' | 'attendance' | 'grades' | 'materials'
@@ -34,9 +35,9 @@ export default function GroupDetailPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('students')
   const [tabLoading, setTabLoading] = useState(false)
-  const [lessons, setLessons] = useState<Lesson[]>([])
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
-  const [grades, setGrades] = useState<Grade[]>([])
+  const [lessons, setLessons] = useState<GroupLessonItem[]>([])
+  const [attendance, setAttendance] = useState<AttendanceReportDetail[]>([])
+  const [grades, setGrades] = useState<GradesReportDetail[]>([])
   const [materials, setMaterials] = useState<Material[]>([])
   const [addStudentOpen, setAddStudentOpen] = useState(false)
   const [availableStudents, setAvailableStudents] = useState<Student[]>([])
@@ -70,10 +71,16 @@ export default function GroupDetailPage() {
     const loadTab = async () => {
       setTabLoading(true)
       try {
-        if (activeTab === 'lessons') setLessons(await lessonsApi.list(groupId))
-        if (activeTab === 'attendance') setAttendance(await lessonsApi.attendance(groupId))
-        if (activeTab === 'grades') setGrades(await lessonsApi.grades(groupId))
-        if (activeTab === 'materials') setMaterials(await lessonsApi.materials(groupId))
+        if (activeTab === 'lessons') setLessons(await lessonsApi.getByGroup(groupId))
+        if (activeTab === 'attendance') {
+          const result = await reportsApi.attendance(groupId)
+          setAttendance(result.details)
+        }
+        if (activeTab === 'grades') {
+          const result = await reportsApi.grades(groupId)
+          setGrades(result.details)
+        }
+        if (activeTab === 'materials') setMaterials(await materialsApi.getByGroup(groupId))
       } catch {
         addToast('Tab məlumatları yüklənmədi', 'error')
       } finally {
@@ -221,89 +228,158 @@ export default function GroupDetailPage() {
       )}
 
       {activeTab === 'lessons' && (
-        <Table
-          columns={[
-            { key: 'date', header: 'Tarix', render: (lesson: Lesson) => <span className="font-mono text-xs">{new Date(lesson.date).toLocaleDateString('az-AZ')}</span> },
-            { key: 'topic', header: 'Mövzu', render: (lesson: Lesson) => <span className="font-bold">{lesson.topic}</span> },
-            { key: 'status', header: 'Status', render: (lesson: Lesson) => <Badge status={lesson.status} /> },
-          ]}
-          data={lessons}
-          loading={tabLoading}
-          rowKey={(lesson) => lesson.id}
-          emptyMessage="Dərs tapılmadı"
-        />
+        <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr className="border-b border-surface-dark/20 bg-surface-light">
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tarix</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Mövzu</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tabLoading ? (
+                  <tr><td colSpan={4} className="py-12 text-center text-text-base/40"><Spinner size="lg" /></td></tr>
+                ) : lessons.length === 0 ? (
+                  <tr><td colSpan={4} className="py-12 text-center text-text-base/40">Dərs tapılmadı</td></tr>
+                ) : (
+                  lessons.map((lesson, index) => (
+                    <tr key={lesson.id} className="border-b border-surface-dark/20 last:border-0 transition-colors hover:bg-surface-dark/10">
+                      <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-text-base">{new Date(lesson.lesson_date).toLocaleDateString('az-AZ')}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-text-base">{lesson.topic}</td>
+                      <td className="px-4 py-3"><Badge status={lesson.status} /></td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {activeTab === 'attendance' && (
-        <Table
-          columns={[
-            { key: 'student', header: 'Tələbə', render: (record: AttendanceRecord) => `${record.studentName} ${record.studentSurname}` },
-            { key: 'lesson', header: 'Tarix', render: (record: AttendanceRecord) => <span className="font-mono text-xs">{record.lessonId}</span> },
-            {
-              key: 'status',
-              header: 'Davamiyyət',
-              render: (record: AttendanceRecord) => {
-                const config: Record<string, { status: string; label: string }> = {
-                  present: { status: 'active', label: 'İştirak etdi' },
-                  late: { status: 'scheduled', label: 'Gecikdi' },
-                  absent_excused: { status: 'inactive', label: 'Qaib (üzrlü)' },
-                  absent_unexcused: { status: 'cancelled', label: 'Qaib (üzrsüz)' },
-                }
-                const c = config[record.status] ?? { status: 'inactive', label: 'Bilinmir' }
-                return <Badge status={c.status as any} label={c.label} />
-              },
-            },
-          ]}
-          data={attendance}
-          loading={tabLoading}
-          rowKey={(record) => record.id}
-          emptyMessage="Davamiyyət məlumatı tapılmadı"
-        />
+        <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr className="border-b border-surface-dark/20 bg-surface-light">
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tələbə</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-widest text-text-base/60">İştirak</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-widest text-text-base/60">Qaib</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-widest text-text-base/60">Gecikmə</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-widest text-text-base/60">Üzrlü</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-text-base/60">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tabLoading ? (
+                  <tr><td colSpan={7} className="py-12 text-center text-text-base/40"><Spinner size="lg" /></td></tr>
+                ) : attendance.length === 0 ? (
+                  <tr><td colSpan={7} className="py-12 text-center text-text-base/40">Davamiyyət məlumatı tapılmadı</td></tr>
+                ) : (
+                  attendance.map((item, index) => {
+                    const pct = item.attendancePercentage
+                    const pctClass = pct >= 70 ? 'text-success' : pct >= 50 ? 'text-warning' : 'text-danger'
+                    return (
+                      <tr key={item.studentId} className="border-b border-surface-dark/20 last:border-0 transition-colors hover:bg-surface-dark/10">
+                        <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-text-base">{item.studentName}</td>
+                        <td className="px-4 py-3 text-center text-sm text-text-base">{item.present}</td>
+                        <td className="px-4 py-3 text-center text-sm text-text-base">{item.absent}</td>
+                        <td className="px-4 py-3 text-center text-sm text-text-base">{item.late}</td>
+                        <td className="px-4 py-3 text-center text-sm text-text-base">{item.excused}</td>
+                        <td className={`px-4 py-3 text-right text-sm font-bold ${pctClass}`}>{pct.toFixed(1)}%</td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {activeTab === 'grades' && (
-        <Table
-          columns={[
-            { key: 'student', header: 'Tələbə', render: (grade: Grade) => grade.student.full_name },
-            { key: 'lesson', header: 'Dərs', render: (grade: Grade) => grade.lesson.topic },
-            { key: 'score', header: 'Qiymət', render: (grade: Grade) => <span className="font-mono">{grade.score} / {grade.max_score}</span> },
-            {
-              key: 'percent',
-              header: '%',
-              render: (grade: Grade) => {
-                if (grade.max_score === 0) return <span className="text-text-base/40">—</span>
-                const percent = Math.round((grade.score / grade.max_score) * 100)
-                const className = percent >= 70 ? 'text-success' : percent >= 50 ? 'text-warning' : 'text-danger'
-                return <span className={`font-bold ${className}`}>{percent}%</span>
-              },
-            },
-          ]}
-          data={grades}
-          loading={tabLoading}
-          rowKey={(grade) => grade.id}
-          emptyMessage="Qiymət tapılmadı"
-        />
+        <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr className="border-b border-surface-dark/20 bg-surface-light">
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tələbə</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-widest text-text-base/60">Qiymətlər</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-text-base/60">Cəmi</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-text-base/60">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tabLoading ? (
+                  <tr><td colSpan={5} className="py-12 text-center text-text-base/40"><Spinner size="lg" /></td></tr>
+                ) : grades.length === 0 ? (
+                  <tr><td colSpan={5} className="py-12 text-center text-text-base/40">Qiymət tapılmadı</td></tr>
+                ) : (
+                  grades.map((item, index) => {
+                    const percent = item.totalMaxScore === 0 ? null : Math.round(item.percentage)
+                    const pClass = percent === null ? 'text-text-base/40' : percent >= 70 ? 'text-success' : percent >= 50 ? 'text-warning' : 'text-danger'
+                    return (
+                      <tr key={item.studentId} className="border-b border-surface-dark/20 last:border-0 transition-colors hover:bg-surface-dark/10">
+                        <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-text-base">{item.studentName}</td>
+                        <td className="px-4 py-3 text-center text-sm text-text-base">{item.gradeCount}</td>
+                        <td className="px-4 py-3 text-right text-sm font-mono text-text-base">{item.totalScore} / {item.totalMaxScore}</td>
+                        <td className="px-4 py-3 text-right text-sm"><span className={`font-bold ${pClass}`}>{percent !== null ? `${percent}%` : '—'}</span></td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {activeTab === 'materials' && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {tabLoading ? (
-            <div className="py-12 text-center text-text-base/40">Yüklənir...</div>
-          ) : materials.length ? (
-            materials.map((material) => (
-              <a key={material.id} href={material.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-neu border border-surface-dark/30 bg-surface p-4 shadow-neu transition-all hover:shadow-neu-inset">
-                <span className="text-2xl" aria-hidden>
-                  {material.type === 'pdf' ? '📄' : material.type === 'video' ? '🎬' : '🔗'}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-text-base">{material.title}</p>
-                  <p className="mt-0.5 text-xs text-text-base/50">{new Date(material.created_at).toLocaleDateString('az-AZ')}</p>
-                </div>
-              </a>
-            ))
-          ) : (
-            <p className="py-12 text-center text-sm text-text-base/40">Material tapılmadı</p>
-          )}
+        <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr className="border-b border-surface-dark/20 bg-surface-light">
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Başlıq</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tip</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tarix</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tabLoading ? (
+                  <tr><td colSpan={4} className="py-12 text-center text-text-base/40"><Spinner size="lg" /></td></tr>
+                ) : materials.length === 0 ? (
+                  <tr><td colSpan={4} className="py-12 text-center text-text-base/40">Material tapılmadı</td></tr>
+                ) : (
+                  materials.map((material, index) => (
+                    <tr key={material.id} className="border-b border-surface-dark/20 last:border-0 transition-colors hover:bg-surface-dark/10">
+                      <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
+                      <td className="px-4 py-3">
+                        <a href={material.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary hover:underline">
+                          {material.title}
+                        </a>
+                      </td>
+                      <td className="px-4 py-3 text-sm capitalize text-text-base/50">
+                        {material.type?.replace('_', ' ')}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-base">
+                        {new Date(material.created_at).toLocaleDateString('az-AZ')}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
