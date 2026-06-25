@@ -17,7 +17,7 @@ const styles: Record<BadgeVariant, string> = {
 
 const defaultLabels: Record<BadgeVariant, string> = {
   active: 'Aktiv',
-  inactive: 'Qeyri-aktiv',
+  inactive: 'Passiv',
   scheduled: 'Planlanıb',
   completed: 'Tamamlandı',
   cancelled: 'Ləğv edildi',

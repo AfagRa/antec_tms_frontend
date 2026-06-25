@@ -17,6 +17,9 @@ export const materialsApi = {
   create: async (payload: CreateMaterialPayload): Promise<void> => {
     await apiClient.post('/materials', payload)
   },
+  update: async (id: number, payload: Partial<CreateMaterialPayload>): Promise<void> => {
+    await apiClient.put(`/materials/${id}`, payload)
+  },
   remove: async (id: number): Promise<void> => {
     await apiClient.delete(`/materials/${id}`)
   },
