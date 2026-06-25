@@ -255,6 +255,20 @@ export default function TeacherJournal() {
     ? lessons
     : lessons.filter(l => (columnCategories[l.id] ?? 'ders') === selectedCategory)
 
+  const groupStartDate = groups.find(g => g.id === selectedGroupId)?.start_date
+  const lastLessonDate = lessons.length > 0
+    ? lessons.reduce((latest, l) => {
+        const d = new Date(l.lesson_date)
+        return d > latest ? d : latest
+      }, new Date(0))
+    : null
+  const minNewLessonDate = (() => {
+    const base = groupStartDate ? new Date(groupStartDate) : new Date('2020-01-01')
+    if (!lastLessonDate) return base.toISOString().split('T')[0]
+    const nextDay = new Date(lastLessonDate.getTime() + 86400000)
+    return new Date(Math.max(base.getTime(), nextDay.getTime())).toISOString().split('T')[0]
+  })()
+
   if (loading) return <Spinner />
 
   return (
@@ -345,7 +359,7 @@ export default function TeacherJournal() {
                           value={newLessonDate}
                           onChange={e => setNewLessonDate(e.target.value)}
                           max={new Date().toISOString().split('T')[0]}
-                          min="2020-01-01"
+                          min={minNewLessonDate}
                           autoComplete="off"
                           className="w-full text-[11px] border border-surface-dark/20 rounded px-1 py-0.5 focus:border-primary outline-none bg-surface [color-scheme:light]"
                         />
