@@ -1,26 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { BookOpen, FileText, Users, UserCheck } from 'lucide-react'
 import StatCard from '../../components/ui/StatCard'
-import WeeklySchedule, { type ScheduleLesson } from '../../components/ui/WeeklySchedule'
-import { ROUTES } from '../../constants/routes'
 import { teacherPortalApi } from '../../api/teacherPortal'
-import { useAuth } from '../../hooks/useAuth'
 import type { TeacherDashboardResponse } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
-const schedule: ScheduleLesson[] = [
-  { id: 's1', groupId: '1', groupName: 'Python-A1', topic: 'Dəyişənlər', timeSlot: '09:00–10:30', day: 0 },
-  { id: 's2', groupId: '2', groupName: 'Code-A2', topic: 'Funksiyalar', timeSlot: '11:00–12:30', day: 0 },
-  { id: 's3', groupId: '1', groupName: 'Python-A1', topic: 'Massivlər', timeSlot: '09:00–10:30', day: 2 },
-  { id: 's4', groupId: '3', groupName: 'JS-B1', topic: 'Döngülər', timeSlot: '14:00–15:30', day: 2 },
-  { id: 's5', groupId: '2', groupName: 'Code-A2', topic: 'Obyektlər', timeSlot: '11:00–12:30', day: 4 },
-  { id: 's6', groupId: '3', groupName: 'JS-B1', topic: 'Siniflər', timeSlot: '09:00–10:30', day: 3 },
-]
-
 export default function Dashboard() {
-  const navigate = useNavigate()
-  const { user } = useAuth()
   const [dashboard, setDashboard] = useState<TeacherDashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [teacherId, setTeacherId] = useState<number | null>(null)
@@ -40,9 +25,6 @@ export default function Dashboard() {
     }
     init()
   }, [])
-
-  const handleLessonClick = (groupId: string) =>
-    navigate(ROUTES.TEACHER_GROUP(groupId))
 
   if (loading) return <Spinner />
 
