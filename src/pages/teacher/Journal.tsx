@@ -445,7 +445,7 @@ export default function TeacherJournal() {
                     : 'text-red-500 font-semibold'
 
                   return (
-                    <tr key={student.id} className="hover:bg-surface-dark/5 transition-colors">
+                    <tr key={student.id} className="hover:bg-surface-dark/30 transition-colors">
                       <td colSpan={2} className="sticky left-0 z-10 bg-white border-b border-r-2 border-surface-dark/20 min-w-[228px]">
                         <span className="inline-block w-[48px] text-center py-2 text-xs font-medium text-text-base/50 align-middle select-none">{index + 1}</span>
                         <span className="inline-block px-4 py-2 font-medium text-text-base align-middle whitespace-nowrap">{student.name} {student.surname}</span>
