@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Grid } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
 import { studentPortalApi } from '../../api/studentPortal'
+import { getFileUrl } from '../../api/client'
 import type { MyLessonItem, MyGradeItem } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
@@ -204,16 +205,18 @@ export default function StudentGroups() {
                         <span className="text-text-base/50">—</span>
                       ) : (
                         <div className="flex flex-col gap-1">
-                          {lesson.materials.slice(0, 2).map(m => (
+                          {lesson.materials.slice(0, 2).map(m => {
+                            const fileUrl = getFileUrl(m.file_path)
+                            return (
                             <button
                               key={m.id}
                               onClick={() => {
-                                if (m.file_path) {
-                                  window.open(m.file_path, '_blank', 'noopener,noreferrer')
+                                if (fileUrl) {
+                                  window.open(fileUrl, '_blank', 'noopener,noreferrer')
                                 }
                               }}
                               className="flex items-center gap-1.5 text-left hover:underline disabled:no-underline disabled:cursor-default"
-                              disabled={!m.file_path}
+                              disabled={!fileUrl}
                               title={m.title}
                             >
                               <MaterialTypeBadge type={m.type as any} size="sm" />
@@ -221,7 +224,8 @@ export default function StudentGroups() {
                                 {m.title.length > 18 ? m.title.slice(0, 18) + '…' : m.title}
                               </span>
                             </button>
-                          ))}
+                          )
+                        })}
                           {lesson.materials.length > 2 && (
                             <span className="text-[11px] text-text-base/50">
                               +{lesson.materials.length - 2} daha

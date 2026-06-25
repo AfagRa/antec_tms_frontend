@@ -96,17 +96,28 @@ export default function MaterialUpload() {
     setSaving(true)
 
     try {
-      const payload: CreateMaterialPayload = {
-        lesson_id: Number(lessonId),
-        group_id: Number(groupId),
-        teacher_id: teacherId,
-        title: title.trim(),
-        type,
-        url: type !== 'file' ? url.trim() : undefined,
-        file_path: type === 'file' ? selectedFile?.name : undefined,
-        description: description.trim() || undefined,
+      if (type === 'file' && selectedFile) {
+        await materialsApi.upload(
+          Number(lessonId),
+          Number(groupId),
+          teacherId,
+          title.trim(),
+          type,
+          selectedFile,
+          description.trim() || undefined,
+        )
+      } else {
+        const payload: CreateMaterialPayload = {
+          lesson_id: Number(lessonId),
+          group_id: Number(groupId),
+          teacher_id: teacherId,
+          title: title.trim(),
+          type,
+          url: type !== 'file' ? url.trim() : undefined,
+          description: description.trim() || undefined,
+        }
+        await materialsApi.create(payload)
       }
-      await materialsApi.create(payload)
       setSuccess(true)
       setTitle('')
       setUrl('')

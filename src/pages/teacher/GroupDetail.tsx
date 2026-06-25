@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Plus, Pencil, Trash2, X, Check, AlertCircle, ExternalLink } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
 import { groupsApi } from '../../api/groups'
 import { lessonsApi } from '../../api/lessons'
 import { materialsApi } from '../../api/materials'
+import { getFileUrl } from '../../api/client'
 import type { Group, GroupLessonItem, Material } from '../../types'
 import { STATUS_LABELS } from '../../types'
 import Spinner from '../../components/ui/Spinner'
@@ -30,8 +31,10 @@ export default function GroupDetail() {
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null)
   const [deletingMaterial, setDeletingMaterial] = useState<Material | null>(null)
   const [editForm, setEditForm] = useState({ title: '', type: 'file' as string, url: '', file_path: '', description: '' })
+  const [editFile, setEditFile] = useState<File | null>(null)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
   const [editSaving, setEditSaving] = useState(false)
+  const editFileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -251,7 +254,7 @@ export default function GroupDetail() {
                         <td className="px-3 py-3 text-sm text-text-base">
                           {material.url || material.file_path ? (
                             <a
-                              href={material.url || material.file_path}
+                              href={material.url || getFileUrl(material.file_path)!}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
@@ -346,10 +349,14 @@ export default function GroupDetail() {
                 <div>
                   <label className="mb-1 block text-sm font-medium text-text-base">Fayl seçin</label>
                   <input
+                    ref={editFileInputRef}
                     type="file"
                     onChange={e => {
                       const file = e.target.files?.[0]
-                      if (file) setEditForm(p => ({ ...p, file_path: file.name }))
+                      if (file) {
+                        setEditFile(file)
+                        setEditForm(p => ({ ...p, file_path: file.name }))
+                      }
                     }}
                     className="w-full text-sm text-text-base file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary hover:file:bg-primary/20"
                   />
@@ -371,15 +378,32 @@ export default function GroupDetail() {
                   if (!editForm.title.trim()) { setEditErrors({ title: 'Başlıq daxil edilməlidir' }); return }
                   setEditSaving(true)
                   try {
-                    await materialsApi.update(editingMaterial.id, {
-                      title: editForm.title.trim(),
-                      type: editForm.type,
-                      url: editForm.type !== 'file' ? editForm.url.trim() || undefined : undefined,
-                      file_path: editForm.type === 'file' ? editForm.file_path.trim() || undefined : undefined,
-                      description: editForm.description.trim() || undefined,
-                    })
+                    if (editForm.type === 'file' && editFile) {
+                      await materialsApi.updateWithFile(
+                        editingMaterial.id,
+                        editForm.title.trim(),
+                        editForm.type,
+                        editFile,
+                        editForm.description.trim() || undefined,
+                      )
+                    } else if (editForm.type === 'file') {
+                      await materialsApi.update(editingMaterial.id, {
+                        title: editForm.title.trim(),
+                        type: editForm.type,
+                        file_path: editingMaterial.file_path,
+                        description: editForm.description.trim() || undefined,
+                      })
+                    } else {
+                      await materialsApi.update(editingMaterial.id, {
+                        title: editForm.title.trim(),
+                        type: editForm.type,
+                        url: editForm.url.trim() || undefined,
+                        description: editForm.description.trim() || undefined,
+                      })
+                    }
                     setMaterials(prev => prev.map(m => m.id === editingMaterial.id ? { ...m, ...editForm, title: editForm.title.trim() } : m))
                     setEditingMaterial(null)
+                    setEditFile(null)
                   } catch {
                     setEditErrors({ submit: 'Yenilənə bilmədi. Yenidən cəhd edin.' })
                   } finally {
