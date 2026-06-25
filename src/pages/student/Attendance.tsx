@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { AlertCircle } from 'lucide-react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import { studentPortalApi } from '../../api/studentPortal'
 import type { MyAttendanceItem } from '../../types'
@@ -16,6 +17,8 @@ const STATUS_OPTIONS = ['Hamısı', 'İştirak edib', 'Qaib (üzrlü)', 'Qaib (�
 export default function StudentAttendance() {
   const [records, setRecords] = useState<MyAttendanceItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [retryCount, setRetryCount] = useState(0)
   const [selectedGroup, setSelectedGroup] = useState('Hamısı')
   const [selectedStatus, setSelectedStatus] = useState('Hamısı')
   const [startDate, setStartDate] = useState('')
@@ -30,12 +33,13 @@ export default function StudentAttendance() {
         setRecords(data.sort((a, b) => new Date(b.lesson_date).getTime() - new Date(a.lesson_date).getTime()))
       } catch (err) {
         console.warn('Failed to load attendance', err)
+        setError('Davamiyyət məlumatları yüklənə bilmədi. Səhifəni yeniləyin.')
       } finally {
         setLoading(false)
       }
     }
     load()
-  }, [])
+  }, [retryCount])
 
   const groupOptions = useMemo(
     () => ['Hamısı', ...Array.from(new Set(records.map(r => r.group_name).filter(Boolean)))],
@@ -89,6 +93,19 @@ export default function StudentAttendance() {
     if (currentPage >= totalPages - 2) return [1, null, totalPages - 2, totalPages - 1, totalPages]
     return [1, null, currentPage - 1, currentPage, currentPage + 1, null, totalPages]
   }
+
+  if (error) return (
+    <div className="flex flex-col items-center justify-center py-16 gap-3">
+      <AlertCircle size={32} className="text-danger" />
+      <p className="text-sm text-text-base/70">{error}</p>
+      <button
+        onClick={() => { setError(''); setLoading(true); setRetryCount(c => c + 1) }}
+        className="text-sm text-primary hover:underline"
+      >
+        Yenidən cəhd et
+      </button>
+    </div>
+  )
 
   if (loading) return <Spinner />
 
@@ -191,7 +208,11 @@ export default function StudentAttendance() {
             <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">›</button>
           </div>
-          <span className="text-xs text-text-base/50">Nəticə {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} ({filtered.length})</span>
+          <span className="text-xs text-text-base/50">
+            {filtered.length === 0
+              ? 'Nəticə tapılmadı'
+              : `Nəticə ${(safePage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(safePage * ITEMS_PER_PAGE, filtered.length)} (${filtered.length})`}
+          </span>
         </div>
       </div>
     </div>
