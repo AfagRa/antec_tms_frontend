@@ -1,4 +1,4 @@
-import type { ReactNode, SelectHTMLAttributes } from 'react'
+import { useId, type ReactNode, type SelectHTMLAttributes } from 'react'
 
 interface Props extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
@@ -7,7 +7,11 @@ interface Props extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export default function Select({ label, error, children, className = '', id, ...rest }: Props) {
-  const selectId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
+  const reactId = useId()
+  const selectId = id
+    ?? (label
+        ? `${label.toLowerCase().replace(/\s+/g, '-')}-${reactId.replace(/:/g, '')}`
+        : reactId.replace(/:/g, ''))
 
   return (
     <div className="flex flex-col gap-1.5">
