@@ -57,7 +57,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-[1fr_340px] gap-4">
+      <div className="grid grid-cols-[minmax(0,700px)_1fr] gap-4">
         <div className="rounded-neu bg-surface shadow-neu-sm p-6">
           <h2 className="mb-4 text-base font-semibold text-text-base">Son Dərslər</h2>
           {dashboard?.recent_lessons && dashboard.recent_lessons.length > 0 ? (
@@ -69,7 +69,7 @@ export default function Dashboard() {
                 >
                   <div>
                     <span className="text-sm font-medium text-text-base">{lesson.topic}</span>
-                    <span className="ml-2 text-xs text-text-base/50">
+                    <span className="ml-4 text-xs text-text-base/50">
                       {lesson.group_name}
                     </span>
                   </div>
