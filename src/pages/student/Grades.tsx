@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { AlertCircle } from 'lucide-react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import { studentPortalApi } from '../../api/studentPortal'
 import type { MyGradeItem, GradeCategory } from '../../types'
@@ -13,6 +14,7 @@ export default function StudentGrades() {
   const [sorting, setSorting] = useState('Ən yeni')
   const [currentPage, setCurrentPage] = useState(1)
   const [error, setError] = useState('')
+  const [retryCount, setRetryCount] = useState(0)
   const ITEMS_PER_PAGE = 10
 
   useEffect(() => {
@@ -21,13 +23,18 @@ export default function StudentGrades() {
         const data = await studentPortalApi.getGrades()
         setGrades(data)
       } catch {
-        setError('Qiymətlər yüklənə bilmədi')
+        setError('Qiymətlər yüklənə bilmədi. Səhifəni yeniləyin.')
       } finally {
         setLoading(false)
       }
     }
     load()
-  }, [])
+  }, [retryCount])
+
+  const safePct = (score: number, maxScore: number): number => {
+    if (!maxScore || maxScore === 0) return 0
+    return Math.round((score / maxScore) * 100)
+  }
 
   const groupOptions = useMemo(
     () => Array.from(new Set(grades.map(g => g.group_name).filter(Boolean))),
@@ -58,7 +65,7 @@ export default function StudentGrades() {
   const categoryAvg = (cat: GradeCategory): number | null => {
     const items = groupGrades.filter(g => g.category === cat)
     if (items.length === 0) return null
-    const pct = items.map(g => (g.score / g.max_score) * 100)
+    const pct = items.map(g => g.max_score ? (g.score / g.max_score) * 100 : 0)
     return pct.reduce((a, b) => a + b, 0) / pct.length
   }
 
@@ -108,17 +115,24 @@ export default function StudentGrades() {
     return [1, null, currentPage - 1, currentPage, currentPage + 1, null, totalPages]
   }
 
+  if (error) return (
+    <div className="flex flex-col items-center justify-center py-16 gap-3">
+      <AlertCircle size={32} className="text-danger" />
+      <p className="text-sm text-text-base/70">{error}</p>
+      <button
+        onClick={() => { setError(''); setLoading(true); setRetryCount(c => c + 1) }}
+        className="text-sm text-primary hover:underline"
+      >
+        Yenidən cəhd et
+      </button>
+    </div>
+  )
+
   if (loading) return <Spinner />
 
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-semibold text-text-base">Qiymət Jurnalı</h1>
-
-      {error && (
-        <div role="alert" className="rounded-lg bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
-          {error}
-        </div>
-      )}
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -194,7 +208,7 @@ export default function StudentGrades() {
             </thead>
             <tbody>
               {paginated.map((row, index) => {
-                const pct = row.max_score === 0 ? 0 : Math.round((row.score / row.max_score) * 100)
+                const pct = safePct(row.score, row.max_score)
                 return (
                   <tr key={row.id || index}>
                   <td className="py-3.5 text-sm text-text-base px-3">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
