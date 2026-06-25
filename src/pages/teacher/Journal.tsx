@@ -42,6 +42,7 @@ export default function TeacherJournal() {
   const [newLessonDate, setNewLessonDate] = useState('')
   const [newLessonTopic, setNewLessonTopic] = useState('')
   const [addingLesson, setAddingLesson] = useState(false)
+  const [locked, setLocked] = useState(false)
 
   useEffect(() => {
     const init = async () => {
@@ -210,6 +211,7 @@ export default function TeacherJournal() {
       })
 
       await Promise.all(ops)
+      setLocked(true)
       setToast('done')
     } catch (err) {
       console.error('Failed to save journal', err)
@@ -317,11 +319,10 @@ export default function TeacherJournal() {
               <Download size={15} />
               Excel Export
             </button>
-            <button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-60 transition-all cursor-pointer">
+            <button onClick={handleSave} disabled={saving || locked} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-60 transition-all cursor-pointer">
               <Save size={15} />
-              {saving ? 'Saxlanılır...' : 'Yadda Saxla'}
+              {locked ? 'Yadda Saxlandı ✓' : saving ? 'Saxlanılır...' : 'Yadda Saxla'}
             </button>
-            {toast === 'done' && <span className="text-sm text-emerald-600 font-medium">Jurnal yadda saxlanıldı ✓</span>}
           </div>
         </div>
       </div>
@@ -346,7 +347,8 @@ export default function TeacherJournal() {
                     {!showAddLesson ? (
                       <button
                         onClick={() => setShowAddLesson(true)}
-                        className="flex items-center gap-1 mx-auto text-[11px] font-medium px-2 py-1 rounded-md border border-dashed border-primary text-primary hover:bg-primary/5 transition-colors"
+                        disabled={locked}
+                        className="flex items-center gap-1 mx-auto text-[11px] font-medium px-2 py-1 rounded-md border border-dashed border-primary text-primary hover:bg-primary/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         title="Yeni dərs əlavə et"
                       >
                         <Plus size={12} />
@@ -414,7 +416,8 @@ export default function TeacherJournal() {
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center">
                         <button
                           onClick={() => handleBulkPresent(lesson.id)}
-                          className="w-full text-[9px] font-medium px-0.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-400 transition-all flex items-center justify-center gap-0.5 whitespace-nowrap"
+                          disabled={locked}
+                          className="w-full text-[9px] font-medium px-0.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-400 transition-all flex items-center justify-center gap-0.5 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <span className="text-[8px]">✔</span> Hamısı dərsdə
                         </button>
@@ -423,7 +426,8 @@ export default function TeacherJournal() {
                         <select
                           value={columnCategories[lesson.id] ?? 'ders'}
                           onChange={(e) => setColumnCategories((prev) => ({ ...prev, [lesson.id]: e.target.value }))}
-                          className="w-[90px] text-center text-xs border border-surface-dark/20 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-surface text-text-base/50"
+                          disabled={locked}
+                          className="w-[90px] text-center text-xs border border-surface-dark/20 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-surface text-text-base/50 disabled:opacity-40"
                         >
                           {CATEGORY_OPTIONS.map((cat) => (
                             <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -479,6 +483,7 @@ export default function TeacherJournal() {
                                 })}
                                 minutesLate={cell.minutesLate ?? 0}
                                 onMinutesChange={(mins) => setCell(student.id, lesson.id, { minutesLate: mins })}
+                                disabled={locked}
                               />
                             </td>
                             <td className="border-b border-r border-surface-dark/20 px-1 py-1.5" style={{ minWidth: '90px' }}>
@@ -504,9 +509,9 @@ export default function TeacherJournal() {
                                   }
                                 }}
                                 placeholder={categoryAllowsGrade ? 'Bal' : 'Dərs'}
-                                disabled={!categoryAllowsGrade}
+                                disabled={locked || !categoryAllowsGrade}
                                 autoComplete="off"
-                                className={`w-[60px] mx-auto block text-center text-xs border border-surface-dark/20 rounded px-1 py-1 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-surface ${!categoryAllowsGrade ? 'opacity-40 cursor-not-allowed' : 'text-text-base'}`}
+                                className={`w-[60px] mx-auto block text-center text-xs border border-surface-dark/20 rounded px-1 py-1 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none bg-surface ${(locked || !categoryAllowsGrade) ? 'opacity-40 cursor-not-allowed' : 'text-text-base'}`}
                               />
                             </td>
                           </React.Fragment>

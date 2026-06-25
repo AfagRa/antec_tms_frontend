@@ -335,6 +335,7 @@ export interface GroupLessonItem {
   status: string
   attendance_count: number
   grade_count: number
+  category?: string
 }
 
 export interface LessonAttendanceItem {

@@ -39,10 +39,11 @@ interface Props {
   onChange: (v: JournalCell['attendance']) => void
   minutesLate?: number
   onMinutesChange?: (v: number) => void
+  disabled?: boolean
 }
 
 export function AttendanceSegment({
-  value, onChange, minutesLate = 0, onMinutesChange
+  value, onChange, minutesLate = 0, onMinutesChange, disabled
 }: Props) {
   return (
     <div className="flex flex-col gap-1">
@@ -53,11 +54,13 @@ export function AttendanceSegment({
             <button
               key={opt.value}
               type="button"
+              disabled={disabled}
               onClick={() => onChange(isActive && opt.value !== 'I/E' ? 'I/E' : opt.value)}
               title={opt.fullLabel}
               className={`
                 px-2 py-1 text-[11px] font-bold transition-all
                 whitespace-nowrap select-none min-w-[28px] text-center
+                ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
                 ${isActive
                   ? opt.activeClass
                   : 'bg-surface text-text-base/60 hover:bg-surface-dark/20'}
@@ -80,6 +83,7 @@ export function AttendanceSegment({
             max={180}
             step={1}
             value={minutesLate || ''}
+            disabled={disabled}
             onChange={e =>
               onMinutesChange?.(
                 e.target.value === '' ? 0 : Math.min(180, Math.max(1, Number(e.target.value)))
