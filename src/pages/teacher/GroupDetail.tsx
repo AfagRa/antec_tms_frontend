@@ -13,9 +13,9 @@ import Spinner from '../../components/ui/Spinner'
 type TabId = 'students' | 'lessons' | 'materials'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'students', label: 'Tab 1 — Tələbə Siyahısı' },
-  { id: 'lessons', label: 'Tab 2 — Dərslər' },
-  { id: 'materials', label: 'Tab 3 — Materiallar' },
+  { id: 'students', label: 'Tələbə Siyahısı' },
+  { id: 'lessons', label: 'Dərslər' },
+  { id: 'materials', label: 'Materiallar' },
 ]
 
 export default function GroupDetail() {
@@ -83,7 +83,7 @@ export default function GroupDetail() {
       </div>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-6 mb-6">
-        <h2 className="mb-4 text-sm font-semibold text-text-base">Qrup Məlumat Kartı</h2>
+        <h2 className="mb-4 text-sm font-semibold text-text-base">Qrup Məlumatları</h2>
         <div className="grid grid-cols-2 gap-6 text-sm md:grid-cols-3 lg:grid-cols-6">
           <div>
             <p className="mb-1 text-xs text-text-base/50">Qrup adı</p>
