@@ -194,8 +194,20 @@ export interface TeacherDashboardResponse {
   upcoming_lessons: number
   recent_materials: number
   pending_grades: number
+  weekly_lessons_completed: number
+  weekly_lessons_total: number
   recent_groups: TeacherGroupItem[]
   recent_lessons: TeacherLessonItem[]
+}
+
+export interface WeeklyScheduleItem {
+  lesson_id: number
+  group_id: number
+  group_name: string
+  topic: string
+  lesson_date: string
+  day_of_week_index: number
+  hour: number
 }
 
 export interface TeacherGroupItem {

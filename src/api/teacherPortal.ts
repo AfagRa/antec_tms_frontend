@@ -3,6 +3,7 @@ import type {
   TeacherDashboardResponse,
   TeacherDetailResponse,
   ChangePasswordPayload,
+  WeeklyScheduleItem,
 } from '@/types'
 
 export const teacherPortalApi = {
@@ -13,6 +14,12 @@ export const teacherPortalApi = {
   getDashboard: async (teacherId: number): Promise<TeacherDashboardResponse> => {
     const { data } = await apiClient.get<{ data: TeacherDashboardResponse }>(
       `/teacher/dashboard/${teacherId}`,
+    )
+    return data.data ?? data
+  },
+  getWeeklySchedule: async (teacherId: number): Promise<WeeklyScheduleItem[]> => {
+    const { data } = await apiClient.get<{ data: WeeklyScheduleItem[] }>(
+      `/teacher/schedule/${teacherId}`,
     )
     return data.data ?? data
   },

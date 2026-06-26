@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react'
-import { BookOpen, FileText, Users, UserCheck } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { BookOpen, Users, UserCheck } from 'lucide-react'
 import StatCard from '../../components/ui/StatCard'
+import WeeklySchedule from '../../components/ui/WeeklySchedule'
 import { teacherPortalApi } from '../../api/teacherPortal'
-import type { TeacherDashboardResponse } from '../../types'
+import { ROUTES } from '../../constants/routes'
+import type { TeacherDashboardResponse, WeeklyScheduleItem } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [dashboard, setDashboard] = useState<TeacherDashboardResponse | null>(null)
+  const [schedule, setSchedule] = useState<WeeklyScheduleItem[]>([])
   const [loading, setLoading] = useState(true)
   const [teacherId, setTeacherId] = useState<number | null>(null)
 
@@ -15,8 +20,12 @@ export default function Dashboard() {
       try {
         const me = await teacherPortalApi.getMe()
         setTeacherId(me.id)
-        const data = await teacherPortalApi.getDashboard(me.id)
+        const [data, scheduleData] = await Promise.all([
+          teacherPortalApi.getDashboard(me.id),
+          teacherPortalApi.getWeeklySchedule(me.id),
+        ])
         setDashboard(data)
+        setSchedule(scheduleData)
       } catch {
         console.warn('Failed to load teacher dashboard')
       } finally {
@@ -32,28 +41,30 @@ export default function Dashboard() {
     <div>
       <h1 className="mb-6 text-2xl font-semibold text-text-base">Dashboard</h1>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
-          title="Mənim Aktiv Qruplarım Sayı"
+          title="Ümumi Aktiv Qruplarım"
           value={dashboard?.total_groups ?? 0}
           icon={<Users size={22} />}
         />
         <StatCard
-          title="Bu Həftə Keçirilmiş Dərslər Sayı"
-          value={dashboard?.upcoming_lessons ?? 0}
+          title="Həftəlik Dərslər"
+          value={`${dashboard?.weekly_lessons_completed ?? 0}/${dashboard?.weekly_lessons_total ?? 0}`}
           icon={<BookOpen size={22} />}
           color="text-success"
-        />
-        <StatCard
-          title="Doldurulmamış Jurnallar Sayı"
-          value={dashboard?.pending_grades ?? 0}
-          icon={<FileText size={22} />}
-          color="text-warning"
         />
         <StatCard
           title="Ümumi Tələbə Sayı"
           value={dashboard?.total_students ?? 0}
           icon={<UserCheck size={22} />}
+        />
+      </div>
+
+      <div className="mb-6">
+        <h2 className="mb-4 text-base font-semibold text-text-base">Həftəlik Cədvəl</h2>
+        <WeeklySchedule
+          lessons={schedule}
+          onLessonClick={(groupId) => navigate(ROUTES.TEACHER_GROUP(String(groupId)))}
         />
       </div>
 
