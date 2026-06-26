@@ -5,6 +5,7 @@ import { groupsApi } from '@/api/groups'
 import { studentsApi } from '@/api/students'
 import { lessonsApi } from '@/api/lessons'
 import { materialsApi } from '@/api/materials'
+import { getFileUrl } from '@/api/client'
 import { reportsApi, type AttendanceReportDetail, type GradesReportDetail } from '@/api/reports'
 import type { Group, GroupLessonItem, GroupStudent, Material, Student } from '@/types'
 import Button from '@/components/ui/Button'
@@ -364,7 +365,7 @@ export default function GroupDetailPage() {
                     <tr key={material.id} className="border-b border-surface-dark/20 last:border-0 transition-colors hover:bg-surface-dark/10">
                       <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
                       <td className="px-4 py-3">
-                        <a href={material.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary hover:underline">
+                        <a href={material.url || getFileUrl(material.file_path)!} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary hover:underline">
                           {material.title}
                         </a>
                       </td>

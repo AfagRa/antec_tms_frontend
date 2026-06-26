@@ -1,10 +1,17 @@
 import axios, { type AxiosError } from 'axios'
 
 export const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5014/api'
+const BACKEND_ORIGIN = BASE_URL.replace('/api', '')
+
+export function getFileUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined
+  if (path.startsWith('http')) return path
+  return `${BACKEND_ORIGIN}${path}`
+}
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+  headers: { 'X-Requested-With': 'XMLHttpRequest' },
   paramsSerializer: {
     serialize: (params) => {
       const converted: Record<string, string> = {}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { studentPortalApi } from '../../api/studentPortal'
+import { getFileUrl } from '../../api/client'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 import NoteCell from '../../components/ui/NoteCell'
 import type { MyMaterialDetail, MaterialTypeName } from '../../types'
@@ -99,12 +100,13 @@ export default function StudentMaterials() {
             </thead>
             <tbody>
               {paginated.map((row, index) => {
-                const hasLink = !!(row.file_path)
+                const fileUrl = getFileUrl(row.file_path)
+                const hasLink = !!fileUrl
                 return (
                   <tr
                     key={row.id || index}
                     onClick={() => {
-                      if (hasLink) window.open(row.file_path!, '_blank', 'noopener,noreferrer')
+                      if (hasLink) window.open(fileUrl!, '_blank', 'noopener,noreferrer')
                     }}
                     className={`transition-colors ${hasLink ? 'cursor-pointer hover:bg-surface-dark/10' : 'cursor-default'}`}
                   >
