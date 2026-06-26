@@ -12,7 +12,7 @@ export default function StudentHeader() {
 
   return (
     <header className="sticky top-0 z-10 flex h-[64px] items-center justify-between border-b border-surface-dark/20 bg-surface px-6">
-      <div className="flex-1 max-w-md">
+      <div className="flex items-center gap-3 flex-1 max-w-md">
         <StudentSearchBar />
       </div>
 
