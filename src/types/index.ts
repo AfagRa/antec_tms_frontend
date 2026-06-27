@@ -275,6 +275,7 @@ export interface MyMaterialRef {
   description: string | null
   type: string
   file_path: string | null
+  url?: string | null
 }
 
 export interface MyAttendanceItem {
