@@ -8,21 +8,21 @@ import type {
 
 interface AttendanceJournalItem {
   id: number
-  studentId: number
-  studentName: string
+  student_id: number
+  student_name: string
   status: string
-  minutesLate: number | null
+  minutes_late: number | null
   reason: string | null
-  teacherNote: string | null
-  createdAt: string
+  teacher_note: string | null
+  created_at: string
 }
 
 interface AttendanceJournalResponse {
   items: AttendanceJournalItem[]
-  presentCount: number
-  excusedCount: number
-  absentCount: number
-  lateCount: number
+  present_count: number
+  excused_count: number
+  absent_count: number
+  late_count: number
   percentage: number
 }
 
