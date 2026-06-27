@@ -2,20 +2,23 @@ import { useState, useEffect, useMemo } from 'react'
 import { AlertCircle } from 'lucide-react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import { studentPortalApi } from '../../api/studentPortal'
-import type { MyAttendanceItem } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 const STATUS_LABELS: Record<string, string> = {
+  Present: 'İştirak edib',
+  Late: 'Gecikib',
+  AbsentExcused: 'Üzürlü qaib',
+  AbsentUnexcused: 'Üzrsüz qaib',
   present: 'İştirak edib',
-  late: 'Gecikdi',
-  absent_excused: 'Qaib (üzrlü)',
-  absent_unexcused: 'Qaib (üzrsüz)',
+  late: 'Gecikib',
+  absent_excused: 'Üzürlü qaib',
+  absent_unexcused: 'Üzrsüz qaib',
 }
 
-const STATUS_OPTIONS = ['Hamısı', 'İştirak edib', 'Qaib (üzrlü)', 'Qaib (üzrsüz)', 'Gecikdi']
+const STATUS_OPTIONS = ['Hamısı', 'İştirak edib', 'Gecikib', 'Üzürlü qaib', 'Üzrsüz qaib']
 
 export default function StudentAttendance() {
-  const [records, setRecords] = useState<MyAttendanceItem[]>([])
+  const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [retryCount, setRetryCount] = useState(0)
@@ -25,12 +28,25 @@ export default function StudentAttendance() {
   const [endDate, setEndDate] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 6
+  const [attSummary, setAttSummary] = useState({ presentCount: 0, excusedCount: 0, absentCount: 0, lateCount: 0, percentage: 0 })
+  const [groupNames, setGroupNames] = useState<string[]>([])
 
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await studentPortalApi.getAttendance()
-        setRecords(data.sort((a, b) => new Date(b.lesson_date).getTime() - new Date(a.lesson_date).getTime()))
+        const [response, groups] = await Promise.all([
+          studentPortalApi.getAttendanceJournal(),
+          studentPortalApi.getMyGroups(),
+        ])
+        setRecords(response.items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+        setAttSummary({
+          presentCount: response.presentCount,
+          excusedCount: response.excusedCount,
+          absentCount: response.absentCount,
+          lateCount: response.lateCount,
+          percentage: response.percentage,
+        })
+        setGroupNames(groups.map(g => g.name))
       } catch (err) {
         console.warn('Failed to load attendance', err)
         setError('Davamiyyət məlumatları yüklənə bilmədi. Səhifəni yeniləyin.')
@@ -42,32 +58,30 @@ export default function StudentAttendance() {
   }, [retryCount])
 
   const groupOptions = useMemo(
-    () => ['Hamısı', ...Array.from(new Set(records.map(r => r.group_name).filter(Boolean)))],
-    [records],
+    () => ['Hamısı', ...groupNames],
+    [groupNames],
   )
 
   useEffect(() => { setCurrentPage(1) }, [selectedGroup, selectedStatus, startDate, endDate])
 
-  const summaryStats = useMemo(() => {
-    const present = records.filter((a) => a.status === 'present').length
-    const excused = records.filter((a) => a.status === 'absent_excused').length
-    const unexcused = records.filter((a) => a.status === 'absent_unexcused').length
-    const late = records.filter((a) => a.status === 'late').length
-    const total = records.length
-    const pct = total > 0 ? Math.round(((present + late) / total) * 100) : 0
-    return { present, excused, unexcused, late, total, pct }
-  }, [records])
+  const summaryStats = useMemo(() => ({
+    present: attSummary.presentCount,
+    excused: attSummary.excusedCount,
+    unexcused: attSummary.absentCount,
+    late: attSummary.lateCount,
+    total: attSummary.presentCount + attSummary.excusedCount + attSummary.absentCount + attSummary.lateCount,
+    pct: attSummary.percentage,
+  }), [attSummary])
 
   const filtered = useMemo(() => {
     return records.filter((r) => {
-      if (selectedGroup !== 'Hamısı' && r.group_name !== selectedGroup) return false
       if (selectedStatus !== 'Hamısı' && STATUS_LABELS[r.status] !== selectedStatus) return false
-      const d = new Date(r.lesson_date)
+      const d = new Date(r.createdAt)
       if (startDate && d < new Date(startDate)) return false
       if (endDate && d > new Date(endDate)) return false
       return true
     })
-  }, [records, selectedGroup, selectedStatus, startDate, endDate])
+  }, [records, selectedStatus, startDate, endDate])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)
@@ -75,10 +89,14 @@ export default function StudentAttendance() {
 
   const getStatusBadge = (status: string) => {
     const map: Record<string, string> = {
+      Present: 'bg-green-100 text-green-700',
+      Late: 'bg-amber-100 text-amber-700',
+      AbsentExcused: 'bg-blue-100 text-blue-600',
+      AbsentUnexcused: 'bg-red-100 text-red-600',
       present: 'bg-green-100 text-green-700',
-      absent_unexcused: 'bg-red-100 text-red-600',
       late: 'bg-amber-100 text-amber-700',
       absent_excused: 'bg-blue-100 text-blue-600',
+      absent_unexcused: 'bg-red-100 text-red-600',
     }
     return (
       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm ${map[status] || ''}`}>
@@ -155,7 +173,7 @@ export default function StudentAttendance() {
         </div>
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between col-span-2 md:col-span-1">
           <span className="text-sm font-semibold text-text-base/50">Ümumi Davamiyyət Faizi</span>
-          <span className="text-3xl font-bold text-text-base mt-1">{summaryStats.pct}%</span>
+          <span className="text-3xl font-bold text-text-base mt-1">{summaryStats.pct.toFixed(1)}%</span>
         </div>
       </div>
 
@@ -180,10 +198,10 @@ export default function StudentAttendance() {
             <tbody>
               {paginated.map((row, index) => (
                 <tr key={row.id || index}>
-                  <td className="py-3.5 text-sm text-text-base px-3">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
-                  <td className="py-3.5 text-sm text-text-base truncate px-3">{row.lesson_topic}</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">{new Date(row.createdAt).toLocaleDateString('az-AZ')}</td>
+                  <td className="py-3.5 text-sm text-text-base truncate px-3">—</td>
                   <td className="py-3.5 px-3">{getStatusBadge(row.status)}</td>
-                  <td className="py-3.5 text-sm text-text-base px-3">{row.minutes_late ? `${row.minutes_late} dəq` : '—'}</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">{row.minutesLate ? `${row.minutesLate} dəq` : '—'}</td>
                 </tr>
               ))}
               {paginated.length === 0 && (

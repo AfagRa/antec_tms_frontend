@@ -226,9 +226,11 @@ export interface TeacherLessonItem {
 
 export interface MyDashboardResponse {
   group: MyGroupInfo | null
-  recent_lessons: MyRecentLesson[]
-  recent_grades: MyRecentGrade[]
-  attendance_summary: MyAttendanceSummary
+  recentLessons: MyRecentLesson[]
+  recentGrades: MyRecentGrade[]
+  attendanceSummary: MyAttendanceSummary
+  finalGrade: number
+  isEligibleForFinal: boolean
 }
 
 export interface MyGroupInfo {
@@ -246,10 +248,9 @@ export interface MyRecentLesson {
 
 export interface MyRecentGrade {
   id: number
-  lesson_topic: string
-  lesson_date?: string
+  lessonTopic: string
   score: number
-  max_score: number
+  maxScore: number
 }
 
 export interface MyAttendanceSummary {
@@ -284,6 +285,15 @@ export interface MyAttendanceItem {
   status: string
   minutes_late: number | null
   reason: string | null
+}
+
+export interface AttendanceJournalResponse {
+  items: MyAttendanceItem[]
+  presentCount: number
+  excusedCount: number
+  absentCount: number
+  lateCount: number
+  percentage: number
 }
 
 export interface MyGradeItem {

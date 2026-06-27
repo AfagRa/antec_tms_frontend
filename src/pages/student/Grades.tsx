@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo } from 'react'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import { studentPortalApi } from '../../api/studentPortal'
-import type { MyGradeItem, GradeCategory } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 export default function StudentGrades() {
-  const [grades, setGrades] = useState<MyGradeItem[]>([])
+  const [grades, setGrades] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedGroup, setSelectedGroup] = useState('')
+  const [finalGrade, setFinalGrade] = useState<number | null>(null)
+  const [isEligibleForFinal, setIsEligibleForFinal] = useState(false)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [sorting, setSorting] = useState('Ən yeni')
@@ -20,9 +20,14 @@ export default function StudentGrades() {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await studentPortalApi.getGrades()
-        setGrades(data)
-      } catch {
+        const response = await studentPortalApi.getMyGrades()
+        const raw = response.recentGrades ?? response.recent_grades ?? []
+        setGrades(Array.isArray(raw) ? raw : [])
+        const fg = response.finalGrade ?? response.final_grade
+        setFinalGrade(fg != null ? fg : null)
+        setIsEligibleForFinal(response.isEligibleForFinal ?? response.is_eligible_for_final ?? false)
+      } catch (err: any) {
+        console.error('Grades load error:', err, err?.response?.data)
         setError('Qiymətlər yüklənə bilmədi. Səhifəni yeniləyin.')
       } finally {
         setLoading(false)
@@ -36,20 +41,9 @@ export default function StudentGrades() {
     return Math.round((score / maxScore) * 100)
   }
 
-  const groupOptions = useMemo(
-    () => Array.from(new Set(grades.map(g => g.group_name).filter(Boolean))),
-    [grades],
-  )
+  useEffect(() => { setCurrentPage(1) }, [startDate, endDate, sorting])
 
-  useEffect(() => {
-    if (groupOptions.length > 0 && !selectedGroup) {
-      setSelectedGroup(groupOptions[0])
-    }
-  }, [groupOptions, selectedGroup])
-
-  useEffect(() => { setCurrentPage(1) }, [selectedGroup, startDate, endDate, sorting])
-
-  const scores = grades.filter((g) => g.score !== null).map((g) => g.score)
+  const scores = grades.filter((g) => g.score != null).map((g) => g.score)
   const stats = {
     count: grades.length,
     avg: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0,
@@ -57,43 +51,21 @@ export default function StudentGrades() {
     lowest: scores.length ? Math.min(...scores) : 0,
   }
 
-  const groupGrades = useMemo(
-    () => grades.filter(g => g.group_name === selectedGroup),
-    [grades, selectedGroup],
-  )
-
-  const categoryAvg = (cat: GradeCategory): number | null => {
-    const items = groupGrades.filter(g => g.category === cat)
-    if (items.length === 0) return null
-    const pct = items.map(g => g.max_score ? (g.score / g.max_score) * 100 : 0)
-    return pct.reduce((a, b) => a + b, 0) / pct.length
-  }
-
-  const yekunQiymet = useMemo(() => {
-    const labAvg   = categoryAvg('lab')
-    const modulAvg = categoryAvg('modul')
-    const finalAvg = categoryAvg('final')
-    if (labAvg === null || modulAvg === null || finalAvg === null) return null
-    return Math.round((0.5 * labAvg + 0.5 * modulAvg) * 0.6 + finalAvg * 0.4)
-  }, [groupGrades])
-
   const filtered = useMemo(() => {
     return grades
-      .filter((r) => {
-        if (selectedGroup && r.group_name !== selectedGroup) return false
-        const d = new Date(r.lesson_date)
+      .filter((r: any) => {
+        const d = new Date(r.createdAt ?? r.lesson_date ?? '')
         if (startDate && d < new Date(startDate)) return false
         if (endDate && d > new Date(endDate)) return false
         return true
       })
-      .sort((a, b) => {
-        const ta = new Date(a.lesson_date).getTime()
-        const tb = new Date(b.lesson_date).getTime()
-        if (sorting === 'Ən yeni') return tb - ta
+      .sort((a: any, b: any) => {
+        if (sorting === 'Ən yüksək bal') return (b.score ?? 0) - (a.score ?? 0)
+        if (sorting === 'Ən aşağı bal') return (a.score ?? 0) - (b.score ?? 0)
+        const ta = new Date(a.createdAt ?? a.lesson_date ?? '').getTime()
+        const tb = new Date(b.createdAt ?? b.lesson_date ?? '').getTime()
         if (sorting === 'Ən köhnə') return ta - tb
-        if (sorting === 'Ən yüksək bal') return b.score - a.score
-        if (sorting === 'Ən aşağı bal') return a.score - b.score
-        return 0
+        return tb - ta
       })
   }, [grades, startDate, endDate, sorting])
 
@@ -135,14 +107,7 @@ export default function StudentGrades() {
       <h1 className="text-2xl font-semibold text-text-base">Qiymət Jurnalı</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div className="flex flex-col">
-            <label className="text-xs font-semibold text-text-base/50 mb-1">Qrup</label>
-            <select value={selectedGroup} onChange={e => setSelectedGroup(e.target.value)}
-              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-fit min-w-[120px]">
-              {groupOptions.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-text-base/50 mb-1">Tarix aralığı</span>
             <DateRangePicker startDate={startDate} endDate={endDate} onStartChange={setStartDate} onEndChange={setEndDate} />
@@ -168,13 +133,12 @@ export default function StudentGrades() {
         <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
           <span className="text-xs text-text-base/50 mb-1">Yekun Qiymət</span>
           <span className="text-2xl font-bold text-text-base">
-            {yekunQiymet !== null ? `${yekunQiymet}%` : '—'}
+            {finalGrade !== null ? `${finalGrade.toFixed(1)}%` : '—'}
           </span>
-          {yekunQiymet === null && (
-            <span className="text-[10px] text-text-base/40 mt-0.5">
-              Lab/Modul/Final qiymətləri tam deyil
-            </span>
-          )}
+          <span className={`text-xs mt-0.5 flex items-center gap-1 ${isEligibleForFinal ? 'text-green-600' : 'text-red-500'}`}>
+            {isEligibleForFinal ? <CheckCircle size={12} /> : <XCircle size={12} />}
+            {isEligibleForFinal ? 'Final imtahanına buraxılır' : 'Buraxılmır'}
+          </span>
         </div>
         <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col justify-between">
           <span className="text-xs text-text-base/50 mb-1">Ən Yüksək Bal</span>
@@ -207,14 +171,17 @@ export default function StudentGrades() {
               <tr><td colSpan={5} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>
             <tbody>
-              {paginated.map((row, index) => {
-                const pct = safePct(row.score, row.max_score)
+              {paginated.map((row: any, index: number) => {
+                const topic = row.lessonTopic ?? row.lesson_topic ?? '—'
+                const score = row.score ?? 0
+                const maxScore = row.maxScore ?? row.max_score ?? 0
+                const pct = safePct(score, maxScore)
                 return (
                   <tr key={row.id || index}>
-                  <td className="py-3.5 text-sm text-text-base px-3">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
-                  <td className="py-3.5 text-sm text-text-base truncate px-3">{row.lesson_topic}</td>
-                  <td className="py-3.5 text-sm text-text-base px-3">{row.score}</td>
-                  <td className="py-3.5 text-sm text-text-base px-3">{row.max_score}</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">—</td>
+                  <td className="py-3.5 text-sm text-text-base truncate px-3">{topic}</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">{score}</td>
+                  <td className="py-3.5 text-sm text-text-base px-3">{maxScore}</td>
                   <td className={`py-3.5 text-sm px-3 ${getFaizColorClass(pct)}`}>{pct}%</td>
                   </tr>
                 )

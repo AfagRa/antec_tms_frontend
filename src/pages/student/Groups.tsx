@@ -4,7 +4,7 @@ import { Grid } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
 import { studentPortalApi } from '../../api/studentPortal'
 import { getFileUrl } from '../../api/client'
-import type { MyLessonItem, MyGradeItem } from '../../types'
+import type { MyLessonItem } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 
@@ -17,19 +17,14 @@ interface GroupInfo {
 
 export default function StudentGroups() {
   const [lessons, setLessons] = useState<MyLessonItem[]>([])
-  const [grades, setGrades] = useState<MyGradeItem[]>([])
   const [lessonGroupFilter, setLessonGroupFilter] = useState<string>('all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [l, g] = await Promise.all([
-          studentPortalApi.getLessons(),
-          studentPortalApi.getGrades(),
-        ])
+        const l = await studentPortalApi.getLessons()
         setLessons(l)
-        setGrades(g)
       } catch (err) {
         console.warn('Failed to load groups data', err)
       } finally {
@@ -48,30 +43,8 @@ export default function StudentGroups() {
       }
       groupMap.get(key)!.lessonCount++
     })
-
-    const gradeMap = new Map<string, number[]>()
-    grades.forEach((g) => {
-      const key = g.lesson_topic
-      if (!gradeMap.has(key)) gradeMap.set(key, [])
-      gradeMap.get(key)!.push(g.score)
-    })
-
-    return Array.from(groupMap.values()).map((g) => {
-      const allScores: number[] = []
-      lessons
-        .filter((l) => l.group_name === g.name)
-        .forEach((l) => {
-          const gr = grades.find((x) => x.lesson_topic === l.topic)
-          if (gr) allScores.push(gr.score)
-        })
-      return {
-        ...g,
-        avgGrade: allScores.length
-          ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
-          : 0,
-      }
-    })
-  }, [lessons, grades])
+    return Array.from(groupMap.values())
+  }, [lessons])
 
   const groupNames = groups.map((g) => g.name)
 
@@ -79,12 +52,6 @@ export default function StudentGroups() {
     () => [...lessons].sort((a, b) => new Date(b.lesson_date).getTime() - new Date(a.lesson_date).getTime()),
     [lessons],
   )
-
-  const gradeByTopic = useMemo(() => {
-    const m = new Map<string, MyGradeItem>()
-    grades.forEach((g) => m.set(g.lesson_topic, g))
-    return m
-  }, [grades])
 
   const filteredLessons = useMemo(
     () => sortedLessons.filter(l =>
@@ -194,7 +161,6 @@ export default function StudentGroups() {
             </thead>
             <tbody>
               {filteredLessons.map((lesson, index) => {
-                const grade = gradeByTopic.get(lesson.topic)
                 return (
                   <tr key={lesson.id || index}>
                     <td className="py-3.5 text-sm text-text-base px-3">{new Date(lesson.lesson_date).toLocaleDateString('az-AZ')}</td>

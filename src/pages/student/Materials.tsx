@@ -32,8 +32,22 @@ export default function StudentMaterials() {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await studentPortalApi.getMaterials()
-        setMaterials(data)
+        const lessons = await studentPortalApi.getLessons()
+        const flat: MyMaterialDetail[] = []
+        for (const lesson of lessons) {
+          for (const m of lesson.materials) {
+            flat.push({
+              id: m.id,
+              title: m.title,
+              description: m.description,
+              type: m.type,
+              file_path: m.file_path,
+              lesson_topic: lesson.topic,
+              lesson_date: lesson.lesson_date,
+            })
+          }
+        }
+        setMaterials(flat)
       } catch (err) {
         console.warn('Failed to load materials', err)
       } finally {
