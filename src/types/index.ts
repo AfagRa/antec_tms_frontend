@@ -314,6 +314,7 @@ export interface MyMaterialDetail {
   description: string | null
   type: string
   file_path: string | null
+  url?: string | null
   lesson_topic: string
   lesson_date: string
 }
@@ -525,6 +526,20 @@ export const MATERIAL_TYPE_CONFIG = {
     border:   'border-red-200',
     icon:     'Youtube',
     iconColor:'text-red-500',
+  },
+  'Video': {
+    bg:       'bg-orange-100',
+    text:     'text-orange-700',
+    border:   'border-orange-200',
+    icon:     'Youtube',
+    iconColor:'text-orange-500',
+  },
+  'Sənəd': {
+    bg:       'bg-green-100',
+    text:     'text-green-700',
+    border:   'border-green-200',
+    icon:     'File',
+    iconColor:'text-green-500',
   },
   'Google Drive': {
     bg:       'bg-green-100',

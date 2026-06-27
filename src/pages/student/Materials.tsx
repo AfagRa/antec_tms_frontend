@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { studentPortalApi } from '../../api/studentPortal'
-import { getFileUrl } from '../../api/client'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 import NoteCell from '../../components/ui/NoteCell'
 import type { MyMaterialDetail, MaterialTypeName } from '../../types'
@@ -10,14 +9,24 @@ import Spinner from '../../components/ui/Spinner'
 const TYPE_TO_LABEL: Record<string, MaterialTypeName> = {
   file:         'Fayl',
   youtube:      'YouTube',
-  video_link:   'YouTube',
+  video_link:   'Video',
   google_drive: 'Google Drive',
   link:         'Linklər',
-  document:     'Fayl',
+  document:     'Sənəd',
 }
 
 function normalizeType(rawType: string): MaterialTypeName {
   return TYPE_TO_LABEL[rawType] ?? 'Linklər'
+}
+
+const PILL_COLORS: Record<string, { idle: string; active: string }> = {
+  'Hamısı':       { idle: 'bg-gray-100 text-gray-600 border-gray-200', active: 'bg-gray-500 text-white border-gray-500' },
+  'Fayl':         { idle: 'bg-blue-100 text-blue-700 border-blue-200', active: 'bg-blue-500 text-white border-blue-500' },
+  'YouTube':      { idle: 'bg-red-100 text-red-700 border-red-200', active: 'bg-red-500 text-white border-red-500' },
+  'Video':        { idle: 'bg-orange-100 text-orange-700 border-orange-200', active: 'bg-orange-500 text-white border-orange-500' },
+  'Google Drive': { idle: 'bg-green-100 text-green-700 border-green-200', active: 'bg-green-500 text-white border-green-500' },
+  'Sənəd':        { idle: 'bg-emerald-100 text-emerald-700 border-emerald-200', active: 'bg-emerald-500 text-white border-emerald-500' },
+  'Linklər':      { idle: 'bg-purple-100 text-purple-700 border-purple-200', active: 'bg-purple-500 text-white border-purple-500' },
 }
 
 export default function StudentMaterials() {
@@ -33,15 +42,18 @@ export default function StudentMaterials() {
     const load = async () => {
       try {
         const lessons = await studentPortalApi.getLessons()
+        console.log('First lesson all materials:', JSON.stringify(lessons[0]?.materials, null, 2))
         const flat: MyMaterialDetail[] = []
         for (const lesson of lessons) {
           for (const m of lesson.materials) {
+            console.log('Material type:', m.type, '| file_path:', m.file_path, '| url:', m.url, '| all keys:', Object.keys(m))
             flat.push({
               id: m.id,
               title: m.title,
               description: m.description,
               type: m.type,
               file_path: m.file_path,
+              url: m.url,
               lesson_topic: lesson.topic,
               lesson_date: lesson.lesson_date,
             })
@@ -79,14 +91,15 @@ export default function StudentMaterials() {
           <div className="flex flex-col">
             <span className="text-xs text-text-base/50 mb-1 block font-semibold">Materialın Tipi</span>
             <div className="flex items-center gap-2 flex-wrap min-h-[38px]">
-              {typeOptions.map((opt) => (
-                <button key={opt} onClick={() => setSelectedType(opt)}
-                  className={selectedType === opt
-                    ? 'border-2 border-primary bg-primary/10 text-primary font-medium rounded-full px-4 py-1.5 text-sm transition-all shadow-neu-inset-sm cursor-pointer'
-                    : 'border border-surface-dark/20 bg-surface text-text-base/50 rounded-full px-4 py-1.5 text-sm transition-all shadow-neu-sm hover:border-primary hover:text-primary cursor-pointer'}>
-                  {opt}
-                </button>
-              ))}
+              {typeOptions.map((opt) => {
+                const c = PILL_COLORS[opt] ?? PILL_COLORS['Hamısı']
+                return (
+                  <button key={opt} onClick={() => setSelectedType(opt)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all cursor-pointer border ${selectedType === opt ? c.active : c.idle + ' shadow-neu-sm hover:shadow-neu-inset-sm'}`}>
+                    {opt}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -105,7 +118,7 @@ export default function StudentMaterials() {
             <thead>
               <tr className="text-xs font-semibold text-text-base/50 uppercase tracking-wide">
                 <th className="pb-2 px-3 pt-4">Materialın Adı</th>
-                <th className="pb-2 px-3 pt-4">Aid Olduğu Dərs</th>
+                <th className="pb-2 px-3 pt-4">Mövzu</th>
                 <th className="pb-2 px-3 pt-4">Tipi</th>
                 <th className="pb-2 px-3 pt-4">Tarix</th>
                 <th className="pb-2 px-3 pt-4">Qeyd</th>
@@ -114,21 +127,18 @@ export default function StudentMaterials() {
             </thead>
             <tbody>
               {paginated.map((row, index) => {
-                const fileUrl = getFileUrl(row.file_path)
-                const hasLink = !!fileUrl
+                const href = row.url ? row.url : row.file_path ? `http://localhost:5014${row.file_path}` : null
                 return (
-                  <tr
-                    key={row.id || index}
-                    onClick={() => {
-                      if (hasLink) window.open(fileUrl!, '_blank', 'noopener,noreferrer')
-                    }}
-                    className={`transition-colors ${hasLink ? 'cursor-pointer hover:bg-surface-dark/10' : 'cursor-default'}`}
-                  >
-                    <td className="py-3.5 text-sm text-text-base font-medium whitespace-normal break-words px-3">{row.title}</td>
-                    <td className="py-3.5 text-sm text-text-base/50 px-3">Mövzu: {row.lesson_topic}</td>
+                  <tr key={row.id || index} className="transition-colors hover:bg-surface-dark/10">
+                    <td className="py-3.5 text-sm text-text-base font-medium whitespace-normal break-words px-3">
+                      {href
+                        ? <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline">{row.title}</a>
+                        : <span>{row.title}</span>}
+                    </td>
+                    <td className="py-3.5 text-sm text-text-base/50 px-3">{row.lesson_topic}</td>
                     <td className="py-3.5 text-sm px-3"><MaterialTypeBadge type={normalizeType(row.type)} /></td>
                     <td className="py-3.5 text-sm text-text-base/50 px-3">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
-                    <td className="py-3.5 px-3" onClick={e => e.stopPropagation()}>
+                    <td className="py-3.5 px-3">
                       {row.description
                         ? <NoteCell note={row.description} meta={row.title} />
                         : <span className="text-sm text-text-base/50">—</span>}
