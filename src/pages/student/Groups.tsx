@@ -4,7 +4,8 @@ import { Grid } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
 import { studentPortalApi } from '../../api/studentPortal'
 import { getFileUrl } from '../../api/client'
-import type { MyLessonItem, MyGradeItem } from '../../types'
+import type { MyLessonItem } from '../../types'
+import { STATUS_LABELS } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 
@@ -12,24 +13,43 @@ interface GroupInfo {
   id: number
   name: string
   lessonCount: number
-  avgGrade: number
+  avgGrade: string
+  status: string
 }
 
 export default function StudentGroups() {
+  const [groups, setGroups] = useState<GroupInfo[]>([])
   const [lessons, setLessons] = useState<MyLessonItem[]>([])
-  const [grades, setGrades] = useState<MyGradeItem[]>([])
   const [lessonGroupFilter, setLessonGroupFilter] = useState<string>('all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [l, g] = await Promise.all([
+        const [g, l, d] = await Promise.all([
+          studentPortalApi.getMyGroups(),
           studentPortalApi.getLessons(),
-          studentPortalApi.getGrades(),
+          studentPortalApi.getDashboard(),
         ])
+        const grades = d.recentGrades ?? d.recent_grades ?? []
+        let avgStr = '-'
+        if (Array.isArray(grades) && grades.length > 0) {
+          const pcts = grades.map((gr: any) => {
+            const score = gr.score ?? 0
+            const maxScore = gr.maxScore ?? gr.max_score ?? 1
+            return (score / Math.max(maxScore, 1)) * 100
+          })
+          const avg = pcts.reduce((a: number, b: number) => a + b, 0) / pcts.length
+          avgStr = avg.toFixed(1) + '%'
+        }
+        setGroups(g.map((grp: any) => ({
+          id: grp.id,
+          name: grp.name,
+          lessonCount: grp.lessonCount ?? grp.lesson_count ?? 0,
+          avgGrade: avgStr,
+          status: grp.status ?? 'active',
+        })))
         setLessons(l)
-        setGrades(g)
       } catch (err) {
         console.warn('Failed to load groups data', err)
       } finally {
@@ -39,52 +59,12 @@ export default function StudentGroups() {
     load()
   }, [])
 
-  const groups = useMemo(() => {
-    const groupMap = new Map<string, GroupInfo>()
-    lessons.forEach((l) => {
-      const key = l.group_name
-      if (!groupMap.has(key)) {
-        groupMap.set(key, { id: 0, name: key, lessonCount: 0, avgGrade: 0 })
-      }
-      groupMap.get(key)!.lessonCount++
-    })
-
-    const gradeMap = new Map<string, number[]>()
-    grades.forEach((g) => {
-      const key = g.lesson_topic
-      if (!gradeMap.has(key)) gradeMap.set(key, [])
-      gradeMap.get(key)!.push(g.score)
-    })
-
-    return Array.from(groupMap.values()).map((g) => {
-      const allScores: number[] = []
-      lessons
-        .filter((l) => l.group_name === g.name)
-        .forEach((l) => {
-          const gr = grades.find((x) => x.lesson_topic === l.topic)
-          if (gr) allScores.push(gr.score)
-        })
-      return {
-        ...g,
-        avgGrade: allScores.length
-          ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
-          : 0,
-      }
-    })
-  }, [lessons, grades])
-
   const groupNames = groups.map((g) => g.name)
 
   const sortedLessons = useMemo(
     () => [...lessons].sort((a, b) => new Date(b.lesson_date).getTime() - new Date(a.lesson_date).getTime()),
     [lessons],
   )
-
-  const gradeByTopic = useMemo(() => {
-    const m = new Map<string, MyGradeItem>()
-    grades.forEach((g) => m.set(g.lesson_topic, g))
-    return m
-  }, [grades])
 
   const filteredLessons = useMemo(
     () => sortedLessons.filter(l =>
@@ -97,7 +77,7 @@ export default function StudentGroups() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-text-base">Mənim Qruplarım və Kurslarım</h1>
+      <h1 className="text-2xl font-semibold text-text-base">Mənim Qruplarım</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5">
         <div className="mb-4">
@@ -128,12 +108,12 @@ export default function StudentGroups() {
             </thead>
             <tbody>
               {groups.map((group, index) => (
-                <tr key={group.name}>
+                <tr key={group.id || index}>
                   <td className="py-3.5 text-sm text-text-base truncate pr-2">{group.name}</td>
                   <td className="py-3.5 text-sm text-text-base pr-2">{group.lessonCount}</td>
-                  <td className="py-3.5 text-sm text-text-base pr-2">{group.avgGrade}%</td>
+                  <td className="py-3.5 text-sm text-text-base pr-2">{group.avgGrade}</td>
                   <td className="py-3.5 text-sm">
-                    <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-primary/10 text-primary">Aktiv</span>
+                    <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-primary/10 text-primary">{STATUS_LABELS[group.status] ?? group.status}</span>
                   </td>
                   <td className="py-3.5 text-sm">
                     <Link to={`${ROUTES.STUDENT_MATERIALS}?group=${group.name}`} className="text-primary text-sm font-medium hover:underline">
@@ -178,54 +158,53 @@ export default function StudentGroups() {
         <div className="overflow-x-auto">
           <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
-              <col style={{ width: '140px' }} />
-              <col />
               <col style={{ width: '120px' }} />
-              <col style={{ width: '180px' }} />
+              <col style={{ width: '140px' }} />
+              <col style={{ width: '130px' }} />
+              <col style={{ minWidth: '350px' }} />
             </colgroup>
             <thead>
               <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3">Dərs tarixi</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3">Mövzu</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3">Qrup</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3">Materiallar</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4">Dərs tarixi</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4">Mövzu</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4">Qrup</th>
+                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4">Materiallar</th>
               </tr>
               <tr><td colSpan={4} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>
             <tbody>
               {filteredLessons.map((lesson, index) => {
-                const grade = gradeByTopic.get(lesson.topic)
                 return (
                   <tr key={lesson.id || index}>
-                    <td className="py-3.5 text-sm text-text-base px-3">{new Date(lesson.lesson_date).toLocaleDateString('az-AZ')}</td>
-                    <td className="py-3.5 text-sm text-text-base truncate px-3">{lesson.topic}</td>
-                    <td className="py-3.5 text-sm text-text-base px-3">{lesson.group_name}</td>
-                    <td className="py-3.5 text-sm px-3">
+                    <td className="py-3.5 text-sm text-text-base px-4">{new Date(lesson.lesson_date).toLocaleDateString('az-AZ')}</td>
+                    <td className="py-3.5 text-sm text-text-base truncate px-4">{lesson.topic}</td>
+                    <td className="py-3.5 text-sm text-text-base px-4">{lesson.group_name}</td>
+                    <td className="py-3.5 text-sm px-4">
                       {lesson.materials.length === 0 ? (
                         <span className="text-text-base/50">—</span>
                       ) : (
                         <div className="flex flex-col gap-1">
                           {lesson.materials.slice(0, 2).map(m => {
-                            const fileUrl = getFileUrl(m.file_path)
+                            const filePath = m.filePath ?? m.file_path
+                            const href = m.url ?? (filePath ? getFileUrl(filePath) : undefined)
+                            if (!href) {
+                              return (
+                                <span key={m.id} className="flex items-center gap-1.5 text-text-base/50 cursor-default">
+                                  <MaterialTypeBadge type={m.type as any} size="sm" />
+                                  <span className="truncate text-xs">{m.title}</span>
+                                </span>
+                              )
+                            }
                             return (
-                            <button
-                              key={m.id}
-                              onClick={() => {
-                                if (fileUrl) {
-                                  window.open(fileUrl, '_blank', 'noopener,noreferrer')
-                                }
-                              }}
-                              className="flex items-center gap-1.5 text-left hover:underline disabled:no-underline disabled:cursor-default"
-                              disabled={!fileUrl}
-                              title={m.title}
-                            >
-                              <MaterialTypeBadge type={m.type as any} size="sm" />
-                              <span className="truncate max-w-[100px] text-xs text-text-base">
-                                {m.title.length > 18 ? m.title.slice(0, 18) + '…' : m.title}
-                              </span>
-                            </button>
-                          )
-                        })}
+                              <a key={m.id} href={href} target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 hover:underline"
+                                title={m.title}
+                              >
+                                <MaterialTypeBadge type={m.type as any} size="sm" />
+                                <span className="truncate text-xs text-text-base">{m.title}</span>
+                              </a>
+                            )
+                          })}
                           {lesson.materials.length > 2 && (
                             <span className="text-[11px] text-text-base/50">
                               +{lesson.materials.length - 2} daha

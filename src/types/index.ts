@@ -194,8 +194,20 @@ export interface TeacherDashboardResponse {
   upcoming_lessons: number
   recent_materials: number
   pending_grades: number
+  weekly_lessons_completed: number
+  weekly_lessons_total: number
   recent_groups: TeacherGroupItem[]
   recent_lessons: TeacherLessonItem[]
+}
+
+export interface WeeklyScheduleItem {
+  lesson_id: number
+  group_id: number
+  group_name: string
+  topic: string
+  lesson_date: string
+  day_of_week_index: number
+  hour: number
 }
 
 export interface TeacherGroupItem {
@@ -214,9 +226,11 @@ export interface TeacherLessonItem {
 
 export interface MyDashboardResponse {
   group: MyGroupInfo | null
-  recent_lessons: MyRecentLesson[]
-  recent_grades: MyRecentGrade[]
-  attendance_summary: MyAttendanceSummary
+  recentLessons: MyRecentLesson[]
+  recentGrades: MyRecentGrade[]
+  attendanceSummary: MyAttendanceSummary
+  finalGrade: number
+  isEligibleForFinal: boolean
 }
 
 export interface MyGroupInfo {
@@ -234,10 +248,9 @@ export interface MyRecentLesson {
 
 export interface MyRecentGrade {
   id: number
-  lesson_topic: string
-  lesson_date?: string
+  lessonTopic: string
   score: number
-  max_score: number
+  maxScore: number
 }
 
 export interface MyAttendanceSummary {
@@ -262,6 +275,7 @@ export interface MyMaterialRef {
   description: string | null
   type: string
   file_path: string | null
+  url?: string | null
 }
 
 export interface MyAttendanceItem {
@@ -272,6 +286,15 @@ export interface MyAttendanceItem {
   status: string
   minutes_late: number | null
   reason: string | null
+}
+
+export interface AttendanceJournalResponse {
+  items: MyAttendanceItem[]
+  presentCount: number
+  excusedCount: number
+  absentCount: number
+  lateCount: number
+  percentage: number
 }
 
 export interface MyGradeItem {
@@ -291,6 +314,7 @@ export interface MyMaterialDetail {
   description: string | null
   type: string
   file_path: string | null
+  url?: string | null
   lesson_topic: string
   lesson_date: string
 }
@@ -502,6 +526,20 @@ export const MATERIAL_TYPE_CONFIG = {
     border:   'border-red-200',
     icon:     'Youtube',
     iconColor:'text-red-500',
+  },
+  'Video': {
+    bg:       'bg-orange-100',
+    text:     'text-orange-700',
+    border:   'border-orange-200',
+    icon:     'Youtube',
+    iconColor:'text-orange-500',
+  },
+  'Sənəd': {
+    bg:       'bg-green-100',
+    text:     'text-green-700',
+    border:   'border-green-200',
+    icon:     'File',
+    iconColor:'text-green-500',
   },
   'Google Drive': {
     bg:       'bg-green-100',

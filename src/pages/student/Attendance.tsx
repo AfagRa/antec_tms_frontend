@@ -2,20 +2,23 @@ import { useState, useEffect, useMemo } from 'react'
 import { AlertCircle } from 'lucide-react'
 import DateRangePicker from '../../components/ui/DateRangePicker'
 import { studentPortalApi } from '../../api/studentPortal'
-import type { MyAttendanceItem } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
 const STATUS_LABELS: Record<string, string> = {
+  Present: 'İştirak edib',
+  Late: 'Gecikib',
+  AbsentExcused: 'Üzürlü qaib',
+  AbsentUnexcused: 'Üzrsüz qaib',
   present: 'İştirak edib',
-  late: 'Gecikdi',
-  absent_excused: 'Qaib (üzrlü)',
-  absent_unexcused: 'Qaib (üzrsüz)',
+  late: 'Gecikib',
+  absent_excused: 'Üzürlü qaib',
+  absent_unexcused: 'Üzrsüz qaib',
 }
 
-const STATUS_OPTIONS = ['Hamısı', 'İştirak edib', 'Qaib (üzrlü)', 'Qaib (üzrsüz)', 'Gecikdi']
+const STATUS_OPTIONS = ['Hamısı', 'İştirak edib', 'Gecikib', 'Üzürlü qaib', 'Üzrsüz qaib']
 
 export default function StudentAttendance() {
-  const [records, setRecords] = useState<MyAttendanceItem[]>([])
+  const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [retryCount, setRetryCount] = useState(0)
@@ -25,12 +28,29 @@ export default function StudentAttendance() {
   const [endDate, setEndDate] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 6
+  const [attSummary, setAttSummary] = useState({ present_count: 0, excused_count: 0, absent_count: 0, late_count: 0, percentage: 0 })
+  const [groupOptions, setGroupOptions] = useState<string[]>(['Hamısı'])
+  const [lessons, setLessons] = useState<any[]>([])
 
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await studentPortalApi.getAttendance()
-        setRecords(data.sort((a, b) => new Date(b.lesson_date).getTime() - new Date(a.lesson_date).getTime()))
+        const [response, groups, allLessons] = await Promise.all([
+          studentPortalApi.getAttendanceJournal(),
+          studentPortalApi.getMyGroups(),
+          studentPortalApi.getLessons(),
+        ])
+        const sorted = [...response.items].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        setRecords(sorted)
+        setAttSummary({
+          present_count: response.present_count,
+          excused_count: response.excused_count,
+          absent_count: response.absent_count,
+          late_count: response.late_count,
+          percentage: response.percentage,
+        })
+        setGroupOptions(['Hamısı', ...groups.map((g: any) => g.name)])
+        setLessons(allLessons)
       } catch (err) {
         console.warn('Failed to load attendance', err)
         setError('Davamiyyət məlumatları yüklənə bilmədi. Səhifəni yeniləyin.')
@@ -41,33 +61,62 @@ export default function StudentAttendance() {
     load()
   }, [retryCount])
 
-  const groupOptions = useMemo(
-    () => ['Hamısı', ...Array.from(new Set(records.map(r => r.group_name).filter(Boolean)))],
-    [records],
-  )
-
   useEffect(() => { setCurrentPage(1) }, [selectedGroup, selectedStatus, startDate, endDate])
 
-  const summaryStats = useMemo(() => {
-    const present = records.filter((a) => a.status === 'present').length
-    const excused = records.filter((a) => a.status === 'absent_excused').length
-    const unexcused = records.filter((a) => a.status === 'absent_unexcused').length
-    const late = records.filter((a) => a.status === 'late').length
-    const total = records.length
+  const groupFilteredRecords = useMemo(() => {
+    if (selectedGroup === 'Hamısı') return records
+    const groupLessonDates = new Set(
+      lessons
+        .filter(l => l.group_name === selectedGroup)
+        .map(l => {
+          const d = new Date(l.lesson_date)
+          return isNaN(d.getTime()) ? '' : d.toDateString()
+        })
+        .filter(Boolean)
+    )
+    if (groupLessonDates.size === 0) return records
+    return records.filter(r => {
+      const d = new Date(r.created_at)
+      return groupLessonDates.has(d.toDateString())
+    })
+  }, [records, lessons, selectedGroup])
+
+  const computedSummary = useMemo(() => {
+    if (selectedGroup === 'Hamısı') return null
+    const items = groupFilteredRecords
+    const count = (statuses: string[]) => items.filter((r: any) => statuses.some(s => r.status === s)).length
+    const present = count(['Present', 'present'])
+    const excused = count(['AbsentExcused', 'absent_excused'])
+    const absent = count(['AbsentUnexcused', 'absent_unexcused'])
+    const late = count(['Late', 'late'])
+    const total = present + excused + absent + late
     const pct = total > 0 ? Math.round(((present + late) / total) * 100) : 0
-    return { present, excused, unexcused, late, total, pct }
-  }, [records])
+    return { present, excused, unexcused: absent, late, total, pct }
+  }, [selectedGroup, groupFilteredRecords])
+
+  const summaryStats = useMemo(() => {
+    if (computedSummary) return computedSummary
+    return {
+      present: attSummary.present_count,
+      excused: attSummary.excused_count,
+      unexcused: attSummary.absent_count,
+      late: attSummary.late_count,
+      total: attSummary.present_count + attSummary.excused_count + attSummary.absent_count + attSummary.late_count,
+      pct: attSummary.percentage,
+    }
+  }, [computedSummary, attSummary])
+
+  const baseRecords = selectedGroup === 'Hamısı' ? records : groupFilteredRecords
 
   const filtered = useMemo(() => {
-    return records.filter((r) => {
-      if (selectedGroup !== 'Hamısı' && r.group_name !== selectedGroup) return false
+    return baseRecords.filter((r) => {
       if (selectedStatus !== 'Hamısı' && STATUS_LABELS[r.status] !== selectedStatus) return false
-      const d = new Date(r.lesson_date)
+      const d = new Date(r.created_at)
       if (startDate && d < new Date(startDate)) return false
       if (endDate && d > new Date(endDate)) return false
       return true
     })
-  }, [records, selectedGroup, selectedStatus, startDate, endDate])
+  }, [baseRecords, selectedStatus, startDate, endDate])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)
@@ -75,10 +124,14 @@ export default function StudentAttendance() {
 
   const getStatusBadge = (status: string) => {
     const map: Record<string, string> = {
+      Present: 'bg-green-100 text-green-700',
+      Late: 'bg-amber-100 text-amber-700',
+      AbsentExcused: 'bg-blue-100 text-blue-600',
+      AbsentUnexcused: 'bg-red-100 text-red-600',
       present: 'bg-green-100 text-green-700',
-      absent_unexcused: 'bg-red-100 text-red-600',
       late: 'bg-amber-100 text-amber-700',
       absent_excused: 'bg-blue-100 text-blue-600',
+      absent_unexcused: 'bg-red-100 text-red-600',
     }
     return (
       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm ${map[status] || ''}`}>
@@ -155,37 +208,45 @@ export default function StudentAttendance() {
         </div>
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between col-span-2 md:col-span-1">
           <span className="text-sm font-semibold text-text-base/50">Ümumi Davamiyyət Faizi</span>
-          <span className="text-3xl font-bold text-text-base mt-1">{summaryStats.pct}%</span>
+          <span className="text-3xl font-bold text-text-base mt-1">{summaryStats.pct.toFixed(1)}%</span>
         </div>
       </div>
 
       <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed border-collapse text-left">
-            <colgroup>
-              <col style={{ width: '120px' }} />
-              <col />
-              <col style={{ width: '130px' }} />
-              <col style={{ width: '100px' }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Dərs tarixi</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Mövzu</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Status</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Gecikmə</th>
-              </tr>
-              <tr><td colSpan={4} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
-            </thead>
-            <tbody>
-              {paginated.map((row, index) => (
-                <tr key={row.id || index}>
-                  <td className="py-3.5 text-sm text-text-base px-3">{new Date(row.lesson_date).toLocaleDateString('az-AZ')}</td>
-                  <td className="py-3.5 text-sm text-text-base truncate px-3">{row.lesson_topic}</td>
-                  <td className="py-3.5 px-3">{getStatusBadge(row.status)}</td>
-                  <td className="py-3.5 text-sm text-text-base px-3">{row.minutes_late ? `${row.minutes_late} dəq` : '—'}</td>
+            <table className="w-full table-fixed border-collapse text-left">
+              <colgroup>
+                <col style={{ width: '120px' }} />
+                <col />
+                <col style={{ width: '160px' }} />
+                <col style={{ width: '100px' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Dərs tarixi</th>
+                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Mövzu</th>
+                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Status</th>
+                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Gecikmə</th>
                 </tr>
-              ))}
+                <tr><td colSpan={4} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
+              </thead>
+              <tbody>
+                {paginated.map((row, index) => {
+                  const d = new Date(row.created_at)
+                  const dateStr = isNaN(d.getTime()) ? '—' : d.toLocaleDateString('az-AZ')
+                  const lessonOnDay = lessons.find(l => {
+                    const ld = new Date(l.lesson_date)
+                    return !isNaN(ld.getTime()) && ld.toDateString() === d.toDateString()
+                  })
+                  return (
+                    <tr key={row.id || index}>
+                      <td className="py-3.5 text-sm text-text-base px-3">{dateStr}</td>
+                      <td className="py-3.5 text-sm text-text-base truncate px-3">{lessonOnDay?.topic ?? '—'}</td>
+                      <td className="py-3.5 px-3">{getStatusBadge(row.status)}</td>
+                      <td className="py-3.5 text-sm text-text-base px-3">{row.minutes_late != null ? `${row.minutes_late} dəq` : '—'}</td>
+                    </tr>
+                  )
+                })}
               {paginated.length === 0 && (
                 <tr><td colSpan={4} className="py-6 text-center text-sm text-text-base/50 px-3">Məlumat tapılmadı.</td></tr>
               )}
