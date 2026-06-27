@@ -35,8 +35,8 @@ export const studentPortalApi = {
     const { data } = await apiClient.get<{ data: MyLessonItem[] }>('/me/lessons')
     return data.data ?? data
   },
-  getMyGroups: async (): Promise<Array<{ id: number; name: string }>> => {
-    const { data } = await apiClient.get<{ data: Array<{ id: number; name: string }> }>('/me/my-groups')
+  getMyGroups: async (): Promise<Array<{ id: number; name: string; lessonCount: number; averageGrade: number; status: string }>> => {
+    const { data } = await apiClient.get<{ data: Array<{ id: number; name: string; lessonCount: number; averageGrade: number; status: string }> }>('/me/my-groups')
     return data.data ?? data
   },
   getAttendanceJournal: async (): Promise<AttendanceJournalResponse> => {
