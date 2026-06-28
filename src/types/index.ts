@@ -315,6 +315,7 @@ export interface MyMaterialDetail {
   description: string | null
   type: string
   file_path: string | null
+  filePath?: string | null
   url?: string | null
   lesson_topic: string
   lesson_date: string
