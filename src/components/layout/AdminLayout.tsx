@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { Menu } from 'lucide-react'
 import AdminSidebar from './AdminSidebar'
 import ToastContainer from '@/components/ui/Toast'
 import Spinner from '@/components/ui/Spinner'
@@ -34,15 +33,6 @@ export default function AdminLayout() {
         />
       )}
       <main className="min-w-0 flex-1 overflow-y-auto p-8">
-        <div className="mb-4">
-          <button
-            onClick={() => setSidebarOpen(prev => !prev)}
-            className="rounded-md p-1.5 text-text-base/50 hover:text-text-base hover:bg-surface-dark/20 transition-colors"
-            aria-label="Menyu"
-          >
-            <Menu size={20} />
-          </button>
-        </div>
         <Outlet />
       </main>
       <ToastContainer toasts={toasts} onRemove={removeToast} />
