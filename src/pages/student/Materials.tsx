@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { studentPortalApi } from '../../api/studentPortal'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 import NoteCell from '../../components/ui/NoteCell'
+import { getMaterialHref } from '../../utils/material'
 import type { MyMaterialDetail, MaterialTypeName } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
@@ -42,11 +43,9 @@ export default function StudentMaterials() {
     const load = async () => {
       try {
         const lessons = await studentPortalApi.getLessons()
-        console.log('First lesson all materials:', JSON.stringify(lessons[0]?.materials, null, 2))
         const flat: MyMaterialDetail[] = []
         for (const lesson of lessons) {
           for (const m of lesson.materials) {
-            console.log('Material type:', m.type, '| file_path:', m.file_path, '| url:', m.url, '| all keys:', Object.keys(m))
             flat.push({
               id: m.id,
               title: m.title,
@@ -127,7 +126,7 @@ export default function StudentMaterials() {
             </thead>
             <tbody>
               {paginated.map((row, index) => {
-                const href = row.url ? row.url : row.file_path ? `http://localhost:5014${row.file_path}` : null
+                const href = getMaterialHref(row)
                 return (
                   <tr key={row.id || index} className="transition-colors hover:bg-surface-dark/10">
                     <td className="py-3.5 text-sm text-text-base font-medium whitespace-normal break-words px-3">

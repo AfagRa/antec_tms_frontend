@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Grid } from 'lucide-react'
 import { ROUTES } from '../../constants/routes'
 import { studentPortalApi } from '../../api/studentPortal'
-import { getFileUrl } from '../../api/client'
+import { getMaterialHref } from '../../utils/material'
 import type { MyLessonItem } from '../../types'
 import { STATUS_LABELS } from '../../types'
 import Spinner from '../../components/ui/Spinner'
@@ -185,8 +185,7 @@ export default function StudentGroups() {
                       ) : (
                         <div className="flex flex-col gap-1">
                           {lesson.materials.slice(0, 2).map(m => {
-                            const filePath = m.filePath ?? m.file_path
-                            const href = m.url ?? (filePath ? getFileUrl(filePath) : undefined)
+                            const href = getMaterialHref(m)
                             if (!href) {
                               return (
                                 <span key={m.id} className="flex items-center gap-1.5 text-text-base/50 cursor-default">

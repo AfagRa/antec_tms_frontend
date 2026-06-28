@@ -22,6 +22,7 @@ const navItems = [
   { to: "/admin/groups", icon: Users, label: "Qruplar" },
   { to: "/admin/teachers", icon: UserCheck, label: "Müəllimlər" },
   { to: "/admin/students", icon: GraduationCap, label: "Tələbələr" },
+  { to: "/admin/journal", icon: BookOpen, label: "Jurnal" },
 ];
 
 export default function Sidebar({ open, onToggle }: Props) {
