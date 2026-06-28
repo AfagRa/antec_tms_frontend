@@ -118,9 +118,26 @@ export default function StudentAttendance() {
     })
   }, [baseRecords, selectedStatus, startDate, endDate])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
+  const deduped = useMemo(() => {
+    const seen = new Set<string>()
+    return filtered.filter(r => {
+      const d = new Date(r.created_at)
+      if (isNaN(d.getTime())) return true
+      const ds = d.toDateString()
+      const lessonOnDay = lessons.find(l => {
+        const ld = new Date(l.lesson_date)
+        return !isNaN(ld.getTime()) && ld.toDateString() === ds
+      })
+      const key = `${ds}_${lessonOnDay?.topic ?? ''}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [filtered, lessons])
+
+  const totalPages = Math.max(1, Math.ceil(deduped.length / ITEMS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)
-  const paginated = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE)
+  const paginated = deduped.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE)
 
   const getStatusBadge = (status: string) => {
     const map: Record<string, string> = {
@@ -217,18 +234,20 @@ export default function StudentAttendance() {
             <table className="w-full table-fixed border-collapse text-left">
               <colgroup>
                 <col style={{ width: '120px' }} />
-                <col />
-                <col style={{ width: '160px' }} />
+                <col style={{ width: '130px' }} />
+                <col style={{ width: '180px' }} />
+                <col style={{ width: '140px' }} />
                 <col style={{ width: '100px' }} />
               </colgroup>
               <thead>
                 <tr>
-                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Dərs tarixi</th>
-                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Mövzu</th>
-                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Status</th>
-                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Gecikmə</th>
+                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Dərs tarixi</th>
+                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Qrup</th>
+                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Mövzu</th>
+                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Status</th>
+                  <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4 pt-4">Gecikmə</th>
                 </tr>
-                <tr><td colSpan={4} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
+                <tr><td colSpan={5} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
               </thead>
               <tbody>
                 {paginated.map((row, index) => {
@@ -240,15 +259,16 @@ export default function StudentAttendance() {
                   })
                   return (
                     <tr key={row.id || index}>
-                      <td className="py-3.5 text-sm text-text-base px-3">{dateStr}</td>
-                      <td className="py-3.5 text-sm text-text-base truncate px-3">{lessonOnDay?.topic ?? '—'}</td>
-                      <td className="py-3.5 px-3">{getStatusBadge(row.status)}</td>
-                      <td className="py-3.5 text-sm text-text-base px-3">{row.minutes_late != null ? `${row.minutes_late} dəq` : '—'}</td>
+                      <td className="py-3.5 text-sm text-text-base px-4 whitespace-nowrap">{dateStr}</td>
+                      <td className="py-3.5 text-sm text-text-base truncate px-4">{lessonOnDay?.group_name ?? '—'}</td>
+                      <td className="py-3.5 text-sm text-text-base truncate px-4">{lessonOnDay?.topic ?? '—'}</td>
+                      <td className="py-3.5 px-4 whitespace-nowrap">{getStatusBadge(row.status)}</td>
+                      <td className="py-3.5 text-sm text-text-base px-4 whitespace-nowrap">{row.minutes_late != null ? `${row.minutes_late} dəq` : '—'}</td>
                     </tr>
                   )
                 })}
               {paginated.length === 0 && (
-                <tr><td colSpan={4} className="py-6 text-center text-sm text-text-base/50 px-3">Məlumat tapılmadı.</td></tr>
+                <tr><td colSpan={5} className="py-6 text-center text-sm text-text-base/50 px-3">Məlumat tapılmadı.</td></tr>
               )}
             </tbody>
           </table>
@@ -270,9 +290,9 @@ export default function StudentAttendance() {
               className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-1.5 text-sm text-text-base shadow-neu-sm hover:shadow-neu-inset-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">›</button>
           </div>
           <span className="text-xs text-text-base/50">
-            {filtered.length === 0
+            {deduped.length === 0
               ? 'Nəticə tapılmadı'
-              : `Nəticə ${(safePage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(safePage * ITEMS_PER_PAGE, filtered.length)} (${filtered.length})`}
+              : `Nəticə ${(safePage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(safePage * ITEMS_PER_PAGE, deduped.length)} (${deduped.length})`}
           </span>
         </div>
       </div>

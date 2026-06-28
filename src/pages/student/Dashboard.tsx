@@ -15,18 +15,24 @@ export default function StudentDashboard() {
   const navigate = useNavigate()
   const [data, setData] = useState<any>(null)
   const [groups, setGroups] = useState<StudentGroup[]>([])
+  const [allLessons, setAllLessons] = useState<any[]>([])
+  const [attJournal, setAttJournal] = useState<any[]>([])
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [d, g] = await Promise.all([
+        const [d, g, l, att] = await Promise.all([
           studentPortalApi.getDashboard(),
           studentPortalApi.getMyGroups(),
+          studentPortalApi.getLessons(),
+          studentPortalApi.getAttendanceJournal(),
         ])
         setData(d)
         setGroups(g)
+        setAllLessons(Array.isArray(l) ? l : [])
+        setAttJournal(att.items ?? [])
         if (g.length > 0 && selectedGroupId === null) {
           setSelectedGroupId(g[0].id)
         }
@@ -40,41 +46,80 @@ export default function StudentDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const lessons: any[] = data?.recentLessons ?? data?.recent_lessons ?? []
   const grades: any[] = data?.recentGrades ?? data?.recent_grades ?? []
-  const attSum: any = data?.attendanceSummary ?? data?.attendance_summary ?? {}
+  const selectedGroup = groups.find(g => g.id === selectedGroupId) ?? groups[0]
+
+  const groupLessons = useMemo(() => {
+    if (!selectedGroup) return allLessons
+    return allLessons.filter(l => l.group_name === selectedGroup.name)
+  }, [allLessons, selectedGroup])
+
+  const groupLessonTopics = useMemo(() => new Set(groupLessons.map(l => l.topic)), [groupLessons])
+
+  const groupLessonDates = useMemo(() => {
+    return new Set(
+      groupLessons
+        .map(l => {
+          const d = new Date(l.lesson_date)
+          return isNaN(d.getTime()) ? '' : d.toDateString()
+        })
+        .filter(Boolean)
+    )
+  }, [groupLessons])
 
   const lessonDateMap = useMemo(() => {
     const map = new Map<string, string>()
-    for (const l of lessons) {
-      const topic = l.topic ?? l.topic
-      const date = l.lessonDate ?? l.lesson_date
+    for (const l of groupLessons) {
+      const topic = l.topic
+      const date = l.lesson_date
       if (topic && date) map.set(topic, date)
     }
     return map
-  }, [lessons])
+  }, [groupLessons])
 
-  const selectedGroup = groups.find(g => g.id === selectedGroupId) ?? groups[0]
+  const groupGrades = useMemo(() => {
+    return grades.filter(g => {
+      const topic = g.lessonTopic ?? g.lesson_topic
+      return groupLessonTopics.has(topic)
+    })
+  }, [grades, groupLessonTopics])
+
+  const groupAttItems = useMemo(() => {
+    return attJournal.filter((r: any) => {
+      const d = new Date(r.created_at)
+      return groupLessonDates.has(d.toDateString())
+    })
+  }, [attJournal, groupLessonDates])
+
+  const groupAttSum = useMemo(() => {
+    const present = groupAttItems.filter((r: any) => /^Present$/i.test(r.status)).length
+    const late = groupAttItems.filter((r: any) => /^Late$/i.test(r.status)).length
+    const absent = groupAttItems.filter((r: any) => /^Absent/i.test(r.status)).length
+    const total = present + late + absent
+    const pct = total > 0 ? Math.round(((present + late) / total) * 100) : 0
+    return { present, late, absent, total, pct }
+  }, [groupAttItems])
+
+  const groupAvgPct = useMemo(() => {
+    if (groupGrades.length === 0) return null
+    const scores = groupGrades.map((g: any) => {
+      const score = g.score ?? 0
+      const maxScore = g.maxScore ?? g.max_score ?? 1
+      return (score / Math.max(maxScore, 1)) * 100
+    })
+    return Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length)
+  }, [groupGrades])
 
   if (loading) return <Spinner />
   if (!data) return <p className="text-sm text-text-base/50">Məlumat tapılmadı.</p>
 
-  const attPct = (attSum.total ?? 0) > 0
-    ? Math.round(
-        (((attSum.present ?? 0) + (attSum.late ?? 0))
-          / (attSum.total ?? 1)) * 100
-      )
-    : 0
-
-  const avgPct = grades.length > 0
-    ? `${Math.round(grades.reduce((a: number, g: any) => a + (g.score ?? 0) / Math.max(g.maxScore ?? g.max_score ?? 1, 1), 0) / grades.length * 100)}%`
-    : '—'
+  const attPct = groupAttSum.total > 0 ? groupAttSum.pct : 0
+  const avgPctDisplay = groupAvgPct !== null ? `${groupAvgPct}%` : '—'
 
   const statCards = [
     { value: groups.length, label: 'Qruplar' },
-    { value: lessons.length, label: 'Son Dərslər' },
     { value: `${attPct}%`, label: 'Davamiyyət', accent: true },
-    { value: avgPct, label: 'Ortalama (%)', accent: true },
+    { value: avgPctDisplay, label: 'Ortalama (%)', accent: true },
   ]
 
   return (
@@ -101,7 +146,7 @@ export default function StudentDashboard() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
         {statCards.map((stat, idx) => (
           <NeuStatCard key={idx} value={stat.value} label={stat.label} accent={stat.accent} />
         ))}
@@ -110,7 +155,7 @@ export default function StudentDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
         <div className="rounded-neu bg-surface shadow-neu-sm p-5">
           <h2 className="text-base font-semibold text-text-base mb-4">Son Qiymətlərim</h2>
-          {grades.length > 0 ? (
+          {groupGrades.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -123,7 +168,7 @@ export default function StudentDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {grades.map((g: any, i: number) => {
+                  {groupGrades.map((g: any, i: number) => {
                     const topic = g.lessonTopic ?? g.lesson_topic ?? ''
                     const lessonDate = lessonDateMap.get(topic)
                     const score = g.score ?? 0
@@ -151,9 +196,9 @@ export default function StudentDashboard() {
         <div className="flex flex-col gap-5">
           <div className="rounded-neu bg-surface shadow-neu-sm p-5">
             <h2 className="text-base font-semibold text-text-base mb-3">Son Dərslər</h2>
-            {lessons.length > 0 ? (
+            {groupLessons.length > 0 ? (
               <div className="flex flex-col gap-2">
-                {lessons.slice(0, 3).map((l: any, i: number) => (
+                {groupLessons.slice(0, 3).map((l: any, i: number) => (
                   <div key={l.id || i} className="flex items-center justify-between py-2 border-b border-surface-dark/20 last:border-0">
                     <div className="min-w-0">
                       <span className="text-sm text-text-base truncate block">{l.topic}</span>
@@ -180,19 +225,19 @@ export default function StudentDashboard() {
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-lg bg-emerald-50 px-3 py-3 shadow-neu-sm">
                 <span className="block text-xl font-bold text-emerald-700">
-                  {(attSum.present ?? 0) + (attSum.late ?? 0)}
+                  {groupAttSum.present + groupAttSum.late}
                 </span>
                 <span className="block text-xs text-emerald-600/70 mt-0.5">İştirak</span>
               </div>
               <div className="rounded-lg bg-red-50 px-3 py-3 shadow-neu-sm">
                 <span className="block text-xl font-bold text-red-600">
-                  {attSum.absent ?? 0}
+                  {groupAttSum.absent}
                 </span>
                 <span className="block text-xs text-red-500/70 mt-0.5">Qaib</span>
               </div>
               <div className="rounded-lg bg-surface-dark/20 px-3 py-3 shadow-neu-sm">
                 <span className="block text-xl font-bold text-text-base">
-                  {attSum.total ?? 0}
+                  {groupAttSum.total}
                 </span>
                 <span className="block text-xs text-text-base/50 mt-0.5">Ümumi</span>
               </div>
