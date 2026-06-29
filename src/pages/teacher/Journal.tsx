@@ -6,6 +6,7 @@ import { lessonsApi } from '../../api/lessons'
 import type { Group, GroupStudent, GroupLessonItem, LessonAttendanceItem, LessonGradeItem, CreateAttendancePayload, CreateGradePayload, GradeCategory } from '../../types'
 import type { JournalCell } from '../../types'
 import Spinner from '../../components/ui/Spinner'
+import Button from '../../components/ui/Button'
 import { AttendanceSegment } from '../../components/ui/AttendanceSegment'
 import { exportJournalToExcel } from '../../utils/exportJournal'
 
@@ -282,7 +283,7 @@ export default function TeacherJournal() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="shrink-0">
-        <h1 className="text-2xl font-semibold text-text-base mb-4">Jurnal</h1>
+        <h1 className="text-2xl font-bold text-text-base mb-4">Jurnal</h1>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
             <div className="flex items-center w-full sm:w-auto">
@@ -314,27 +315,34 @@ export default function TeacherJournal() {
           <div className="flex items-center gap-3 flex-wrap">
             <span className="rounded-neu-sm bg-surface shadow-neu-sm px-3 py-1.5 text-sm text-text-base">{students.length} tələbə</span>
             <span className="rounded-neu-sm bg-surface shadow-neu-sm px-3 py-1.5 text-sm text-text-base">{visibleLessons.length} dərs</span>
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Download size={15} />}
               onClick={() => {
                 const grp = groups.find(g => g.id === selectedGroupId)
                 if (!grp) return
                 exportJournalToExcel(grp.name, students, lessons, matrix, columnCategories, selectedCategory)
               }}
-              className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all cursor-pointer"
             >
-              <Download size={15} />
               Excel Export
-            </button>
-            <button onClick={handleSave} disabled={saving || (locked && !editableLessonId)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-60 transition-all cursor-pointer">
-              <Save size={15} />
-              {locked && !editableLessonId ? 'Yadda Saxlandı ✓' : saving ? 'Saxlanılır...' : 'Yadda Saxla'}
-            </button>
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Save size={15} />}
+              onClick={handleSave}
+              disabled={saving || (locked && !editableLessonId)}
+              loading={saving}
+            >
+              {locked && !editableLessonId ? 'Yadda Saxlandı ✓' : 'Yadda Saxla'}
+            </Button>
           </div>
         </div>
       </div>
 
       <div className="flex-1 min-h-0">
-        <div className="rounded-neu bg-surface shadow-neu-sm p-0 h-full overflow-hidden">
+        <div className="rounded-neu bg-surface p-0 h-full overflow-hidden">
           <div className="overflow-auto h-full w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
             <table className="border-separate border-spacing-0 text-sm" style={{ minWidth: `${20 + 132 + visibleLessons.length * 270 + 80}px` }}>
               <thead>

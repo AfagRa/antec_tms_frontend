@@ -126,7 +126,7 @@ export default function StudentGrades() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold text-text-base">Qiymət Jurnalı</h1>
+      <h1 className="text-2xl font-bold text-text-base">Qiymət Jurnalı</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
@@ -184,12 +184,12 @@ export default function StudentGrades() {
               <col style={{ width: '80px' }} />
             </colgroup>
             <thead>
-              <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Dərs tarixi</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Mövzu</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Bal</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Maksimum</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-3 pt-4">Faiz(%)</th>
+              <tr className="bg-surface-dark/20">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Dərs tarixi</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Mövzu</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Bal</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Maksimum</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Faiz(%)</th>
               </tr>
               <tr><td colSpan={5} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>

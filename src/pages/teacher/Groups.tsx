@@ -5,7 +5,7 @@ import { groupsApi } from '../../api/groups'
 import { teacherPortalApi } from '../../api/teacherPortal'
 import { lessonsApi } from '../../api/lessons'
 import type { Group } from '../../types'
-import { STATUS_LABELS } from '../../types'
+import Badge from '../../components/ui/Badge'
 import Spinner from '../../components/ui/Spinner'
 
 export default function Groups() {
@@ -46,28 +46,28 @@ export default function Groups() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-text-base">Mənim Qruplarım</h1>
+      <h1 className="mb-6 text-2xl font-bold text-text-base">Mənim Qruplarım</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-6">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-text-base">
-            Cəmi Qruplar: <span className="font-semibold">{groups.length}</span>
+            Cəmi Qruplar: <span className="font-bold">{groups.length}</span>
           </p>
         </div>
 
         <div className="overflow-x-auto w-full">
           <table className="min-w-max w-full">
             <thead>
-              <tr className="border-b border-surface-dark/20 bg-surface-light">
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">#</th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Qrup adı</th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Kurs adı</th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Tələbə sayı</th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Dərs sayı</th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Başlama tarixi</th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Bitmə tarixi</th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Status</th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">Əməliyyatlar</th>
+              <tr className="bg-surface-dark/20">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">#</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Qrup adı</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Kurs adı</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tələbə sayı</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Dərs sayı</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Başlama tarixi</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Bitmə tarixi</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Status</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Əməliyyatlar</th>
               </tr>
             </thead>
             <tbody>
@@ -85,11 +85,7 @@ export default function Groups() {
                     {group.end_date ? new Date(group.end_date).toLocaleDateString('az-AZ') : '—'}
                   </td>
                   <td className="px-3 py-3">
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      group.status === 'active' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {STATUS_LABELS[group.status] ?? group.status}
-                    </span>
+                    <Badge status={group.status} />
                   </td>
                   <td className="px-3 py-3">
                     <Link

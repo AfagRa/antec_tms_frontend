@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import NeuStatCard from '../../components/ui/NeuStatCard'
+import { BookOpen, TrendingUp, Users } from 'lucide-react'
+import StatCard from '../../components/ui/StatCard'
 import { studentPortalApi } from '../../api/studentPortal'
 import type { MyDashboardResponse } from '../../types'
 import { STATUS_LABELS } from '../../types'
@@ -116,15 +117,9 @@ export default function StudentDashboard() {
   const attPct = groupAttSum.total > 0 ? groupAttSum.pct : 0
   const avgPctDisplay = groupAvgPct !== null ? `${groupAvgPct}%` : '—'
 
-  const statCards = [
-    { value: groups.length, label: 'Qruplar' },
-    { value: `${attPct}%`, label: 'Davamiyyət', accent: true },
-    { value: avgPctDisplay, label: 'Ortalama (%)', accent: true },
-  ]
-
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-text-base">Tələbə Ana Səhifəsi</h1>
+      <h1 className="mb-6 text-2xl font-bold text-text-base">Tələbə Ana Səhifəsi</h1>
 
       {groups.length > 0 ? (
         <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -146,25 +141,25 @@ export default function StudentDashboard() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-        {statCards.map((stat, idx) => (
-          <NeuStatCard key={idx} value={stat.value} label={stat.label} accent={stat.accent} />
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <StatCard title="Qruplar" value={groups.length} icon={<Users size={22} />} />
+        <StatCard title="Davamiyyət" value={`${attPct}%`} icon={<BookOpen size={22} />} color="text-primary" />
+        <StatCard title="Ortalama (%)" value={avgPctDisplay} icon={<TrendingUp size={22} />} color="text-primary" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
         <div className="rounded-neu bg-surface shadow-neu-sm p-5">
-          <h2 className="text-base font-semibold text-text-base mb-4">Son Qiymətlərim</h2>
+          <h2 className="text-base font-bold text-text-base mb-4">Son Qiymətlərim</h2>
           {groupGrades.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-surface-dark/20">
-                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Dərs tarixi</th>
-                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Mövzu</th>
-                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Bal</th>
-                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Maksimum</th>
-                    <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Faiz (%)</th>
+                  <tr className="bg-surface-dark/20">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Dərs tarixi</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Mövzu</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Bal</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Maksimum</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Faiz (%)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -195,7 +190,7 @@ export default function StudentDashboard() {
 
         <div className="flex flex-col gap-5">
           <div className="rounded-neu bg-surface shadow-neu-sm p-5">
-            <h2 className="text-base font-semibold text-text-base mb-3">Son Dərslər</h2>
+            <h2 className="text-base font-bold text-text-base mb-3">Son Dərslər</h2>
             {groupLessons.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {groupLessons.slice(0, 3).map((l: any, i: number) => (
@@ -221,7 +216,7 @@ export default function StudentDashboard() {
           </div>
 
           <div className="rounded-neu bg-surface shadow-neu-sm p-5">
-            <h2 className="text-sm font-semibold text-text-base mb-3">Davamiyyət Xülasəsi</h2>
+            <h2 className="text-sm font-bold text-text-base mb-3">Davamiyyət Xülasəsi</h2>
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-lg bg-emerald-50 px-3 py-3 shadow-neu-sm">
                 <span className="block text-xl font-bold text-emerald-700">

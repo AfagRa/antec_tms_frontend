@@ -16,11 +16,11 @@ export default function Header({ sidebarOpen, onToggle }: Props) {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-10 flex h-[64px] items-center justify-end border-b border-surface-dark/20 bg-surface px-6">
-      <div className="flex items-center gap-3 flex-1 max-w-md">
+    <header className="sticky top-0 z-10 flex h-[64px] items-center justify-between border-b border-surface-dark/20 bg-surface px-6">
+      <div className="flex items-center gap-3">
         <button
           onClick={onToggle}
-          className="lg:hidden mr-auto p-2 rounded-md text-text-base/50 hover:text-text-base hover:bg-surface-dark/20 transition-colors"
+          className="lg:hidden p-2 rounded-md text-text-base/50 hover:text-text-base hover:bg-surface-dark/20 transition-colors"
           aria-label="Menyu"
         >
           <Menu size={22} />

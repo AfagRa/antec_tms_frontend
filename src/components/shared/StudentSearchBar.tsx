@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, FileText, Search, Users, UsersRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { searchGlobalStudent, resolveStudentId, type GlobalSearchResult, type SearchResultType } from '../../utils/globalSearch';
-import { useAuth } from '../../hooks/useAuth';
+import { searchGlobalStudent, initSearchCache, type GlobalSearchResult, type SearchResultType } from '../../utils/globalSearch';
 
 const TYPE_ICONS: Record<SearchResultType, LucideIcon> = {
   group: UsersRound,
@@ -33,22 +32,22 @@ function highlightMatch(text: string, query: string): ReactNode {
 }
 
 export default function StudentSearchBar() {
-  const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query), 250);
+    initSearchCache();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 200);
     return () => clearTimeout(timer);
   }, [query]);
 
-  const studentId = resolveStudentId(user?.id)
-  const results = useMemo(
-    () => searchGlobalStudent(debouncedQuery, studentId),
-    [debouncedQuery, studentId],
-  );
+  const results = useMemo(() => searchGlobalStudent(debouncedQuery), [debouncedQuery]);
   const showDropdown = isFocused && query.trim().length > 0;
 
   useEffect(() => {
@@ -57,6 +56,7 @@ export default function StudentSearchBar() {
         setIsFocused(false);
       }
     }
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -64,22 +64,33 @@ export default function StudentSearchBar() {
   function handleResultClick() {
     setQuery('');
     setIsFocused(false);
+    inputRef.current?.blur();
   }
 
+  const grouped = useMemo(() => {
+    if (results.length === 0) return [];
+    const map: Record<string, GlobalSearchResult[]> = {};
+    for (const r of results) {
+      (map[r.category] ??= []).push(r);
+    }
+    return Object.entries(map);
+  }, [results]);
+
   return (
-    <div ref={containerRef} className="relative w-full max-w-md">
+    <div ref={containerRef} className="relative w-full min-w-[320px] max-w-2xl">
       <Search
-        size={16}
+        size={18}
         className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-text-base/40"
         aria-hidden="true"
       />
       <input
+        ref={inputRef}
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         onFocus={() => setIsFocused(true)}
         placeholder="Axtarış..."
-        className="w-full rounded-lg border border-surface-dark/20 bg-surface py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-base/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="w-full rounded-neu border border-surface-dark/20 bg-surface py-2.5 pl-10 pr-3 text-sm text-text-base placeholder:text-text-base/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
         aria-label="Axtarış"
         aria-expanded={showDropdown}
         aria-autocomplete="list"
@@ -87,22 +98,29 @@ export default function StudentSearchBar() {
 
       {showDropdown && (
         <div
-          className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-surface-dark/20 bg-surface shadow-neu-sm"
+          className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-surface-dark/20 bg-surface shadow-neu"
           role="listbox"
         >
-          {results.length === 0 ? (
+          {grouped.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-text-base/50">
               Nəticə tapılmadı
             </p>
           ) : (
-            <ul className="max-h-80 overflow-y-auto py-1">
-              {results.map((result) => (
-                <SearchResultItem
-                  key={result.id}
-                  result={result}
-                  query={query}
-                  onSelect={handleResultClick}
-                />
+            <ul className="max-h-96 overflow-y-auto py-1">
+              {grouped.map(([category, items]) => (
+                <li key={category}>
+                  <p className="px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-text-base/40">
+                    {category}
+                  </p>
+                  {items.map((result) => (
+                    <SearchResultItem
+                      key={result.id}
+                      result={result}
+                      query={query}
+                      onSelect={handleResultClick}
+                    />
+                  ))}
+                </li>
               ))}
             </ul>
           )}

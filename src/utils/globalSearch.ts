@@ -1,52 +1,9 @@
-import { ROUTES } from '../constants/routes'
-
-interface SearchGroup { id: string; name: string }
-interface SearchStudent { userId: number; studentId: string; studentName: string; studentSurname: string; groupIds: string[] }
-interface SearchLesson { id: string; groupId: string; date: string; topic: string }
-interface SearchMaterial { id: string; lessonId: string; title: string; type: string; url: string }
-
-const SHARED_GROUPS: SearchGroup[] = [
-  { id: '1', name: 'Python-A1' }, { id: '2', name: 'Code-A2' }, { id: '3', name: 'JS-B1' },
-]
-const SHARED_STUDENTS: SearchStudent[] = [
-  { userId: 3, studentId: 's1', studentName: 'Əli', studentSurname: 'Məmmədov', groupIds: ['1', '2'] },
-  { userId: 4, studentId: 's2', studentName: 'Sona', studentSurname: 'Quliyeva', groupIds: ['1'] },
-  { userId: 5, studentId: 's3', studentName: 'Orxan', studentSurname: 'Rəsulov', groupIds: ['1'] },
-  { userId: 6, studentId: 's4', studentName: 'Vüsal', studentSurname: 'Qəfarov', groupIds: ['1'] },
-  { userId: 7, studentId: 's5', studentName: 'Leyla', studentSurname: 'Əliyeva', groupIds: ['1'] },
-  { userId: 8, studentId: 's6', studentName: 'Murad', studentSurname: 'Həsənov', groupIds: ['1'] },
-  { userId: 9, studentId: 's7', studentName: 'Nigar', studentSurname: 'Babayeva', groupIds: ['2'] },
-  { userId: 10, studentId: 's8', studentName: 'Rauf', studentSurname: 'İsmayılov', groupIds: ['2'] },
-  { userId: 11, studentId: 's9', studentName: 'Könül', studentSurname: 'Nəsirov', groupIds: ['3'] },
-  { userId: 12, studentId: 's10', studentName: 'Tural', studentSurname: 'Qədirov', groupIds: ['3'] },
-]
-const SHARED_LESSONS: SearchLesson[] = [
-  { id: 'l1', groupId: '1', date: '01.06.2026', topic: 'Giriş' },
-  { id: 'l2', groupId: '1', date: '03.06.2026', topic: 'Dəyişənlər' },
-  { id: 'l3', groupId: '1', date: '06.06.2026', topic: 'Massivlər' },
-  { id: 'l4', groupId: '1', date: '08.06.2026', topic: 'Funksiyalar' },
-  { id: 'l5', groupId: '1', date: '10.06.2026', topic: 'Döngülər' },
-  { id: 'l6', groupId: '2', date: '02.06.2026', topic: 'HTML Əsasları' },
-  { id: 'l7', groupId: '2', date: '05.06.2026', topic: 'CSS Flex' },
-  { id: 'l8', groupId: '2', date: '09.06.2026', topic: 'JS Giriş' },
-  { id: 'l9', groupId: '3', date: '04.06.2026', topic: 'Dəyişənlər' },
-  { id: 'l10', groupId: '3', date: '07.06.2026', topic: 'Funksiyalar' },
-]
-const SHARED_MATERIALS: SearchMaterial[] = [
-  { id:'m1', lessonId:'l1', title:'Dərs 01 - Giriş Konspekti', type:'Fayl', url:'#' },
-  { id:'m2', lessonId:'l2', title:'Dəyişənlər - Videodərs', type:'YouTube', url:'https://youtube.com' },
-  { id:'m3', lessonId:'l3', title:'Massivlər Sənədi', type:'Google Drive', url:'https://drive.google.com' },
-  { id:'m4', lessonId:'l4', title:'Funksiyalar - Faydalı Keçidlər', type:'Linklər', url:'https://python.org' },
-  { id:'m5', lessonId:'l5', title:'Döngülər Konspekti', type:'Fayl', url:'#' },
-  { id:'m6', lessonId:'l6', title:'HTML Əsasları - Slaydlar', type:'Fayl', url:'#' },
-  { id:'m7', lessonId:'l7', title:'CSS Flex - Praktiki Tapşırıq', type:'Google Drive', url:'https://drive.google.com' },
-  { id:'m8', lessonId:'l9', title:'JS-B1 Dərs Materialları', type:'YouTube', url:'https://youtube.com' },
-]
-
-export function resolveStudentId(userId?: number): string {
-  if (!userId) return 's1'
-  return SHARED_STUDENTS.find((s) => s.userId === userId)?.studentId ?? 's1'
-}
+import { groupsApi } from '@/api/groups'
+import { studentsApi } from '@/api/students'
+import { lessonsApi } from '@/api/lessons'
+import { materialsApi } from '@/api/materials'
+import { teacherPortalApi } from '@/api/teacherPortal'
+import { ROUTES } from '@/constants/routes'
 
 export type SearchResultType = 'group' | 'student' | 'lesson' | 'material'
 
@@ -58,40 +15,114 @@ export interface GlobalSearchResult {
   to: string
 }
 
+interface CachedGroup { id: number; name: string }
+interface CachedStudent { id: number; name: string; surname: string; groupIds: number[] }
+interface CachedLesson { id: number; groupId: number; topic: string; date: string }
+interface CachedMaterial { id: number; lessonId: number; title: string; type: string }
+
+let cachedGroups: CachedGroup[] = []
+let cachedStudents: CachedStudent[] = []
+let cachedLessons: CachedLesson[] = []
+let cachedMaterials: CachedMaterial[] = []
+let cacheLoaded = false
+let cacheLoading = false
+let loadPromise: Promise<void> | null = null
+
+async function loadCache(): Promise<void> {
+  if (cacheLoaded || cacheLoading) return
+  cacheLoading = true
+  try {
+    const [groupsRes, studentsRes] = await Promise.all([
+      groupsApi.list().catch(() => ({ data: [] as any[] })),
+      studentsApi.list().catch(() => ({ data: [] as any[] })),
+    ])
+
+    const groups = groupsRes.data ?? []
+    cachedGroups = groups.map((g: any) => ({ id: g.id, name: g.name }))
+
+    const students = studentsRes.data ?? []
+    cachedStudents = students.map((s: any) => ({
+      id: s.id,
+      name: s.name,
+      surname: s.surname,
+      groupIds: s.groupIds ?? s.group_ids ?? [],
+    }))
+
+    const lessonsResults = await Promise.all(
+      groups.map((g: any) => lessonsApi.getByGroup(g.id).catch(() => [] as any[])),
+    )
+    const lessons = lessonsResults.flat()
+    cachedLessons = lessons.map((l: any) => ({
+      id: l.id,
+      groupId: l.group_id,
+      topic: l.topic,
+      date: l.lesson_date,
+    }))
+
+    const materialsResults = await Promise.all(
+      cachedLessons.map((l) => materialsApi.getByLesson(l.id).catch(() => [] as any[])),
+    )
+    const materials = materialsResults.flat().filter(Boolean)
+    cachedMaterials = materials.map((m: any) => ({
+      id: m.id,
+      lessonId: m.lesson_id ?? m.lessonId,
+      title: m.title,
+      type: m.type,
+    }))
+
+    cacheLoaded = true
+  } catch {
+    // silent fail — search will return empty
+  } finally {
+    cacheLoading = false
+  }
+}
+
+loadPromise = loadCache()
+
+export function initSearchCache(): Promise<void> {
+  if (cacheLoaded) return Promise.resolve()
+  if (loadPromise) return loadPromise
+  loadPromise = loadCache()
+  return loadPromise
+}
+
 export function searchGlobal(query: string): GlobalSearchResult[] {
   const q = query.trim().toLowerCase()
-  if (q.length < 1) return []
+  if (q.length < 1 || !cacheLoaded) return []
+
+  initSearchCache()
 
   const results: GlobalSearchResult[] = []
 
-  SHARED_GROUPS.forEach((g) => {
+  for (const g of cachedGroups) {
     if (g.name.toLowerCase().includes(q)) {
       results.push({
         id: `group-${g.id}`,
         type: 'group',
         label: g.name,
         category: 'Qrup',
-        to: ROUTES.TEACHER_GROUP(g.id),
+        to: ROUTES.TEACHER_GROUP(String(g.id)),
       })
     }
-  })
+  }
 
-  SHARED_STUDENTS.forEach((s) => {
-    const full = `${s.studentName} ${s.studentSurname}`.toLowerCase()
+  for (const s of cachedStudents) {
+    const full = `${s.name} ${s.surname}`.toLowerCase()
     if (full.includes(q)) {
       results.push({
-        id: `student-${s.studentId}`,
+        id: `student-${s.id}`,
         type: 'student',
-        label: `${s.studentName} ${s.studentSurname}`,
+        label: `${s.name} ${s.surname}`,
         category: 'Tələbə',
         to: ROUTES.TEACHER_GROUPS,
       })
     }
-  })
+  }
 
-  SHARED_LESSONS.forEach((l) => {
+  for (const l of cachedLessons) {
     if (l.topic.toLowerCase().includes(q) || l.date.includes(q)) {
-      const group = SHARED_GROUPS.find((g) => g.id === l.groupId)
+      const group = cachedGroups.find((g) => g.id === l.groupId)
       results.push({
         id: `lesson-${l.id}`,
         type: 'lesson',
@@ -100,9 +131,9 @@ export function searchGlobal(query: string): GlobalSearchResult[] {
         to: ROUTES.TEACHER_JOURNAL,
       })
     }
-  })
+  }
 
-  SHARED_MATERIALS.forEach((m) => {
+  for (const m of cachedMaterials) {
     if (m.title.toLowerCase().includes(q)) {
       results.push({
         id: `material-${m.id}`,
@@ -112,64 +143,68 @@ export function searchGlobal(query: string): GlobalSearchResult[] {
         to: ROUTES.TEACHER_MATERIAL,
       })
     }
-  })
+  }
 
-  return results.slice(0, 8)
+  return results.slice(0, 20)
 }
 
-export function searchGlobalStudent(query: string, studentId: string): GlobalSearchResult[] {
+export function searchGlobalStudent(query: string, _studentId?: string): GlobalSearchResult[] {
   const q = query.trim().toLowerCase()
-  if (q.length < 1) return []
+  if (q.length < 1 || !cacheLoaded) return []
 
-  const student = SHARED_STUDENTS.find((s) => s.studentId === studentId)
-  const myGroupIds = new Set(student?.groupIds ?? [])
+  initSearchCache()
 
   const results: GlobalSearchResult[] = []
 
-  SHARED_GROUPS
-    .filter((g) => myGroupIds.has(g.id))
-    .forEach((g) => {
-      if (g.name.toLowerCase().includes(q)) {
-        results.push({
-          id: `group-${g.id}`,
-          type: 'group',
-          label: g.name,
-          category: 'Qrup',
-          to: ROUTES.STUDENT_GROUPS,
-        })
-      }
-    })
+  for (const s of cachedStudents) {
+    const full = `${s.name} ${s.surname}`.toLowerCase()
+    if (full.includes(q)) {
+      results.push({
+        id: `student-${s.id}`,
+        type: 'student',
+        label: `${s.name} ${s.surname}`,
+        category: 'Tələbə',
+        to: ROUTES.STUDENT_GROUPS,
+      })
+    }
+  }
 
-  SHARED_LESSONS
-    .filter((l) => myGroupIds.has(l.groupId))
-    .forEach((l) => {
-      if (l.topic.toLowerCase().includes(q) || l.date.includes(q)) {
-        const group = SHARED_GROUPS.find((g) => g.id === l.groupId)
-        results.push({
-          id: `lesson-${l.id}`,
-          type: 'lesson',
-          label: `${l.topic} — ${l.date}`,
-          category: group?.name ?? 'Dərs',
-          to: ROUTES.STUDENT_GROUPS,
-        })
-      }
-    })
+  for (const g of cachedGroups) {
+    if (g.name.toLowerCase().includes(q)) {
+      results.push({
+        id: `group-${g.id}`,
+        type: 'group',
+        label: g.name,
+        category: 'Qrup',
+        to: ROUTES.STUDENT_GROUPS,
+      })
+    }
+  }
 
-  SHARED_MATERIALS
-    .filter((m) => myGroupIds.has(
-      SHARED_LESSONS.find((l) => l.id === m.lessonId)?.groupId ?? '',
-    ))
-    .forEach((m) => {
-      if (m.title.toLowerCase().includes(q)) {
-        results.push({
-          id: `material-${m.id}`,
-          type: 'material',
-          label: m.title,
-          category: m.type,
-          to: ROUTES.STUDENT_MATERIALS,
-        })
-      }
-    })
+  for (const l of cachedLessons) {
+    if (l.topic.toLowerCase().includes(q) || l.date.includes(q)) {
+      const group = cachedGroups.find((g) => g.id === l.groupId)
+      results.push({
+        id: `lesson-${l.id}`,
+        type: 'lesson',
+        label: `${l.topic} — ${l.date}`,
+        category: group?.name ?? 'Dərs',
+        to: ROUTES.STUDENT_GROUPS,
+      })
+    }
+  }
 
-  return results.slice(0, 8)
+  for (const m of cachedMaterials) {
+    if (m.title.toLowerCase().includes(q)) {
+      results.push({
+        id: `material-${m.id}`,
+        type: 'material',
+        label: m.title,
+        category: m.type,
+        to: ROUTES.STUDENT_MATERIALS,
+      })
+    }
+  }
+
+  return results.slice(0, 20)
 }

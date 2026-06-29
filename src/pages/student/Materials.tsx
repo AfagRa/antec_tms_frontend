@@ -83,7 +83,7 @@ export default function StudentMaterials() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold text-text-base">Dərs Materialları</h1>
+      <h1 className="text-2xl font-bold text-text-base">Dərs Materialları</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
         <div className="flex items-end gap-6 flex-wrap">
@@ -115,12 +115,12 @@ export default function StudentMaterials() {
               <col style={{ width: '180px' }} />
             </colgroup>
             <thead>
-              <tr className="text-xs font-semibold text-text-base/50 uppercase tracking-wide">
-                <th className="pb-2 px-3 pt-4">Materialın Adı</th>
-                <th className="pb-2 px-3 pt-4">Mövzu</th>
-                <th className="pb-2 px-3 pt-4">Tipi</th>
-                <th className="pb-2 px-3 pt-4">Tarix</th>
-                <th className="pb-2 px-3 pt-4">Qeyd</th>
+              <tr className="bg-surface-dark/20">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Materialın Adı</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Mövzu</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tipi</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tarix</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Qeyd</th>
               </tr>
               <tr><td colSpan={5} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>
