@@ -39,9 +39,9 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-text-base">Dashboard</h1>
+      <h1 className="mb-6 text-2xl font-bold text-text-base">Dashboard</h1>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Ümumi Aktiv Qruplarım"
           value={dashboard?.total_groups ?? 0}
@@ -61,16 +61,16 @@ export default function Dashboard() {
       </div>
 
       <div className="mb-6">
-        <h2 className="mb-4 text-base font-semibold text-text-base">Həftəlik Cədvəl</h2>
+        <h2 className="mb-4 text-base font-bold text-text-base">Həftəlik Cədvəl</h2>
         <WeeklySchedule
           lessons={schedule}
           onLessonClick={(groupId) => navigate(ROUTES.TEACHER_GROUP(String(groupId)))}
         />
       </div>
 
-      <div className="grid grid-cols-[minmax(0,700px)_1fr] gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-neu bg-surface shadow-neu-sm p-6">
-          <h2 className="mb-4 text-base font-semibold text-text-base">Son Dərslər</h2>
+          <h2 className="mb-4 text-base font-bold text-text-base">Son Dərslər</h2>
           {dashboard?.recent_lessons && dashboard.recent_lessons.length > 0 ? (
             <ul className="space-y-2">
               {dashboard.recent_lessons.slice(0, 5).map((lesson) => (
@@ -96,7 +96,7 @@ export default function Dashboard() {
         </div>
 
         <div className="rounded-neu bg-surface shadow-neu-sm p-6">
-          <h2 className="mb-4 text-base font-semibold text-text-base">
+          <h2 className="mb-4 text-base font-bold text-text-base">
             Son Bildirişlər və Elanlar
           </h2>
           <p className="text-sm text-text-base/50">Hazırda bildiriş yoxdur.</p>

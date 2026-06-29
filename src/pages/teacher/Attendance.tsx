@@ -125,7 +125,8 @@ export default function Attendance() {
       )}
 
       <div className="rounded-neu bg-surface shadow-neu-sm overflow-hidden">
-        <table className="w-full min-w-[960px]">
+        <div className="overflow-x-auto w-full">
+          <table className="min-w-max w-full">
           <thead>
             <tr className="border-b border-surface-dark/20 bg-surface-light">
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">#</th>
@@ -202,9 +203,10 @@ export default function Attendance() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
+      <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <Link
           to={lessonInfo ? `${ROUTES.TEACHER_GROUP(String(lessonInfo.groupId))}?tab=lessons` : ROUTES.TEACHER_GROUPS}
           className="text-sm text-text-base/50 hover:text-text-base"

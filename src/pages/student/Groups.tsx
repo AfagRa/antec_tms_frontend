@@ -5,7 +5,7 @@ import { ROUTES } from '../../constants/routes'
 import { studentPortalApi } from '../../api/studentPortal'
 import { getMaterialHref } from '../../utils/material'
 import type { MyLessonItem } from '../../types'
-import { STATUS_LABELS } from '../../types'
+import Badge from '../../components/ui/Badge'
 import Spinner from '../../components/ui/Spinner'
 import { MaterialTypeBadge } from '../../components/ui/MaterialTypeBadge'
 
@@ -77,7 +77,7 @@ export default function StudentGroups() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-text-base">Mənim Qruplarım</h1>
+      <h1 className="text-2xl font-bold text-text-base">Mənim Qruplarım</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5">
         <div className="mb-4">
@@ -97,12 +97,12 @@ export default function StudentGroups() {
               <col style={{ width: '220px' }} />
             </colgroup>
             <thead>
-              <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Qrup adı</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Dərs sayı</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Ortalama bal (%)</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">Status</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50" />
+              <tr className="bg-surface-dark/20">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Qrup adı</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Dərs sayı</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Ortalama bal (%)</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Status</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60" />
               </tr>
               <tr><td colSpan={5} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>
@@ -113,7 +113,7 @@ export default function StudentGroups() {
                   <td className="py-3.5 text-sm text-text-base pr-2">{group.lessonCount}</td>
                   <td className="py-3.5 text-sm text-text-base pr-2">{group.avgGrade}</td>
                   <td className="py-3.5 text-sm">
-                    <span className="rounded-full px-2.5 py-0.5 text-xs font-medium shadow-neu-sm bg-primary/10 text-primary">{STATUS_LABELS[group.status] ?? group.status}</span>
+                    <Badge status={group.status} />
                   </td>
                   <td className="py-3.5 text-sm">
                     <Link to={`${ROUTES.STUDENT_MATERIALS}?group=${group.name}`} className="text-primary text-sm font-medium hover:underline">
@@ -132,7 +132,7 @@ export default function StudentGroups() {
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-text-base">Mənim Dərslərim</h2>
+          <h2 className="text-base font-bold text-text-base">Mənim Dərslərim</h2>
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setLessonGroupFilter('all')}
@@ -164,11 +164,11 @@ export default function StudentGroups() {
               <col style={{ minWidth: '350px' }} />
             </colgroup>
             <thead>
-              <tr>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4">Dərs tarixi</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4">Mövzu</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4">Qrup</th>
-                <th className="pb-2 text-xs font-semibold uppercase tracking-wide text-text-base/50 px-4">Materiallar</th>
+              <tr className="bg-surface-dark/20">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Dərs tarixi</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Mövzu</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Qrup</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Materiallar</th>
               </tr>
               <tr><td colSpan={4} className="p-0 pb-1"><div className="bg-surface-dark/20 h-px w-full" /></td></tr>
             </thead>

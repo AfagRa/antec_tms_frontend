@@ -68,7 +68,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Kurslar" value={stats.courses} icon={<BookOpen size={22} />} loading={loading} />
         <StatCard title="Qruplar" value={stats.groups} icon={<Users size={22} />} color="text-success" loading={loading} />
         <StatCard title="Müəllimlər" value={stats.teachers} icon={<UserCheck size={22} />} color="text-warning" loading={loading} />

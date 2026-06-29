@@ -242,26 +242,26 @@ export default function AdminJournal() {
     <div className="flex flex-col h-full overflow-hidden">
       <div className="shrink-0">
         <h1 className="text-2xl font-semibold text-text-base mb-4">Jurnal</h1>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center">
-              <label className="text-sm text-text-base/50 mr-2">Qrup seçin:</label>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+            <div className="flex items-center w-full sm:w-auto">
+              <label className="text-sm text-text-base/50 mr-2 shrink-0">Qrup seçin:</label>
               <select
                 value={selectedGroupId ?? ''}
                 onChange={(e) => setSelectedGroupId(Number(e.target.value))}
-                className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base focus:ring-2 focus:ring-primary/30 outline-none"
+                className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base focus:ring-2 focus:ring-primary/30 outline-none w-full sm:w-auto"
               >
                 {groups.map((g) => (
                   <option key={g.id} value={g.id}>{g.name}</option>
                 ))}
               </select>
             </div>
-            <div className="flex items-center">
-              <label className="text-sm text-text-base/50 mr-2">Kategoriya:</label>
+            <div className="flex items-center w-full sm:w-auto">
+              <label className="text-sm text-text-base/50 mr-2 shrink-0">Kategoriya:</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value as GradeCategory | 'all')}
-                className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base focus:ring-2 focus:ring-primary/30 outline-none"
+                className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base focus:ring-2 focus:ring-primary/30 outline-none w-full sm:w-auto"
               >
                 <option value="all">Hamısı</option>
                 {CATEGORY_OPTIONS.map((cat) => (
@@ -270,7 +270,7 @@ export default function AdminJournal() {
               </select>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="rounded-neu-sm bg-surface shadow-neu-sm px-3 py-1.5 text-sm text-text-base">{students.length} tələbə</span>
             <span className="rounded-neu-sm bg-surface shadow-neu-sm px-3 py-1.5 text-sm text-text-base">{visibleLessons.length} dərs</span>
             <button
@@ -316,15 +316,17 @@ export default function AdminJournal() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0">
         <div className="rounded-neu bg-surface shadow-neu-sm p-0 h-full overflow-hidden">
-          <div className="overflow-auto h-full w-full">
-            <table className="border-collapse text-sm" style={{ minWidth: `${48 + 180 + visibleLessons.length * 270 + 120 + 80}px` }}>
+          <div className="overflow-auto h-full w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <table className="border-separate border-spacing-0 text-sm" style={{ minWidth: `${20 + 132 + visibleLessons.length * 270 + 80}px` }}>
               <thead>
                 <tr>
-                  <th colSpan={2} className="sticky left-0 z-30 bg-white border-b border-r-2 border-surface-dark/20 text-xs font-medium text-text-base/50 uppercase tracking-wide min-w-[228px]">
-                    <span className="inline-block w-[48px] text-center py-3 align-middle shrink-0">№</span>
-                    <span className="inline-block px-4 py-3 align-middle">Tələbənin adı</span>
+                  <th colSpan={2} className="sticky left-0 z-30 bg-white border-b border-r-2 border-surface-dark/20 text-xs font-medium text-text-base/50 uppercase tracking-wide min-w-[152px]">
+                    <span className="flex items-center">
+                      <span className="text-center py-3 w-[20px] shrink-0">№</span>
+                      <span className="px-2 py-3 whitespace-nowrap truncate">Tələbənin adı</span>
+                    </span>
                   </th>
                   {visibleLessons.map((lesson) => (
                     <th key={lesson.id} colSpan={2} className="border-b border-r border-surface-dark/20 px-2 py-2 text-center font-medium text-text-base text-xs min-w-[140px]">
@@ -332,17 +334,17 @@ export default function AdminJournal() {
                       <span className="text-text-base/50 font-normal text-[11px] truncate max-w-[110px] block text-center leading-tight mt-0.5">{lesson.topic}</span>
                     </th>
                   ))}
-                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-3 text-center font-semibold text-slate-700 text-xs uppercase tracking-wide w-[80px]">Ümumi %</th>
+                  <th className="right-0 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-3 text-center font-semibold text-slate-700 text-xs uppercase tracking-wide w-[80px]">Ümumi %</th>
                 </tr>
                 <tr>
-                  <th colSpan={2} className="sticky left-0 z-30 bg-white border-b border-r-2 border-surface-dark/20 py-1 min-w-[228px]" />
+                  <th colSpan={2} className="sticky left-0 z-30 bg-white border-b border-r-2 border-surface-dark/20 py-1 min-w-[152px]" />
                   {visibleLessons.map((lesson) => (
                     <React.Fragment key={lesson.id}>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-surface-dark/5 w-[150px]">Davamiyyət</th>
                       <th className="border-b border-r border-surface-dark/20 px-1 py-1 text-center text-xs text-text-base/50 bg-surface-dark/5 w-[120px]">Qiymət</th>
                     </React.Fragment>
                   ))}
-                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1 w-[80px]" />
+                  <th className="right-0 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1 w-[80px]" />
                 </tr>
                 <tr>
                   <th colSpan={2} className="sticky left-0 z-30 bg-white border-b border-r-2 border-surface-dark/20 py-1" />
@@ -371,7 +373,7 @@ export default function AdminJournal() {
                       </th>
                     </React.Fragment>
                   ))}
-                  <th className="sticky right-0 z-20 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1 w-[80px]" />
+                  <th className="right-0 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-1 w-[80px]" />
                 </tr>
               </thead>
               <tbody>
@@ -398,9 +400,11 @@ export default function AdminJournal() {
 
                   return (
                     <tr key={student.id} className="hover:bg-surface-dark/30 transition-colors">
-                      <td colSpan={2} className="sticky left-0 z-10 bg-white border-b border-r-2 border-surface-dark/20 min-w-[228px]">
-                        <span className="inline-block w-[48px] text-center py-2 text-xs font-medium text-text-base/50 align-middle select-none">{index + 1}</span>
-                        <span className="inline-block px-4 py-2 font-medium text-text-base align-middle whitespace-nowrap">{student.name} {student.surname}</span>
+                      <td colSpan={2} className="sticky left-0 z-10 bg-white border-b border-r-2 border-surface-dark/20 min-w-[152px]">
+                        <span className="flex items-center">
+                          <span className="text-center py-2 text-xs font-medium text-text-base/50 select-none w-[20px] shrink-0">{index + 1}</span>
+                          <span className="px-2 py-2 font-medium text-text-base whitespace-nowrap truncate">{student.name} {student.surname}</span>
+                        </span>
                       </td>
                       {visibleLessons.map((lesson) => {
                         const cell = getCell(student.id, lesson.id)
@@ -451,7 +455,7 @@ export default function AdminJournal() {
                           </React.Fragment>
                         )
                       })}
-                      <td className={`sticky right-0 z-10 bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-2 text-center font-semibold text-sm w-[80px] ${avgColor}`}>
+                      <td className={`bg-slate-100 border-b border-l border-surface-dark/20 px-3 py-2 text-center font-semibold text-sm w-[80px] ${avgColor}`}>
                         {avg !== null ? `${avg}%` : '-'}
                       </td>
                     </tr>

@@ -1,18 +1,30 @@
 import { useNavigate } from 'react-router-dom';
-import { User } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
 import TeacherSearchBar from '../shared/TeacherSearchBar';
 import { useAuth } from '../../hooks/useAuth';
 
 const ROLE_LABEL: Record<string, string> = { teacher: 'Müəllim', student: 'Tələbə' };
 
-export default function Header() {
+interface Props {
+  sidebarOpen?: boolean;
+  onToggle?: () => void;
+}
+
+export default function Header({ sidebarOpen, onToggle }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-10 flex h-[64px] items-center justify-between border-b border-surface-dark/20 bg-surface px-6">
-      <div className="flex items-center gap-3 flex-1 max-w-md">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onToggle}
+          className="lg:hidden p-2 rounded-md text-text-base/50 hover:text-text-base hover:bg-surface-dark/20 transition-colors"
+          aria-label="Menyu"
+        >
+          <Menu size={22} />
+        </button>
         <TeacherSearchBar />
       </div>
 

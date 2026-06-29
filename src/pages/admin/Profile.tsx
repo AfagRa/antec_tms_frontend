@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
 import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
-import { studentPortalApi } from '../../api/studentPortal'
-import type { MyProfileResponse } from '../../types'
-import Spinner from '../../components/ui/Spinner'
-import Button from '../../components/ui/Button'
+import { authApi } from '@/api/auth'
+import type { User } from '@/types'
+import Spinner from '@/components/ui/Spinner'
 
-export default function StudentProfile() {
-  const [profile, setProfile] = useState<MyProfileResponse | null>(null)
+export default function AdminProfile() {
+  const [profile, setProfile] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   const [current, setCurrent] = useState('')
@@ -23,7 +22,7 @@ export default function StudentProfile() {
   useEffect(() => {
     const load = async () => {
       try {
-        const p = await studentPortalApi.getProfile()
+        const p = await authApi.me()
         setProfile(p)
       } catch {
         console.warn('Failed to load profile')
@@ -41,7 +40,7 @@ export default function StudentProfile() {
     setPwError('')
     setSaving(true)
     try {
-      await studentPortalApi.changePassword({ current_password: current, new_password: newPw })
+      await authApi.changePassword({ current_password: current, new_password: newPw })
       setPwSuccess(true)
       setCurrent('')
       setNewPw('')
@@ -54,12 +53,15 @@ export default function StudentProfile() {
     }
   }
 
+  const statusLabels: Record<string, string> = { active: 'Aktiv', inactive: 'Passiv' }
+  const roleLabels: Record<string, string> = { admin: 'Admin', teacher: 'Müəllim', student: 'Tələbə' }
+
   if (loading) return <Spinner />
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="rounded-neu bg-surface shadow-neu-sm p-6">
-        <h2 className="text-lg font-bold text-text-base mb-5">Profil Məlumatları</h2>
+        <h2 className="text-lg font-semibold text-text-base mb-5">Profil Məlumatları</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-text-base/50 mb-1">Ad</label>
@@ -77,19 +79,19 @@ export default function StudentProfile() {
             <label className="text-xs font-semibold text-text-base/50 mb-1">Telefon</label>
             <input type="text" value={profile?.phone ?? ''} readOnly className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base opacity-60 cursor-not-allowed outline-none" />
           </div>
-          <div className="flex flex-col md:col-span-2">
-            <label className="text-xs font-semibold text-text-base/50 mb-1">Doğum tarixi</label>
-            <input type="date" value={profile?.birth_date ?? ''} readOnly className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base opacity-60 cursor-not-allowed outline-none" />
+          <div className="flex flex-col">
+            <label className="text-xs font-semibold text-text-base/50 mb-1">Rol</label>
+            <input type="text" value={roleLabels[profile?.role ?? ''] ?? profile?.role ?? ''} readOnly className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base opacity-60 cursor-not-allowed outline-none" />
           </div>
-          <div className="flex flex-col md:col-span-2">
-            <label className="text-xs font-semibold text-text-base/50 mb-1">Qeyd</label>
-            <textarea rows={3} value={profile?.note ?? ''} readOnly className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base opacity-60 cursor-not-allowed resize-none outline-none" />
+          <div className="flex flex-col">
+            <label className="text-xs font-semibold text-text-base/50 mb-1">Status</label>
+            <input type="text" value={statusLabels[profile?.status ?? ''] ?? profile?.status ?? ''} readOnly className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base opacity-60 cursor-not-allowed outline-none" />
           </div>
         </div>
       </div>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-6">
-        <h2 className="text-lg font-bold text-text-base mb-5">Şifrəni Dəyiş</h2>
+        <h2 className="text-lg font-semibold text-text-base mb-5">Şifrəni Dəyiş</h2>
         <p className="text-sm text-text-base/50 mb-4">Şifrənizi yeniləmək üçün mövcud şifrənizi daxil edin.</p>
         <div className="space-y-4">
           {[
@@ -112,9 +114,9 @@ export default function StudentProfile() {
         {pwError && <p className="text-red-500 text-sm mt-2 flex items-center gap-1"><AlertCircle size={14} /> {pwError}</p>}
         {pwSuccess && <p className="text-green-600 text-sm mt-2 flex items-center gap-1"><CheckCircle size={14} /> Şifrə uğurla yeniləndi</p>}
         <div className="flex justify-end mt-4">
-          <Button variant="primary" onClick={handleChangePassword} disabled={saving} loading={saving}>
-            Şifrəni Yenilə
-          </Button>
+          <button onClick={handleChangePassword} disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-60">
+            {saving ? 'Yenilənir...' : 'Şifrəni Yenilə'}
+          </button>
         </div>
       </div>
     </div>

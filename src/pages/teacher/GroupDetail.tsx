@@ -7,8 +7,9 @@ import { lessonsApi } from '../../api/lessons'
 import { materialsApi } from '../../api/materials'
 import { getFileUrl } from '../../api/client'
 import type { Group, GroupLessonItem, Material } from '../../types'
-import { STATUS_LABELS } from '../../types'
+import Badge from '../../components/ui/Badge'
 import Spinner from '../../components/ui/Spinner'
+import Button from '../../components/ui/Button'
 
 type TabId = 'students' | 'lessons' | 'materials'
 
@@ -61,23 +62,25 @@ export default function GroupDetail() {
   if (!group) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-text-base">Qrup tapılmadı</h1>
+        <h1 className="text-2xl font-bold text-text-base">Qrup tapılmadı</h1>
       </div>
     )
   }
 
   return (
     <div>
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
+        icon={<ArrowLeft size={16} />}
         onClick={() => navigate(ROUTES.TEACHER_GROUPS)}
-        className="flex items-center gap-1.5 text-sm text-text-base/50 hover:text-text-base transition-colors mb-4 group"
+        className="mb-4"
       >
-        <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
         Mənim Qruplarıma Qayıt
-      </button>
+      </Button>
 
       <div className="mb-6 flex items-start justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-text-base">
+        <h1 className="text-2xl font-bold text-text-base">
           Qrup Detalları: {group.name}
         </h1>
       </div>
@@ -111,11 +114,7 @@ export default function GroupDetail() {
           </div>
           <div>
             <p className="mb-1 text-xs text-text-base/50">Status</p>
-            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              group.status === 'active' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600'
-            }`}>
-              {STATUS_LABELS[group.status] ?? group.status}
-            </span>
+            <Badge status={group.status} />
           </div>
         </div>
       </div>
@@ -153,11 +152,11 @@ export default function GroupDetail() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px]">
                 <thead>
-                  <tr className="border-b border-surface-dark/20 bg-surface-light">
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">#</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Ad</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Soyad</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Status</th>
+                  <tr className="bg-surface-dark/20">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">#</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Ad</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Soyad</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -168,9 +167,7 @@ export default function GroupDetail() {
                         <td className="px-3 py-3 text-sm text-text-base">{student.name}</td>
                         <td className="px-3 py-3 text-sm text-text-base">{student.surname}</td>
                         <td className="px-3 py-3">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                            {STATUS_LABELS[student.status] ?? student.status}
-                          </span>
+                          <Badge status={student.status} />
                         </td>
                       </tr>
                     ))
@@ -190,11 +187,11 @@ export default function GroupDetail() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[600px]">
                 <thead>
-                  <tr className="border-b border-surface-dark/20 bg-surface-light">
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">#</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Tarix</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Mövzu</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Kategoriya</th>
+                  <tr className="bg-surface-dark/20">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">#</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tarix</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Mövzu</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Kategoriya</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -232,12 +229,12 @@ export default function GroupDetail() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-surface-dark/20 bg-surface-light">
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">#</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Başlıq</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Tip</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base">Tarix</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-base" />
+                  <tr className="bg-surface-dark/20">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">#</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Başlıq</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tip</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60">Tarix</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-text-base/60" />
                   </tr>
                 </thead>
                 <tbody>
@@ -372,8 +369,11 @@ export default function GroupDetail() {
               )}
             </div>
             <div className="mt-6 flex items-center justify-between">
-              <button onClick={() => setEditingMaterial(null)} className="text-sm text-text-base/50 hover:text-text-base">Ləğv et</button>
-              <button
+              <Button variant="ghost" size="sm" onClick={() => setEditingMaterial(null)}>Ləğv et</Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Check size={16} />}
                 onClick={async () => {
                   if (!editForm.title.trim()) { setEditErrors({ title: 'Başlıq daxil edilməlidir' }); return }
                   setEditSaving(true)
@@ -411,10 +411,10 @@ export default function GroupDetail() {
                   }
                 }}
                 disabled={editSaving}
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60"
+                loading={editSaving}
               >
-                {editSaving ? 'Yadda saxlanılır...' : 'Yadda Saxla'} <Check size={16} />
-              </button>
+                Yadda Saxla
+              </Button>
             </div>
           </div>
         </div>
@@ -428,8 +428,10 @@ export default function GroupDetail() {
               "<strong>{deletingMaterial.title}</strong>" materialını silmək istədiyinizə əminsiniz? Bu əməliyyat geri alına bilməz.
             </p>
             <div className="flex items-center justify-end gap-3">
-              <button onClick={() => setDeletingMaterial(null)} className="rounded-lg border border-surface-dark/20 px-4 py-2 text-sm font-medium text-text-base hover:bg-surface-dark/10">Ləğv et</button>
-              <button
+              <Button variant="ghost" size="sm" onClick={() => setDeletingMaterial(null)}>Ləğv et</Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={async () => {
                   try {
                     await materialsApi.remove(deletingMaterial.id)
@@ -439,10 +441,9 @@ export default function GroupDetail() {
                     alert('Silinə bilmədi. Yenidən cəhd edin.')
                   }
                 }}
-                className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
               >
                 Sil
-              </button>
+              </Button>
             </div>
           </div>
         </div>
