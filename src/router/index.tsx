@@ -11,6 +11,7 @@ import GroupDetailPage from "@/pages/admin/GroupDetailPage";
 import TeachersPage from "@/pages/admin/TeachersPage";
 import StudentsPage from "@/pages/admin/StudentsPage";
 import AdminJournal from "@/pages/admin/Journal";
+import AdminProfile from "@/pages/admin/Profile";
 import AppLayout from "@/components/layout/AppLayout";
 import TeacherDashboard from "@/pages/teacher/Dashboard";
 import Groups from "@/pages/teacher/Groups";
@@ -117,6 +118,7 @@ export const router = createBrowserRouter([
       { path: "teachers", element: <TeachersPage /> },
       { path: "students", element: <StudentsPage /> },
       { path: "journal", element: <AdminJournal /> },
+      { path: "profile", element: <AdminProfile /> },
     ],
   },
 

@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { AuthResponse, User } from '@/types'
+import type { AuthResponse, ChangePasswordPayload, User } from '@/types'
 
 export const authApi = {
   login: async (payload: { email: string; password: string }): Promise<AuthResponse> => {
@@ -12,5 +12,8 @@ export const authApi = {
   },
   logout: async (): Promise<void> => {
     await apiClient.post('/auth/logout')
+  },
+  changePassword: async (payload: ChangePasswordPayload): Promise<void> => {
+    await apiClient.put('/auth/change-password', payload)
   },
 }

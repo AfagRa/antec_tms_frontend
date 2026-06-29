@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   LogOut,
   Users,
+  User,
   UserCheck,
   Menu,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const navItems = [
   { to: "/admin/teachers", icon: UserCheck, label: "Müəllimlər" },
   { to: "/admin/students", icon: GraduationCap, label: "Tələbələr" },
   { to: "/admin/journal", icon: BookOpen, label: "Jurnal" },
+  { to: "/admin/profile", icon: User, label: "Profil" },
 ];
 
 export default function Sidebar({ open, onToggle }: Props) {
@@ -79,12 +81,22 @@ export default function Sidebar({ open, onToggle }: Props) {
       </nav>
 
       <div className={`border-t border-surface-dark/20 p-4 ${open ? 'block' : 'hidden md:hidden'}`}>
-        <div className="mb-3 rounded-neu px-3 py-2.5 shadow-neu-inset-sm">
-          <p className="truncate text-xs font-bold text-text-base">
-            {user?.name} {user?.surname}
-          </p>
-          <p className="truncate text-xs text-text-base/40">{user?.email}</p>
-        </div>
+        <button
+          onClick={() => navigate('/admin/profile')}
+          className="mb-3 w-full rounded-neu px-3 py-2.5 shadow-neu-inset-sm hover:bg-surface-dark/10 transition-colors text-left cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shrink-0">
+              {user?.name?.[0]}{user?.surname?.[0]}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-bold text-text-base">
+                {user?.name} {user?.surname}
+              </p>
+              <p className="truncate text-xs text-text-base/40">{user?.email}</p>
+            </div>
+          </div>
+        </button>
         <Button
           variant="ghost"
           size="sm"
