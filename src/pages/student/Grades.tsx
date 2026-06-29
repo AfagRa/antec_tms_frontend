@@ -129,7 +129,7 @@ export default function StudentGrades() {
       <h1 className="text-2xl font-semibold text-text-base">Qiymət Jurnalı</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-text-base/50 mb-1">Tarix aralığı</span>
             <DateRangePicker startDate={startDate} endDate={endDate} onStartChange={setStartDate} onEndChange={setEndDate} />
@@ -137,7 +137,7 @@ export default function StudentGrades() {
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-text-base/50 mb-1">Sıralama</label>
             <select value={sorting} onChange={(e) => setSorting(e.target.value)}
-              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-fit min-w-[140px]">
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-full min-w-0">
               <option value="Ən yeni">Ən yeni</option>
               <option value="Ən köhnə">Ən köhnə</option>
               <option value="Ən yüksək bal">Ən yüksək bal</option>
@@ -147,7 +147,7 @@ export default function StudentGrades() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
         <div className="rounded-neu bg-surface shadow-neu-sm p-4 flex flex-col text-center min-h-[100px]">
           <span className="text-xs text-text-base/50 mb-1">Ümumi Qiymətlər</span>
           <span className="text-2xl font-bold text-text-base">{stats.count} dərs</span>

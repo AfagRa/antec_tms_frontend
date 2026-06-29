@@ -55,8 +55,8 @@ export default function Groups() {
           </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
+        <div className="overflow-x-auto w-full">
+          <table className="min-w-max w-full">
             <thead>
               <tr className="border-b border-surface-dark/20 bg-surface-light">
                 <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-base/50">#</th>

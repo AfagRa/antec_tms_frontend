@@ -184,29 +184,29 @@ export default function StudentAttendance() {
       <h1 className="text-2xl font-semibold text-text-base">Davamiyyət Jurnalı</h1>
 
       <div className="rounded-neu bg-surface shadow-neu-sm p-5 mb-5">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-text-base/50 mb-1">Qrup</label>
             <select value={selectedGroup} onChange={e => setSelectedGroup(e.target.value)}
-              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-fit min-w-[120px]">
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-full min-w-0">
               {groupOptions.map(g => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
           <div className="flex flex-col">
             <label className="text-xs font-semibold text-text-base/50 mb-1">Status</label>
             <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}
-              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-fit min-w-[110px]">
+              className="rounded-neu-sm border border-surface-dark/20 bg-surface px-3 py-2 text-sm text-text-base outline-none focus:ring-2 focus:ring-primary/30 h-[38px] cursor-pointer w-full min-w-0">
               {STATUS_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
             </select>
           </div>
-          <div className="flex flex-col md:col-span-2">
+          <div className="flex flex-col sm:col-span-2 md:col-span-2">
             <span className="text-xs font-semibold text-text-base/50 mb-1">Tarix</span>
             <DateRangePicker startDate={startDate} endDate={endDate} onStartChange={setStartDate} onEndChange={setEndDate} />
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-5">
         <div className="rounded-neu bg-surface shadow-neu-sm py-4 px-4 flex flex-col justify-between">
           <span className="text-sm font-semibold text-green-600">İştirak edib</span>
           <span className="text-2xl font-bold text-text-base mt-1">{summaryStats.present} dərs</span>

@@ -41,7 +41,7 @@ export default function Dashboard() {
     <div>
       <h1 className="mb-6 text-2xl font-semibold text-text-base">Dashboard</h1>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Ümumi Aktiv Qruplarım"
           value={dashboard?.total_groups ?? 0}
@@ -68,7 +68,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-[minmax(0,700px)_1fr] gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-neu bg-surface shadow-neu-sm p-6">
           <h2 className="mb-4 text-base font-semibold text-text-base">Son Dərslər</h2>
           {dashboard?.recent_lessons && dashboard.recent_lessons.length > 0 ? (
