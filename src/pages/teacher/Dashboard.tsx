@@ -4,23 +4,41 @@ import { BookOpen, Users, UserCheck } from 'lucide-react'
 import StatCard from '../../components/ui/StatCard'
 import { teacherPortalApi } from '../../api/teacherPortal'
 import { ROUTES } from '../../constants/routes'
-import type { TeacherDashboardResponse } from '../../types'
+import type { TeacherDashboardResponse, DashboardScheduleItem } from '../../types'
 import Spinner from '../../components/ui/Spinner'
 
-const DAY_LABELS: Record<string, string> = {
-  Monday:    'B.e',
-  Tuesday:   'Ç.a',
-  Wednesday: 'Çərşənbə',
-  Thursday:  'C.a',
-  Friday:    'Cümə',
-  Saturday:  'Şənbə',
-  Sunday:    'Bazar',
+const DAYS = [
+  { key: 'Monday', label: 'B.e' },
+  { key: 'Tuesday', label: 'Ç.a' },
+  { key: 'Wednesday', label: 'Çərşənbə' },
+  { key: 'Thursday', label: 'C.a' },
+  { key: 'Friday', label: 'Cümə' },
+  { key: 'Saturday', label: 'Şənbə' },
+]
+
+function buildHourSlots(schedule: DashboardScheduleItem[]): string[] {
+  if (schedule.length === 0) {
+    return ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
+  }
+  const starts = schedule.map((s) => parseInt(s.start_time.split(':')[0], 10))
+  const ends = schedule.map((s) => parseInt(s.end_time.split(':')[0], 10))
+  const minHour = Math.min(...starts)
+  const maxHour = Math.max(...ends)
+  const slots: string[] = []
+  for (let h = minHour; h < maxHour; h++) {
+    slots.push(`${String(h).padStart(2, '0')}:00`)
+  }
+  return slots
 }
 
-const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-
-function formatTime(time: string): string {
-  return time.slice(0, 5)
+function findForSlot(schedule: DashboardScheduleItem[], day: string, hourSlot: string) {
+  const hour = parseInt(hourSlot.split(':')[0], 10)
+  return schedule.find((s) => {
+    if (s.day_of_week !== day) return false
+    const startHour = parseInt(s.start_time.split(':')[0], 10)
+    const endHour = parseInt(s.end_time.split(':')[0], 10)
+    return hour >= startHour && hour < endHour
+  })
 }
 
 export default function Dashboard() {
@@ -78,38 +96,53 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="rounded-neu bg-surface shadow-neu-sm overflow-auto">
-            <div className="grid min-w-[700px]" style={{ gridTemplateColumns: `repeat(7, 1fr)` }}>
-              {DAY_ORDER.map((day) => (
+            <div
+              className="grid min-w-[600px]"
+              style={{ gridTemplateColumns: `110px repeat(${DAYS.length}, 1fr)` }}
+            >
+              <div className="sticky top-0 z-10 bg-surface border-b border-r border-surface-dark/20 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-base/50">
+                Saat
+              </div>
+              {DAYS.map((d) => (
                 <div
-                  key={day}
-                  className="border-r border-surface-dark/20 last:border-r-0 px-2 py-2"
+                  key={d.key}
+                  className="sticky top-0 z-10 bg-surface border-b border-r border-surface-dark/20 px-2 py-2 text-center text-xs font-semibold text-text-base/50 uppercase tracking-wide"
                 >
-                  <div className="sticky top-0 bg-surface border-b border-surface-dark/20 pb-2 mb-2 text-center text-xs font-semibold uppercase tracking-wide text-text-base/50">
-                    {DAY_LABELS[day]}
+                  {d.label}
+                </div>
+              ))}
+              {buildHourSlots(schedule).map((slot) => (
+                <div key={slot} className="contents">
+                  <div className="border-b border-r border-surface-dark/20 px-3 py-3 text-xs font-medium text-text-base/70 whitespace-nowrap">
+                    {slot}
                   </div>
-                  <div className="space-y-1.5 min-h-[80px]">
-                    {schedule
-                      .filter((item) => item.day_of_week === day)
-                      .map((item, idx) => (
-                        <button
-                          key={`${item.group_id}-${day}-${idx}`}
-                          onClick={() => navigate(ROUTES.TEACHER_GROUP(String(item.group_id)))}
-                          className="w-full rounded-neu-sm bg-surface shadow-neu-sm text-left p-2 hover:border-success hover:shadow-md transition-all cursor-pointer group"
-                        >
-                          <p className="text-xs font-medium text-text-base group-hover:text-success transition-colors truncate">
-                            {item.group_name}
-                          </p>
-                          <p className="text-[10px] text-text-base/50 mt-0.5 truncate">
-                            {formatTime(item.start_time)} - {formatTime(item.end_time)}
-                          </p>
-                          {item.room_or_note && (
-                            <p className="text-[10px] text-text-base/30 mt-0.5 truncate">
-                              {item.room_or_note}
+                  {DAYS.map((d) => {
+                    const match = findForSlot(schedule, d.key, slot)
+                    return (
+                      <div
+                        key={d.key}
+                        className="border-b border-r border-surface-dark/20 px-2 py-2 min-h-[60px]"
+                      >
+                        {match ? (
+                          <button
+                            onClick={() => navigate(ROUTES.TEACHER_GROUP(String(match.group_id)))}
+                            className="rounded-neu bg-surface shadow-neu-sm text-left p-2 hover:border-success hover:shadow-md transition-all cursor-pointer group w-full"
+                          >
+                            <p className="text-xs font-medium text-text-base group-hover:text-success transition-colors truncate">
+                              {match.group_name}
                             </p>
-                          )}
-                        </button>
-                      ))}
-                  </div>
+                            {match.room_or_note && (
+                              <p className="text-[10px] text-text-base/30 mt-0.5 truncate">
+                                {match.room_or_note}
+                              </p>
+                            )}
+                          </button>
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-xs text-text-base/30 italic">—</div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               ))}
             </div>
