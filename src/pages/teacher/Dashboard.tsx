@@ -2,30 +2,38 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Users, UserCheck } from 'lucide-react'
 import StatCard from '../../components/ui/StatCard'
-import WeeklySchedule from '../../components/ui/WeeklySchedule'
 import { teacherPortalApi } from '../../api/teacherPortal'
 import { ROUTES } from '../../constants/routes'
-import type { TeacherDashboardResponse, WeeklyScheduleItem } from '../../types'
+import type { TeacherDashboardResponse } from '../../types'
 import Spinner from '../../components/ui/Spinner'
+
+const DAY_LABELS: Record<string, string> = {
+  Monday:    'B.e',
+  Tuesday:   'Ç.a',
+  Wednesday: 'Çərşənbə',
+  Thursday:  'C.a',
+  Friday:    'Cümə',
+  Saturday:  'Şənbə',
+  Sunday:    'Bazar',
+}
+
+const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+function formatTime(time: string): string {
+  return time.slice(0, 5)
+}
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const [dashboard, setDashboard] = useState<TeacherDashboardResponse | null>(null)
-  const [schedule, setSchedule] = useState<WeeklyScheduleItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [teacherId, setTeacherId] = useState<number | null>(null)
 
   useEffect(() => {
     const init = async () => {
       try {
         const me = await teacherPortalApi.getMe()
-        setTeacherId(me.id)
-        const [data, scheduleData] = await Promise.all([
-          teacherPortalApi.getDashboard(me.id),
-          teacherPortalApi.getWeeklySchedule(me.id),
-        ])
+        const data = await teacherPortalApi.getDashboard(me.id)
         setDashboard(data)
-        setSchedule(scheduleData)
       } catch {
         console.warn('Failed to load teacher dashboard')
       } finally {
@@ -36,6 +44,8 @@ export default function Dashboard() {
   }, [])
 
   if (loading) return <Spinner />
+
+  const schedule = dashboard?.weeklySchedule ?? []
 
   return (
     <div>
@@ -62,10 +72,49 @@ export default function Dashboard() {
 
       <div className="mb-6">
         <h2 className="mb-4 text-base font-bold text-text-base">Həftəlik Cədvəl</h2>
-        <WeeklySchedule
-          lessons={schedule}
-          onLessonClick={(groupId) => navigate(ROUTES.TEACHER_GROUP(String(groupId)))}
-        />
+        {schedule.length === 0 ? (
+          <div className="rounded-neu bg-surface shadow-neu-sm p-6 text-center text-sm text-text-base/50 italic">
+            Cədvəl məlumatı yoxdur.
+          </div>
+        ) : (
+          <div className="rounded-neu bg-surface shadow-neu-sm overflow-auto">
+            <div className="grid min-w-[700px]" style={{ gridTemplateColumns: `repeat(7, 1fr)` }}>
+              {DAY_ORDER.map((day) => (
+                <div
+                  key={day}
+                  className="border-r border-surface-dark/20 last:border-r-0 px-2 py-2"
+                >
+                  <div className="sticky top-0 bg-surface border-b border-surface-dark/20 pb-2 mb-2 text-center text-xs font-semibold uppercase tracking-wide text-text-base/50">
+                    {DAY_LABELS[day]}
+                  </div>
+                  <div className="space-y-1.5 min-h-[80px]">
+                    {schedule
+                      .filter((item) => item.dayOfWeek === day)
+                      .map((item, idx) => (
+                        <button
+                          key={`${item.groupId}-${day}-${idx}`}
+                          onClick={() => navigate(ROUTES.TEACHER_GROUP(String(item.groupId)))}
+                          className="w-full rounded-neu-sm bg-surface shadow-neu-sm text-left p-2 hover:border-success hover:shadow-md transition-all cursor-pointer group"
+                        >
+                          <p className="text-xs font-medium text-text-base group-hover:text-success transition-colors truncate">
+                            {item.groupName}
+                          </p>
+                          <p className="text-[10px] text-text-base/50 mt-0.5 truncate">
+                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                          </p>
+                          {item.roomOrNote && (
+                            <p className="text-[10px] text-text-base/30 mt-0.5 truncate">
+                              {item.roomOrNote}
+                            </p>
+                          )}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

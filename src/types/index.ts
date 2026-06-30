@@ -64,6 +64,13 @@ export interface GroupStudent {
   full_name?: string
 }
 
+export interface ScheduleRow {
+  dayOfWeek: string
+  startTime: string
+  endTime: string
+  roomOrNote?: string
+}
+
 export interface Group {
   id: number
   name: string
@@ -74,6 +81,7 @@ export interface Group {
   end_date?: string
   status: UserStatus
   students?: GroupStudent[]
+  schedules?: ScheduleRow[]
 }
 
 export interface GroupPayload {
@@ -83,6 +91,16 @@ export interface GroupPayload {
   start_date: string
   end_date?: string
   status: UserStatus
+  schedules?: ScheduleRow[]
+}
+
+export interface DashboardScheduleItem {
+  groupId: number
+  groupName: string
+  dayOfWeek: string
+  startTime: string
+  endTime: string
+  roomOrNote?: string
 }
 
 export interface Teacher {
@@ -198,6 +216,7 @@ export interface TeacherDashboardResponse {
   weekly_lessons_total: number
   recent_groups: TeacherGroupItem[]
   recent_lessons: TeacherLessonItem[]
+  weeklySchedule?: DashboardScheduleItem[]
 }
 
 export interface WeeklyScheduleItem {

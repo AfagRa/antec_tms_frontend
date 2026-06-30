@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { Group, GroupPayload, Paginated } from '@/types'
+import type { Group, GroupPayload, Paginated, ScheduleRow } from '@/types'
 
 export const groupsApi = {
   list: async (params?: { course_id?: number; teacher_id?: number; status?: string }): Promise<Paginated<Group>> => {
@@ -26,5 +26,9 @@ export const groupsApi = {
   },
   removeStudent: async (groupId: number, studentId: number): Promise<void> => {
     await apiClient.delete(`/groups/${groupId}/students/${studentId}`)
+  },
+  getGroupSchedule: async (groupId: number): Promise<ScheduleRow[]> => {
+    const { data } = await apiClient.get<{ data: ScheduleRow[] }>(`/groups/${groupId}/schedule`)
+    return data.data ?? data
   },
 }
