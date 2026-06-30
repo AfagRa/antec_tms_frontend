@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import Button from "@/components/ui/Button";
+import logo from "../../antec_logo.png";
 
 interface Props {
   open: boolean;
@@ -42,16 +43,9 @@ export default function Sidebar({ open, onToggle }: Props) {
       }`}
       aria-label="Əsas naviqasiya"
     >
-      <div className="flex shrink-0 items-center gap-3 border-b border-surface-dark/20 px-4 py-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-neu bg-primary shadow-neu-sm shrink-0">
-          <span className="text-sm font-bold text-white">N</span>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold leading-none text-text-base">
-            Neumorphism
-          </p>
-          <p className="mt-0.5 text-xs text-text-base/40">Admin Panel</p>
-        </div>
+      <div className="flex shrink-0 items-center gap-3 border-b border-surface-dark/20 px-4 py-5">
+        <img src={logo} alt="ANTEC Academy" className="h-8 w-auto" />
+        <span className="text-lg font-bold tracking-wide text-text-base">ANTEC Academy</span>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
