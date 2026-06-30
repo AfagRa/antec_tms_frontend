@@ -161,7 +161,15 @@ export default function GroupsPage() {
 
     setSaving(true)
     try {
-      const payload = { ...form, schedules: scheduleRows.length > 0 ? scheduleRows : undefined }
+      const payload: GroupPayload = { ...form }
+      if (scheduleRows.length > 0) {
+        payload.schedules = scheduleRows.map((row) => ({
+          dayOfWeek: row.dayOfWeek,
+          startTime: row.startTime,
+          endTime: row.endTime,
+          roomOrNote: row.roomOrNote || null,
+        }))
+      }
       if (editing) {
         await groupsApi.update(editing.id, payload)
         const refreshed = await groupsApi.list()
@@ -174,7 +182,8 @@ export default function GroupsPage() {
         addToast('Qrup yaradıldı', 'success')
       }
       setOpen(false)
-    } catch {
+    } catch (err: any) {
+      console.error('Submit error:', err?.response?.data ?? err)
       addToast('Əməliyyat uğursuz oldu', 'error')
     } finally {
       setSaving(false)

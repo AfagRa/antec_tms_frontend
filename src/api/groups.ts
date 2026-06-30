@@ -11,12 +11,22 @@ export const groupsApi = {
     return data
   },
   create: async (payload: GroupPayload): Promise<Group> => {
-    const { data } = await apiClient.post<{ data: Group }>('/groups', payload)
-    return data.data
+    try {
+      const { data } = await apiClient.post<{ data: Group }>('/groups', payload)
+      return data.data
+    } catch (error: any) {
+      console.error('createGroup failed:', error?.response?.data ?? error.message)
+      throw error
+    }
   },
   update: async (id: number, payload: Partial<GroupPayload>): Promise<Group> => {
-    const { data } = await apiClient.put<{ data: Group }>(`/groups/${id}`, payload)
-    return data.data
+    try {
+      const { data } = await apiClient.put<{ data: Group }>(`/groups/${id}`, payload)
+      return data.data
+    } catch (error: any) {
+      console.error('updateGroup failed:', error?.response?.data ?? error.message)
+      throw error
+    }
   },
   remove: async (id: number): Promise<void> => {
     await apiClient.delete(`/groups/${id}`)
