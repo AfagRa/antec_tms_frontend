@@ -15,7 +15,13 @@ export const groupsApi = {
       const { data } = await apiClient.post<{ data: Group }>('/groups', payload)
       return data.data
     } catch (error: any) {
-      console.error('createGroup failed:', error?.response?.data ?? error.message)
+      const data = error?.response?.data
+      console.error('createGroup failed - full response:', JSON.stringify(data, null, 2))
+      if (data?.errors) {
+        Object.entries(data.errors).forEach(([field, messages]) => {
+          console.error(`Field: ${field} →`, messages)
+        })
+      }
       throw error
     }
   },
@@ -24,7 +30,13 @@ export const groupsApi = {
       const { data } = await apiClient.put<{ data: Group }>(`/groups/${id}`, payload)
       return data.data
     } catch (error: any) {
-      console.error('updateGroup failed:', error?.response?.data ?? error.message)
+      const data = error?.response?.data
+      console.error('updateGroup failed - full response:', JSON.stringify(data, null, 2))
+      if (data?.errors) {
+        Object.entries(data.errors).forEach(([field, messages]) => {
+          console.error(`Field: ${field} →`, messages)
+        })
+      }
       throw error
     }
   },
