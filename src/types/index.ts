@@ -65,10 +65,10 @@ export interface GroupStudent {
 }
 
 export interface ScheduleRow {
-  dayOfWeek: string
-  startTime: string
-  endTime: string
-  roomOrNote?: string
+  day_of_week: string
+  start_time: string
+  end_time: string
+  room_or_note?: string
 }
 
 export interface Group {

@@ -34,7 +34,7 @@ const DAY_OPTIONS = [
 ]
 
 function emptyScheduleRow(): ScheduleRow {
-  return { dayOfWeek: '', startTime: '', endTime: '', roomOrNote: '' }
+  return { day_of_week: '', start_time: '', end_time: '', room_or_note: '' }
 }
 
 export default function GroupsPage() {
@@ -109,7 +109,7 @@ export default function GroupsPage() {
       const next = prev.map((row, i) => (i === index ? { ...row, [field]: value } : row))
       return next
     })
-    if (field === 'startTime' || field === 'endTime') {
+    if (field === 'start_time' || field === 'end_time') {
       setTimeErrors((prev) => {
         const next = { ...prev }
         delete next[index]
@@ -130,10 +130,10 @@ export default function GroupsPage() {
     const errors: Record<number, string> = {}
     let valid = true
     scheduleRows.forEach((row, i) => {
-      if (!row.dayOfWeek || !row.startTime || !row.endTime) {
+      if (!row.day_of_week || !row.start_time || !row.end_time) {
         errors[i] = 'Gün, başlama və bitmə vaxtı məcburidir'
         valid = false
-      } else if (row.startTime >= row.endTime) {
+      } else if (row.start_time >= row.end_time) {
         errors[i] = 'Bitmə vaxtı başlama vaxtından sonra olmalıdır'
         valid = false
       }
@@ -163,12 +163,7 @@ export default function GroupsPage() {
     try {
       const payload: GroupPayload = { ...form }
       if (scheduleRows.length > 0) {
-        payload.schedules = scheduleRows.map((row) => ({
-          dayOfWeek: row.dayOfWeek,
-          startTime: row.startTime,
-          endTime: row.endTime,
-          roomOrNote: row.roomOrNote || null,
-        }))
+        payload.schedules = [...scheduleRows]
       }
       if (editing) {
         await groupsApi.update(editing.id, payload)
@@ -302,8 +297,8 @@ export default function GroupsPage() {
                   <div className="w-full sm:w-[180px]">
                     <label className="mb-1 block text-xs font-bold text-text-base/60">Gün</label>
                     <select
-                      value={row.dayOfWeek}
-                      onChange={(e) => updateScheduleRow(i, 'dayOfWeek', e.target.value)}
+                      value={row.day_of_week}
+                      onChange={(e) => updateScheduleRow(i, 'day_of_week', e.target.value)}
                       className="w-full rounded-neu-sm border border-surface-dark/30 bg-surface px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">Seçin...</option>
@@ -316,8 +311,8 @@ export default function GroupsPage() {
                     <label className="mb-1 block text-xs font-bold text-text-base/60">Başlama vaxtı</label>
                     <input
                       type="time"
-                      value={row.startTime}
-                      onChange={(e) => updateScheduleRow(i, 'startTime', e.target.value)}
+                      value={row.start_time}
+                      onChange={(e) => updateScheduleRow(i, 'start_time', e.target.value)}
                       className="w-full sm:w-[150px] rounded-neu-sm border border-surface-dark/30 bg-surface px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
@@ -325,8 +320,8 @@ export default function GroupsPage() {
                     <label className="mb-1 block text-xs font-bold text-text-base/60">Bitmə vaxtı</label>
                     <input
                       type="time"
-                      value={row.endTime}
-                      onChange={(e) => updateScheduleRow(i, 'endTime', e.target.value)}
+                      value={row.end_time}
+                      onChange={(e) => updateScheduleRow(i, 'end_time', e.target.value)}
                       className="w-full sm:w-[150px] rounded-neu-sm border border-surface-dark/30 bg-surface px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
@@ -334,8 +329,8 @@ export default function GroupsPage() {
                     <label className="mb-1 block text-xs font-bold text-text-base/60">Otaq/Qeyd</label>
                     <input
                       type="text"
-                      value={row.roomOrNote ?? ''}
-                      onChange={(e) => updateScheduleRow(i, 'roomOrNote', e.target.value)}
+                      value={row.room_or_note ?? ''}
+                      onChange={(e) => updateScheduleRow(i, 'room_or_note', e.target.value)}
                       placeholder="İstəyə bağlı"
                       className="w-full sm:w-[150px] rounded-neu-sm border border-surface-dark/30 bg-surface px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary"
                     />
