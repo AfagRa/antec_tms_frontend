@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/useToast'
 export default function AdminLayout() {
   const { user, isLoading } = useAuth()
   const { toasts, removeToast } = useToast()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const navigate = useNavigate()
 
   if (isLoading) {
@@ -34,7 +34,7 @@ export default function AdminLayout() {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className={`flex flex-1 flex-col min-w-0 transition-all duration-300 ease-in-out ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
         <header className="sticky top-0 z-10 flex h-[64px] items-center justify-end border-b border-surface-dark/20 bg-surface px-6">
           <button
             onClick={() => setSidebarOpen(prev => !prev)}

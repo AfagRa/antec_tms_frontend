@@ -37,7 +37,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" aria-hidden onClick={onClose} />
-      <div className={`relative w-full ${sizeMap[size]} mx-4 rounded-neu-lg bg-surface shadow-neu-lg`}>
+        <div className={`relative max-h-[85vh] overflow-y-auto w-full ${sizeMap[size]} mx-4 rounded-neu-lg bg-surface shadow-neu-lg`}>
         <div className="flex items-center justify-between border-b border-surface-dark/30 px-6 py-4">
           <h2 className="text-lg font-bold tracking-wide text-text-base">{title}</h2>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Bağla">

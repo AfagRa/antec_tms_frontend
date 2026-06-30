@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Lock, Mail } from 'lucide-react'
+import logo from '../antec_logo.png'
 import { useAuth } from '@/hooks/useAuth'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -53,9 +54,8 @@ export default function LoginPage() {
 
       <Card className="relative w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-neu-lg bg-primary shadow-neu-sm">
-            <span className="text-2xl font-bold text-white">N</span>
-          </div>
+          <img src={logo} alt="ANTEC Academy" className="mx-auto h-12 w-auto" />
+          <p className="mt-2 text-center text-lg font-semibold text-primary">ANTEC Academy</p>
           <h1 className="text-xl font-bold tracking-wide text-text-base">Tədris Platforması</h1>
           <p className="mt-1 text-sm text-text-base/50">Sistemə daxil olun</p>
         </div>
@@ -92,7 +92,7 @@ export default function LoginPage() {
         </form>
       </Card>
 
-      <p className="absolute bottom-6 text-xs font-mono text-text-base/30">Neumorphism Admin</p>
+
     </div>
   )
 }

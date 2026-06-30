@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { coursesApi } from '@/api/courses'
 import { groupsApi } from '@/api/groups'
 import { teachersApi } from '@/api/teachers'
-import type { Course, Group, GroupPayload, Teacher } from '@/types'
+import type { Course, Group, GroupPayload, ScheduleRow, Teacher } from '@/types'
 import Button from '@/components/ui/Button'
 import Table from '@/components/ui/Table'
 import Input from '@/components/ui/Input'
@@ -23,6 +23,20 @@ const emptyForm: GroupPayload = {
   status: 'active',
 }
 
+const DAY_OPTIONS = [
+  { value: 'Monday',    label: 'Bazar ertəsi' },
+  { value: 'Tuesday',   label: 'Çərşənbə axşamı' },
+  { value: 'Wednesday', label: 'Çərşənbə' },
+  { value: 'Thursday',  label: 'Cümə axşamı' },
+  { value: 'Friday',    label: 'Cümə' },
+  { value: 'Saturday',  label: 'Şənbə' },
+  { value: 'Sunday',    label: 'Bazar' },
+]
+
+function emptyScheduleRow(): ScheduleRow {
+  return { day_of_week: '', start_time: '', end_time: '', room_or_note: '' }
+}
+
 export default function GroupsPage() {
   const navigate = useNavigate()
   const { addToast } = useToast()
@@ -34,6 +48,8 @@ export default function GroupsPage() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Group | null>(null)
   const [form, setForm] = useState<GroupPayload>(emptyForm)
+  const [scheduleRows, setScheduleRows] = useState<ScheduleRow[]>([])
+  const [timeErrors, setTimeErrors] = useState<Record<number, string>>({})
   const [saving, setSaving] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Group | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -68,6 +84,8 @@ export default function GroupsPage() {
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm)
+    setScheduleRows([])
+    setTimeErrors({})
     setOpen(true)
   }
 
@@ -81,7 +99,47 @@ export default function GroupsPage() {
       end_date: group.end_date ?? '',
       status: group.status,
     })
+    setScheduleRows(group.schedules && group.schedules.length > 0 ? [...group.schedules] : [])
+    setTimeErrors({})
     setOpen(true)
+  }
+
+  const updateScheduleRow = (index: number, field: keyof ScheduleRow, value: string) => {
+    setScheduleRows((prev) => {
+      const next = prev.map((row, i) => (i === index ? { ...row, [field]: value } : row))
+      return next
+    })
+    if (field === 'start_time' || field === 'end_time') {
+      setTimeErrors((prev) => {
+        const next = { ...prev }
+        delete next[index]
+        return next
+      })
+    }
+  }
+
+  const removeScheduleRow = (index: number) => {
+    setScheduleRows((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const addScheduleRow = () => {
+    setScheduleRows((prev) => [...prev, emptyScheduleRow()])
+  }
+
+  const validateSchedule = (): boolean => {
+    const errors: Record<number, string> = {}
+    let valid = true
+    scheduleRows.forEach((row, i) => {
+      if (!row.day_of_week || !row.start_time || !row.end_time) {
+        errors[i] = 'Gün, başlama və bitmə vaxtı məcburidir'
+        valid = false
+      } else if (row.start_time >= row.end_time) {
+        errors[i] = 'Bitmə vaxtı başlama vaxtından sonra olmalıdır'
+        valid = false
+      }
+    })
+    setTimeErrors(errors)
+    return valid
   }
 
   const handleSave = async (event: FormEvent) => {
@@ -96,21 +154,31 @@ export default function GroupsPage() {
       return
     }
 
+    if (scheduleRows.length > 0 && !validateSchedule()) {
+      addToast('Cədvəl məlumatlarını düzgün doldurun', 'warning')
+      return
+    }
+
     setSaving(true)
     try {
+      const payload: GroupPayload = { ...form }
+      if (scheduleRows.length > 0) {
+        payload.schedules = [...scheduleRows]
+      }
       if (editing) {
-        await groupsApi.update(editing.id, form)
+        await groupsApi.update(editing.id, payload)
         const refreshed = await groupsApi.list()
         setGroups(refreshed.data)
         addToast('Qrup yeniləndi', 'success')
       } else {
-        await groupsApi.create(form)
+        await groupsApi.create(payload)
         const refreshed = await groupsApi.list()
         setGroups(refreshed.data)
         addToast('Qrup yaradıldı', 'success')
       }
       setOpen(false)
-    } catch {
+    } catch (err: any) {
+      console.error('Submit error:', err?.response?.data ?? err)
       addToast('Əməliyyat uğursuz oldu', 'error')
     } finally {
       setSaving(false)
@@ -217,6 +285,76 @@ export default function GroupsPage() {
               <option value="inactive">Qeyri-aktiv</option>
             </Select>
           </div>
+
+          <div className="md:col-span-2 border-t border-surface-dark/20 pt-4">
+            <h3 className="mb-3 text-base font-bold text-text-base">Həftəlik Cədvəl</h3>
+            {scheduleRows.length === 0 && (
+              <p className="mb-3 text-sm text-text-base/50">Hələ cədvəl sətri əlavə edilməyib.</p>
+            )}
+            <div className="space-y-3">
+              {scheduleRows.map((row, i) => (
+                <div key={i} className="flex flex-wrap items-end gap-3 rounded-neu-sm bg-surface-dark/10 p-3">
+                  <div className="w-full sm:w-[180px]">
+                    <label className="mb-1 block text-xs font-bold text-text-base/60">Gün</label>
+                    <select
+                      value={row.day_of_week}
+                      onChange={(e) => updateScheduleRow(i, 'day_of_week', e.target.value)}
+                      className="w-full rounded-neu-sm border border-surface-dark/30 bg-surface px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Seçin...</option>
+                      {DAY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-text-base/60">Başlama vaxtı</label>
+                    <input
+                      type="time"
+                      value={row.start_time}
+                      onChange={(e) => updateScheduleRow(i, 'start_time', e.target.value)}
+                      className="w-full sm:w-[150px] rounded-neu-sm border border-surface-dark/30 bg-surface px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-text-base/60">Bitmə vaxtı</label>
+                    <input
+                      type="time"
+                      value={row.end_time}
+                      onChange={(e) => updateScheduleRow(i, 'end_time', e.target.value)}
+                      className="w-full sm:w-[150px] rounded-neu-sm border border-surface-dark/30 bg-surface px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-text-base/60">Otaq/Qeyd</label>
+                    <input
+                      type="text"
+                      value={row.room_or_note ?? ''}
+                      onChange={(e) => updateScheduleRow(i, 'room_or_note', e.target.value)}
+                      placeholder="İstəyə bağlı"
+                      className="w-full sm:w-[150px] rounded-neu-sm border border-surface-dark/30 bg-surface px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeScheduleRow(i)}
+                    className="p-2 rounded-md text-danger/60 hover:text-danger transition-colors"
+                    aria-label="Cədvəl sətirini sil"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                  {timeErrors[i] && (
+                    <p className="w-full text-xs text-danger">{timeErrors[i]}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+            <Button type="button" variant="secondary" size="sm" onClick={addScheduleRow} className="mt-3">
+              <Plus size={14} />
+              Cədvəl sətri əlavə et
+            </Button>
+          </div>
+
           <div className="md:col-span-2 flex justify-end gap-3 pt-2">
             <Button variant="secondary" type="button" onClick={() => setOpen(false)}>
               Ləğv et
