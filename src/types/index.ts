@@ -95,12 +95,12 @@ export interface GroupPayload {
 }
 
 export interface DashboardScheduleItem {
-  groupId: number
-  groupName: string
-  dayOfWeek: string
-  startTime: string
-  endTime: string
-  roomOrNote?: string
+  group_id: number
+  group_name: string
+  day_of_week: string
+  start_time: string
+  end_time: string
+  room_or_note?: string
 }
 
 export interface Teacher {
@@ -216,7 +216,7 @@ export interface TeacherDashboardResponse {
   weekly_lessons_total: number
   recent_groups: TeacherGroupItem[]
   recent_lessons: TeacherLessonItem[]
-  weeklySchedule?: DashboardScheduleItem[]
+  weekly_schedule?: DashboardScheduleItem[]
 }
 
 export interface WeeklyScheduleItem {

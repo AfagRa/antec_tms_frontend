@@ -45,7 +45,7 @@ export default function Dashboard() {
 
   if (loading) return <Spinner />
 
-  const schedule = dashboard?.weeklySchedule ?? []
+  const schedule = dashboard?.weekly_schedule ?? []
 
   return (
     <div>
@@ -89,22 +89,22 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-1.5 min-h-[80px]">
                     {schedule
-                      .filter((item) => item.dayOfWeek === day)
+                      .filter((item) => item.day_of_week === day)
                       .map((item, idx) => (
                         <button
-                          key={`${item.groupId}-${day}-${idx}`}
-                          onClick={() => navigate(ROUTES.TEACHER_GROUP(String(item.groupId)))}
+                          key={`${item.group_id}-${day}-${idx}`}
+                          onClick={() => navigate(ROUTES.TEACHER_GROUP(String(item.group_id)))}
                           className="w-full rounded-neu-sm bg-surface shadow-neu-sm text-left p-2 hover:border-success hover:shadow-md transition-all cursor-pointer group"
                         >
                           <p className="text-xs font-medium text-text-base group-hover:text-success transition-colors truncate">
-                            {item.groupName}
+                            {item.group_name}
                           </p>
                           <p className="text-[10px] text-text-base/50 mt-0.5 truncate">
-                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                            {formatTime(item.start_time)} - {formatTime(item.end_time)}
                           </p>
-                          {item.roomOrNote && (
+                          {item.room_or_note && (
                             <p className="text-[10px] text-text-base/30 mt-0.5 truncate">
-                              {item.roomOrNote}
+                              {item.room_or_note}
                             </p>
                           )}
                         </button>
