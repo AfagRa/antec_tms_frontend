@@ -1,40 +1,40 @@
 import { apiClient } from './client'
 
 export interface AttendanceReportDetail {
-  studentId: number
-  studentName: string | null
+  student_id: number
+  student_name: string | null
   present: number
   absent: number
   late: number
   excused: number
-  attendancePercentage: number
+  attendance_percentage: number
 }
 
 export interface AttendanceReportResult {
-  totalLessons: number
-  totalRecords: number
+  total_lessons: number
+  total_records: number
   present: number
   absent: number
   late: number
   excused: number
-  attendancePercentage: number
+  attendance_percentage: number
   details: AttendanceReportDetail[]
 }
 
 export interface GradesReportDetail {
-  studentId: number
-  studentName: string | null
-  totalScore: number
-  totalMaxScore: number
+  student_id: number
+  student_name: string | null
+  total_score: number
+  total_max_score: number
   percentage: number
-  gradeCount: number
+  grade_count: number
 }
 
 export interface GradesReportResult {
-  totalRecords: number
-  averageScore: number
-  averageMaxScore: number
-  overallPercentage: number
+  total_records: number
+  average_score: number
+  average_max_score: number
+  overall_percentage: number
   details: GradesReportDetail[]
 }
 
