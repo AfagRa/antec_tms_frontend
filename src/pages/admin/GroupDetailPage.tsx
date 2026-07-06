@@ -283,12 +283,12 @@ export default function GroupDetailPage() {
                   <tr><td colSpan={7} className="py-12 text-center text-text-base/40">Davamiyyət məlumatı tapılmadı</td></tr>
                 ) : (
                   attendance.map((item, index) => {
-                    const pct = item.attendancePercentage
+                    const pct = item.attendance_percentage ?? 0
                     const pctClass = pct >= 70 ? 'text-success' : pct >= 50 ? 'text-warning' : 'text-danger'
                     return (
-                      <tr key={item.studentId} className="border-b border-surface-dark/20 last:border-0 transition-colors hover:bg-surface-dark/10">
+                      <tr key={item.student_id} className="border-b border-surface-dark/20 last:border-0 transition-colors hover:bg-surface-dark/10">
                         <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
-                        <td className="px-4 py-3 text-sm font-bold text-text-base">{item.studentName}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-text-base">{item.student_name}</td>
                         <td className="px-4 py-3 text-center text-sm text-text-base">{item.present}</td>
                         <td className="px-4 py-3 text-center text-sm text-text-base">{item.absent}</td>
                         <td className="px-4 py-3 text-center text-sm text-text-base">{item.late}</td>
@@ -324,14 +324,14 @@ export default function GroupDetailPage() {
                   <tr><td colSpan={5} className="py-12 text-center text-text-base/40">Qiymət tapılmadı</td></tr>
                 ) : (
                   grades.map((item, index) => {
-                    const percent = item.totalMaxScore === 0 ? null : Math.round(item.percentage)
+                    const percent = item.total_max_score === 0 ? null : Math.round(item.percentage)
                     const pClass = percent === null ? 'text-text-base/40' : percent >= 70 ? 'text-success' : percent >= 50 ? 'text-warning' : 'text-danger'
                     return (
-                      <tr key={item.studentId} className="border-b border-surface-dark/20 last:border-0 transition-colors hover:bg-surface-dark/10">
+                      <tr key={item.student_id} className="border-b border-surface-dark/20 last:border-0 transition-colors hover:bg-surface-dark/10">
                         <td className="px-4 py-3 text-sm text-text-base">{index + 1}</td>
-                        <td className="px-4 py-3 text-sm font-bold text-text-base">{item.studentName}</td>
-                        <td className="px-4 py-3 text-center text-sm text-text-base">{item.gradeCount}</td>
-                        <td className="px-4 py-3 text-right text-sm font-mono text-text-base">{item.totalScore} / {item.totalMaxScore}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-text-base">{item.student_name}</td>
+                        <td className="px-4 py-3 text-center text-sm text-text-base">{item.grade_count}</td>
+                        <td className="px-4 py-3 text-right text-sm font-mono text-text-base">{item.total_score} / {item.total_max_score}</td>
                         <td className="px-4 py-3 text-right text-sm"><span className={`font-bold ${pClass}`}>{percent !== null ? `${percent}%` : '—'}</span></td>
                       </tr>
                     )
